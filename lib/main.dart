@@ -1,24 +1,38 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-void main() => runApp(const BusConnect());
-class Bus {
-  final String name, from, to;
-  final int departure, duration;
-  const Bus(this.name, this.from, this.to, this.departure, this.duration);
+const firebaseOptions = FirebaseOptions(
+  apiKey: 'AIzaSyB7h2kuVM8CvhNlkptsPtyKXXHUO4T1RQk',
+  appId: '1:442982526142:web:6daaf45238e0cf8de442ef',
+  messagingSenderId: '442982526142',
+  projectId: 'findmybus-535ae',
+  authDomain: 'findmybus-535ae.firebaseapp.com',
+  storageBucket: 'findmybus-535ae.firebasestorage.app',
+);
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: firebaseOptions);
+  runApp(const FindMyBus());
 }
-String clock(int minutes) {
+class FindMyBus extends StatelessWidget {
+  const FindMyBus({super.key});
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    title: 'FindMyBus', debugShowCheckedModeBanner: false,
+    theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xff087f80),
+      scaffoldBackgroundColor: const Color(0xfff5f8fa)),
+    home: const BusHome(),
+  );
+}
+String timeLabel(int minutes) {
   final h = (minutes ~/ 60) % 24, m = minutes % 60;
   return '${h % 12 == 0 ? 12 : h % 12}:${m.toString().padLeft(2, '0')} ${h < 12 ? 'AM' : 'PM'}';
 }
-class BusConnect extends StatelessWidget {
-  const BusConnect({super.key});
-  @override
-  Widget build(BuildContext context) => MaterialApp(
-    debugShowCheckedModeBanner: false,
-    title: 'FindMyBus',
-    theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xff087f80), scaffoldBackgroundColor: const Color(0xfff4f7fa)),
-    home: const BusHome(),
-  );
+int minutesNow() {
+  final now = DateTime.now();
+  return now.hour * 60 + now.minute;
 }
 class BusHome extends StatefulWidget {
   const BusHome({super.key});
@@ -26,151 +40,270 @@ class BusHome extends StatefulWidget {
   State<BusHome> createState() => _BusHomeState();
 }
 class _BusHomeState extends State<BusHome> {
-  final towns = ['Thrissur', 'Guruvayur', 'Kunnamkulam', 'Ernakulam', 'Aluva', 'Chalakudy', 'Palakkad'];
-  final buses = <Bus>[
-    const Bus('Malabar Express', 'Thrissur', 'Guruvayur', 420, 65),
-    const Bus('City Rider', 'Thrissur', 'Guruvayur', 445, 65),
-    const Bus('Green Line', 'Thrissur', 'Guruvayur', 490, 65),
-    const Bus('Coastal Star', 'Thrissur', 'Guruvayur', 535, 65),
-    const Bus('Royal Travels', 'Thrissur', 'Guruvayur', 600, 65),
-    const Bus('Metro Link', 'Ernakulam', 'Aluva', 450, 50),
-    const Bus('Blue Bird', 'Ernakulam', 'Aluva', 495, 50),
-    const Bus('Highway Rider', 'Thrissur', 'Chalakudy', 480, 45),
-  ];
-  String from = 'Thrissur', to = 'Guruvayur';
-  int tab = 0, separation = 15;
-  TimeOfDay selectedTime = const TimeOfDay(hour: 11, minute: 0);
-  final name = TextEditingController();
-  List<Bus> get route => buses.where((b) => b.from == from && b.to == to).toList()
-    ..sort((a, b) => a.departure.compareTo(b.departure));
-  List<(int, int)> get suggestions {
-    final list = route, gaps = <(int, int)>[];
-    for (var i = 0; i < list.length - 1; i++) {
-      final gap = list[i + 1].departure - list[i].departure;
-      if (gap >= separation * 2) gaps.add((list[i].departure + gap ~/ 2, gap));
-    }
-    gaps.sort((a, b) => b.$2.compareTo(a.$2));
-    return gaps.take(3).toList();
+  final db = FirebaseFirestore.instance;
+  final auth = FirebaseAuth.instance;
+  final business = TextEditingController();
+  final routeName = TextEditingController();
+  final from = TextEditingController();
+  final to = TextEditingController();
+  final stops = TextEditingController();
+  final busName = TextEditingController();
+  final searchFrom = TextEditingController();
+  final searchTo = TextEditingController();
+  TimeOfDay departure = const TimeOfDay(hour: 8, minute: 0);
+  int tab = 0;
+  String? selectedBusinessId, selectedRouteId;
+  bool busy = false;
+  @override
+  void dispose() {
+    for (final c in [business, routeName, from, to, stops, busName, searchFrom, searchTo]) { c.dispose(); }
+    super.dispose();
   }
-  @override
-  void dispose() { name.dispose(); super.dispose(); }
-  Widget panel(String heading, Widget child) => Card(
-    elevation: 0, color: Colors.white,
-    child: Padding(padding: const EdgeInsets.all(20), child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [Text(heading, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), const SizedBox(height: 14), child],
-    )),
-  );
-  Widget townPicker(String label, String value, ValueChanged<String?> change) =>
-    DropdownButtonFormField<String>(
-      value: value,
-      decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
-      items: towns.map((town) => DropdownMenuItem(value: town, child: Text(town))).toList(),
-      onChanged: change,
-    );
-  @override
-  Widget build(BuildContext context) {
-    final wide = MediaQuery.sizeOf(context).width > 750, services = route;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Row(children: [Icon(Icons.directions_bus, color: Color(0xff087f80)), SizedBox(width: 10), Flexible(child: Text('FindMyBus'))]),
-        actions: wide ? [
-          TextButton(onPressed: () => setState(() => tab = 0), child: const Text('Passenger Search')),
-          TextButton(onPressed: () => setState(() => tab = 1), child: const Text('Owner Dashboard')),
-          const SizedBox(width: 16),
-        ] : null,
-      ),
-      bottomNavigationBar: wide ? null : NavigationBar(
-        selectedIndex: tab, onDestinationSelected: (value) => setState(() => tab = value),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.search), label: 'Find buses'),
-          NavigationDestination(icon: Icon(Icons.analytics), label: 'Bus owner'),
-        ],
-      ),
-      body: SingleChildScrollView(child: Center(child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1050),
-        child: Padding(padding: const EdgeInsets.all(16), child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(28),
-              decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xff11263d), Color(0xff087f80)]), borderRadius: BorderRadius.circular(20)),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text(tab == 0 ? 'Find your next bus' : 'Optimize your departure time',
-                  style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white)),
-                const SizedBox(height: 8),
-                Text(tab == 0 ? 'Search routes and compare scheduled departures.' : 'Discover timetable gaps and manage bus departures.',
-                  style: const TextStyle(color: Colors.white70)),
-                const SizedBox(height: 12),
-                const Text('KERALA • SAMPLE DATA', style: TextStyle(color: Colors.white, fontSize: 11)),
-              ]),
-            ),
-            const SizedBox(height: 16),
-            panel('Select route', Wrap(spacing: 12, runSpacing: 12, children: [
-              SizedBox(width: wide ? 290 : double.infinity, child: townPicker('From', from, (v) => setState(() => from = v!))),
-              IconButton.filledTonal(onPressed: () => setState(() { final old = from; from = to; to = old; }), icon: const Icon(Icons.swap_horiz)),
-              SizedBox(width: wide ? 290 : double.infinity, child: townPicker('To', to, (v) => setState(() => to = v!))),
-            ])),
-            const SizedBox(height: 12),
-            if (tab == 0)
-              panel('${services.length} bus services', services.isEmpty
-                ? const Text('No sample services for this route. Try Thrissur → Guruvayur.')
-                : Column(children: services.map((bus) => ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const CircleAvatar(child: Icon(Icons.directions_bus)),
-                    title: Text(bus.name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('Departure ${clock(bus.departure)} • Arrival ${clock(bus.departure + bus.duration)}'),
-                    trailing: Text('${bus.duration} min'),
-                  )).toList()))
-            else ...[
-              panel('Best departure slots', Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Minimum separation: $separation minutes'),
-                Slider(value: separation.toDouble(), min: 5, max: 30, divisions: 5,
-                  label: '$separation min', onChanged: (v) => setState(() => separation = v.round())),
-                if (suggestions.isEmpty) const Text('Add two services with a sufficient gap.'),
-                ...suggestions.map((g) => Card(
-                  color: const Color(0xffe4f5ee),
-                  child: ListTile(leading: const Icon(Icons.auto_awesome, color: Color(0xff087f80)),
-                    title: Text(clock(g.$1), style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('Midpoint of a ${g.$2}-minute gap')),
-                )),
-                const SizedBox(height: 8),
-                const Text('Gap-only suggestions; demand, permits, traffic and profitability are not verified.',
-                  style: TextStyle(fontSize: 12, color: Colors.black54)),
-              ])),
-              panel('Add bus departure', Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                TextField(controller: name, decoration: const InputDecoration(labelText: 'Bus name', border: OutlineInputBorder())),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(onPressed: () async {
-                  final picked = await showTimePicker(context: context, initialTime: selectedTime);
-                  if (picked != null) setState(() => selectedTime = picked);
-                }, icon: const Icon(Icons.schedule), label: Text('Departure: ${selectedTime.format(context)}')),
-                const SizedBox(height: 12),
-                FilledButton.icon(onPressed: () {
-                  if (name.text.trim().isEmpty || from == to) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Enter a bus name and choose different towns')));
-                    return;
+  void notice(String message) {
+    if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+  }
+  Future<void> perform(Future<void> Function() work) async {
+    setState(() => busy = true);
+    try { await work(); } on FirebaseException catch (e) {
+      notice(e.message ?? e.code);
+    } catch (e) { notice(e.toString()); }
+    finally { if (mounted) setState(() => busy = false); }
+  }
+  Future<void> signIn(bool register, String email, String password) async {
+    await perform(() async {
+      if (register) {
+        await auth.createUserWithEmailAndPassword(email: email.trim(), password: password);
+      } else {
+        await auth.signInWithEmailAndPassword(email: email.trim(), password: password);
+      }
+      if (mounted) Navigator.of(context).pop();
+    });
+  }
+  void loginDialog() {
+    final email = TextEditingController(), password = TextEditingController();
+    bool register = false;
+    showDialog(context: context, builder: (context) => StatefulBuilder(builder: (context, refresh) =>
+      AlertDialog(title: Text(register ? 'Create owner account' : 'Owner login'),
+        content: SizedBox(width: 360, child: Column(mainAxisSize: MainAxisSize.min, children: [
+          TextField(controller: email, keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(labelText: 'Email')),
+          TextField(controller: password, obscureText: true,
+            decoration: const InputDecoration(labelText: 'Password (6+ characters)')),
+          TextButton(onPressed: () => refresh(() => register = !register),
+            child: Text(register ? 'Already registered? Sign in' : 'New business owner? Register')),
+        ])),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          FilledButton(onPressed: () => signIn(register, email.text, password.text),
+            child: Text(register ? 'Register' : 'Sign in')),
+        ])));
+  }
+  Widget panel(String title, Widget child) => Card(elevation: 0, color: Colors.white,
+    child: Padding(padding: const EdgeInsets.all(18), child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 19)),
+        const SizedBox(height: 12), child,
+      ])));
+  Widget field(TextEditingController c, String label) => TextField(controller: c,
+    decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()));
+  Widget services() => StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+    stream: db.collection('services').where('published', isEqualTo: true).snapshots(),
+    builder: (context, snap) {
+      if (snap.hasError) return Text('Unable to load timetables: ${snap.error}');
+      if (!snap.hasData) return const Center(child: CircularProgressIndicator());
+      final a = searchFrom.text.trim().toLowerCase(), b = searchTo.text.trim().toLowerCase();
+      final matches = snap.data!.docs.where((d) {
+        final x = d.data();
+        final stops = (x['stops'] as List<dynamic>? ?? []).map((s) => s.toString().toLowerCase()).toList();
+        final i = a.isEmpty ? 0 : stops.indexOf(a);
+        final j = b.isEmpty ? stops.length - 1 : stops.indexOf(b);
+        return i >= 0 && j > i;
+      }).toList();
+      matches.sort((a, b) => ((a.data()['departureMinutes'] as num?)?.toInt() ?? 0)
+        .compareTo((b.data()['departureMinutes'] as num?)?.toInt() ?? 0));
+      final upcoming = matches.where((d) =>
+        ((d.data()['departureMinutes'] as num?)?.toInt() ?? 0) >= minutesNow()).take(4).toList();
+      Widget tile(QueryDocumentSnapshot<Map<String, dynamic>> doc) {
+        final d = doc.data();
+        return ListTile(
+          leading: const CircleAvatar(child: Icon(Icons.directions_bus)),
+          title: Text(d['busName']?.toString() ?? 'Bus'),
+          subtitle: Text('${d['businessName'] ?? ''} • ${(d['stops'] as List<dynamic>? ?? []).join(' → ')}'),
+          trailing: Text(timeLabel((d['departureMinutes'] as num?)?.toInt() ?? 0),
+            style: const TextStyle(fontWeight: FontWeight.bold)),
+        );
+      }
+      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        panel('Next ${upcoming.length} upcoming buses', upcoming.isEmpty
+          ? const Text('No more scheduled departures today for this route.')
+          : Column(children: upcoming.map(tile).toList())),
+        panel('All matching services (${matches.length})', matches.isEmpty
+          ? const Text('No published buses match this stop-to-stop search.')
+          : Column(children: matches.map(tile).toList())),
+        const Text('Scheduled departure times only. These are not live GPS arrival estimates.',
+          style: TextStyle(color: Colors.black54, fontSize: 12)),
+      ]);
+    });
+  Widget passenger() => Column(children: [
+    panel('Search by boarding and destination stop', Column(children: [
+      field(searchFrom, 'Boarding location / stop'), const SizedBox(height: 10),
+      field(searchTo, 'Destination stop'), const SizedBox(height: 10),
+      FilledButton.icon(onPressed: () => setState(() {}), icon: const Icon(Icons.search),
+        label: const Text('Find buses')),
+    ])),
+    services(),
+  ]);
+  Widget owner() => StreamBuilder<User?>(
+    stream: auth.authStateChanges(),
+    builder: (context, snapshot) {
+      final user = snapshot.data;
+      if (user == null) return panel('Business owner access', Column(children: [
+        const Text('Sign in or register to create a bus business, routes and timetables.'),
+        const SizedBox(height: 12),
+        FilledButton(onPressed: loginDialog, child: const Text('Sign in / Register')),
+      ]));
+      return Column(children: [
+        panel('Owner account', Row(children: [
+          Expanded(child: Text(user.email ?? 'Signed in')),
+          TextButton(onPressed: () => auth.signOut(), child: const Text('Sign out')),
+        ])),
+        panel('Create bus business', Column(children: [
+          field(business, 'Business / operator name'), const SizedBox(height: 10),
+          FilledButton.icon(onPressed: busy ? null : () => perform(() async {
+            if (business.text.trim().isEmpty) throw Exception('Enter a business name');
+            final ref = await db.collection('businesses').add({
+              'ownerId': user.uid, 'name': business.text.trim(),
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+            setState(() => selectedBusinessId = ref.id);
+            business.clear(); notice('Business created');
+          }), icon: const Icon(Icons.add_business), label: const Text('Create business')),
+        ])),
+        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+          stream: db.collection('businesses').where('ownerId', isEqualTo: user.uid).snapshots(),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) return Text('Business loading failed: ${snapshot.error}');
+            if (!snapshot.hasData) return const CircularProgressIndicator();
+            final businesses = snapshot.data!.docs;
+            if (businesses.isEmpty) return const Text('Create a business to add routes.');
+            final selected = businesses.any((d) => d.id == selectedBusinessId)
+              ? selectedBusinessId! : businesses.first.id;
+            final operator = businesses.firstWhere((d) => d.id == selected);
+            return Column(children: [
+              panel('Manage business', DropdownButtonFormField<String>(
+                value: selected, isExpanded: true,
+                decoration: const InputDecoration(labelText: 'Business', border: OutlineInputBorder()),
+                items: businesses.map((d) => DropdownMenuItem(value: d.id,
+                  child: Text(d.data()['name']?.toString() ?? 'Business'))).toList(),
+                onChanged: (v) => setState(() { selectedBusinessId = v; selectedRouteId = null; }),
+              )),
+              panel('Create route', Column(children: [
+                field(routeName, 'Route name'), const SizedBox(height: 10),
+                field(from, 'Starting stop'), const SizedBox(height: 10),
+                field(to, 'Last stop'), const SizedBox(height: 10),
+                field(stops, 'Intermediate stops (comma separated)'), const SizedBox(height: 10),
+                FilledButton.icon(onPressed: busy ? null : () => perform(() async {
+                  final start = from.text.trim(), end = to.text.trim();
+                  if (start.isEmpty || end.isEmpty || start.toLowerCase() == end.toLowerCase()) {
+                    throw Exception('Enter different starting and ending stops');
                   }
-                  setState(() {
-                    buses.add(Bus(name.text.trim(), from, to, selectedTime.hour * 60 + selectedTime.minute, 60));
-                    name.clear();
+                  final routeStops = [start, ...stops.text.split(',').map((s) => s.trim())
+                    .where((s) => s.isNotEmpty), end];
+                  final ref = await db.collection('routes').add({
+                    'ownerId': user.uid, 'businessId': selected,
+                    'businessName': operator.data()['name'], 'name': routeName.text.trim().isEmpty
+                      ? '$start – $end' : routeName.text.trim(),
+                    'stops': routeStops, 'createdAt': FieldValue.serverTimestamp(),
                   });
-                }, icon: const Icon(Icons.add), label: const Text('Add to timetable')),
+                  setState(() => selectedRouteId = ref.id);
+                  routeName.clear(); from.clear(); to.clear(); stops.clear();
+                  notice('Route created');
+                }), icon: const Icon(Icons.alt_route), label: const Text('Save route')),
               ])),
-              panel('Existing departures', services.isEmpty
-                ? const Text('No departures yet.')
-                : Column(children: services.map((bus) => ListTile(
-                  title: Text(bus.name), subtitle: Text(clock(bus.departure)),
-                  trailing: IconButton(tooltip: 'Remove', icon: const Icon(Icons.delete_outline),
-                    onPressed: () => setState(() => buses.remove(bus))),
-                )).toList())),
-            ],
-            const SizedBox(height: 18),
-            const Text('Prototype • Illustrative schedules only. Changes are session-only.',
-              textAlign: TextAlign.center, style: TextStyle(fontSize: 12, color: Colors.black54)),
-          ],
-        )),
-      ))),
-    );
-  }
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: db.collection('routes').where('businessId', isEqualTo: selected).snapshots(),
+                builder: (context, routesSnap) {
+                  if (routesSnap.hasError) return Text('Routes loading failed: ${routesSnap.error}');
+                  if (!routesSnap.hasData) return const CircularProgressIndicator();
+                  final routes = routesSnap.data!.docs;
+                  if (routes.isEmpty) return const Text('Create a route before adding departures.');
+                  final selectedRoute = routes.any((d) => d.id == selectedRouteId)
+                    ? selectedRouteId! : routes.first.id;
+                  final route = routes.firstWhere((d) => d.id == selectedRoute);
+                  return Column(children: [
+                    panel('Publish bus timetable', Column(children: [
+                      DropdownButtonFormField<String>(
+                        value: selectedRoute, isExpanded: true,
+                        decoration: const InputDecoration(labelText: 'Route', border: OutlineInputBorder()),
+                        items: routes.map((d) => DropdownMenuItem(value: d.id,
+                          child: Text(d.data()['name']?.toString() ?? 'Route'))).toList(),
+                        onChanged: (v) => setState(() => selectedRouteId = v)),
+                      const SizedBox(height: 10),
+                      field(busName, 'Bus name'), const SizedBox(height: 10),
+                      OutlinedButton.icon(onPressed: () async {
+                        final value = await showTimePicker(context: context, initialTime: departure);
+                        if (value != null) setState(() => departure = value);
+                      }, icon: const Icon(Icons.schedule),
+                        label: Text('Departure: ${departure.format(context)}')),
+                      const SizedBox(height: 10),
+                      FilledButton.icon(onPressed: busy ? null : () => perform(() async {
+                        if (busName.text.trim().isEmpty) throw Exception('Enter bus name');
+                        await db.collection('services').add({
+                          'ownerId': user.uid, 'businessId': selected, 'routeId': selectedRoute,
+                          'businessName': operator.data()['name'], 'busName': busName.text.trim(),
+                          'stops': route.data()['stops'],
+                          'departureMinutes': departure.hour * 60 + departure.minute,
+                          'published': true, 'createdAt': FieldValue.serverTimestamp(),
+                        });
+                        busName.clear(); notice('Timetable published to passenger search');
+                      }), icon: const Icon(Icons.publish), label: const Text('Publish timetable')),
+                    ])),
+                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: db.collection('services').where('ownerId', isEqualTo: user.uid).snapshots(),
+                      builder: (context, serviceSnap) {
+                        if (!serviceSnap.hasData) return const SizedBox.shrink();
+                        final mine = serviceSnap.data!.docs.where((d) =>
+                          d.data()['businessId'] == selected).toList();
+                        return panel('Your published buses (${mine.length})', Column(children:
+                          mine.map((d) => ListTile(
+                            title: Text(d.data()['busName']?.toString() ?? 'Bus'),
+                            subtitle: Text(timeLabel((d.data()['departureMinutes'] as num).toInt())),
+                            trailing: IconButton(icon: const Icon(Icons.delete_outline),
+                              onPressed: () => perform(() => d.reference.delete())),
+                          )).toList()));
+                      }),
+                  ]);
+                }),
+            ]);
+          }),
+      ]);
+    });
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Row(children: [
+      Icon(Icons.directions_bus, color: Color(0xff087f80)), SizedBox(width: 8), Text('FindMyBus'),
+    ]), actions: [
+      TextButton(onPressed: () => setState(() => tab = 0), child: const Text('Passengers')),
+      TextButton(onPressed: () => setState(() => tab = 1), child: const Text('Bus owners')),
+    ]),
+    body: SingleChildScrollView(child: Center(child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 900),
+      child: Padding(padding: const EdgeInsets.all(16), child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Container(padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(18),
+              gradient: const LinearGradient(colors: [Color(0xff102c49), Color(0xff078e91)])),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(tab == 0 ? 'Find your next bus' : 'Manage your bus business',
+                style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              Text(tab == 0 ? 'Search published services by boarding stop and destination.'
+                : 'Create businesses, routes, stops and scheduled departures.',
+                style: const TextStyle(color: Colors.white70)),
+            ])),
+          const SizedBox(height: 14),
+          if (tab == 0) passenger() else owner(),
+        ])),
+    ))),
+  );
 }
