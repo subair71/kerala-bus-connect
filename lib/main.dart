@@ -15,7 +15,7 @@ class BusConnect extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MaterialApp(
     debugShowCheckedModeBanner: false,
-    title: 'Kerala Bus Connect',
+    title: 'FindMyBus',
     theme: ThemeData(useMaterial3: true, colorSchemeSeed: const Color(0xff087f80), scaffoldBackgroundColor: const Color(0xfff4f7fa)),
     home: const BusHome(),
   );
@@ -73,7 +73,7 @@ class _BusHomeState extends State<BusHome> {
     final wide = MediaQuery.sizeOf(context).width > 750, services = route;
     return Scaffold(
       appBar: AppBar(
-        title: const Row(children: [Icon(Icons.directions_bus, color: Color(0xff087f80)), SizedBox(width: 10), Flexible(child: Text('Kerala Bus Connect'))]),
+        title: const Row(children: [Icon(Icons.directions_bus, color: Color(0xff087f80)), SizedBox(width: 10), Flexible(child: Text('FindMyBus'))]),
         actions: wide ? [
           TextButton(onPressed: () => setState(() => tab = 0), child: const Text('Passenger Search')),
           TextButton(onPressed: () => setState(() => tab = 1), child: const Text('Owner Dashboard')),
