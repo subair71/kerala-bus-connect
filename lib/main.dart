@@ -491,155 +491,186 @@ class _BusHomeState extends State<BusHome> {
               ),
               color:
                   isOffOnSelectedDay ? const Color(0xfffff9f5) : Colors.white,
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: isOffOnSelectedDay
-                              ? Colors.orange.shade100
-                              : const Color(0xffe0f2f1),
-                          foregroundColor: isOffOnSelectedDay
-                              ? Colors.deepOrange
-                              : const Color(0xff087f80),
-                          child: const Icon(Icons.directions_bus),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => openTrainRouteSheet(d, a, b, effectiveDay),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: isOffOnSelectedDay
+                                ? Colors.orange.shade100
+                                : const Color(0xffe0f2f1),
+                            foregroundColor: isOffOnSelectedDay
+                                ? Colors.deepOrange
+                                : const Color(0xff087f80),
+                            child: const Icon(Icons.directions_bus),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  d['busName']?.toString() ?? 'Bus',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                Text(
+                                  '${d['businessName'] ?? 'Operator'} • ${d['routeName'] ?? stopsList.join(' → ')}',
+                                  style: TextStyle(
+                                    color: Colors.grey.shade700,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                d['busName']?.toString() ?? 'Bus',
+                                timeLabel(boardTime),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+                                  fontSize: 17,
+                                  color: Color(0xff087f80),
                                 ),
                               ),
-                              Text(
-                                '${d['businessName'] ?? 'Operator'} • ${d['routeName'] ?? stopsList.join(' → ')}',
-                                style: TextStyle(
-                                  color: Colors.grey.shade700,
-                                  fontSize: 13,
+                              if (destTime > boardTime)
+                                Text(
+                                  'Arr: ${timeLabel(destTime)} (${destTime - boardTime}m)',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade600,
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              timeLabel(boardTime),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 17,
-                                color: Color(0xff087f80),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Stops: ${stopsList.join(' → ')}',
+                        style:
+                            TextStyle(fontSize: 12, color: Colors.grey.shade800),
+                      ),
+                      if (hasCustomTimings) ...[
+                        const SizedBox(height: 6),
+                        Wrap(
+                          spacing: 8,
+                          children: stopsList.map((stop) {
+                            final stopTimings =
+                                d['stopTimings'] as Map<String, dynamic>?;
+                            final stopMinutes = stopTimings?[stop];
+                            return Chip(
+                              visualDensity: VisualDensity.compact,
+                              labelPadding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                              label: Text(
+                                stopMinutes != null
+                                    ? '$stop: ${timeLabel((stopMinutes as num).toInt())}'
+                                    : stop,
+                                style: const TextStyle(fontSize: 11),
                               ),
-                            ),
-                            if (destTime > boardTime)
-                              Text(
-                                'Arr: ${timeLabel(destTime)} (${destTime - boardTime}m)',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade600,
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                      if (offDays.isNotEmpty ||
+                          (offTimings != null && offTimings.isNotEmpty)) ...[
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: [
+                            if (offDays.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isOffOnSelectedDay
+                                      ? Colors.red.shade50
+                                      : Colors.orange.shade50,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: isOffOnSelectedDay
+                                        ? Colors.red.shade300
+                                        : Colors.orange.shade300,
+                                  ),
+                                ),
+                                child: Text(
+                                  isOffOnSelectedDay
+                                      ? '⚠️ No service on $effectiveDay (Off: ${offDays.join(', ')})'
+                                      : 'Off Days: ${offDays.join(', ')}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: isOffOnSelectedDay
+                                        ? Colors.red.shade900
+                                        : Colors.brown.shade800,
+                                  ),
+                                ),
+                              ),
+                            if (offTimings != null && offTimings.isNotEmpty)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade100,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'ℹ️ Note: $offTimings',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey.shade800,
+                                  ),
                                 ),
                               ),
                           ],
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      'Stops: ${stopsList.join(' → ')}',
-                      style:
-                          TextStyle(fontSize: 12, color: Colors.grey.shade800),
-                    ),
-                    if (hasCustomTimings) ...[
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 8,
-                        children: stopsList.map((stop) {
-                          final stopTimings =
-                              d['stopTimings'] as Map<String, dynamic>?;
-                          final stopMinutes = stopTimings?[stop];
-                          return Chip(
-                            visualDensity: VisualDensity.compact,
-                            labelPadding:
-                                const EdgeInsets.symmetric(horizontal: 4),
-                            label: Text(
-                              stopMinutes != null
-                                  ? '$stop: ${timeLabel((stopMinutes as num).toInt())}'
-                                  : stop,
-                              style: const TextStyle(fontSize: 11),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                    if (offDays.isNotEmpty ||
-                        (offTimings != null && offTimings.isNotEmpty)) ...[
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 6,
-                        runSpacing: 4,
+                      const Divider(height: 20),
+                      Row(
                         children: [
-                          if (offDays.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isOffOnSelectedDay
-                                    ? Colors.red.shade50
-                                    : Colors.orange.shade50,
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: isOffOnSelectedDay
-                                      ? Colors.red.shade300
-                                      : Colors.orange.shade300,
-                                ),
-                              ),
-                              child: Text(
-                                isOffOnSelectedDay
-                                    ? '⚠️ No service on $effectiveDay (Off: ${offDays.join(', ')})'
-                                    : 'Off Days: ${offDays.join(', ')}',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: isOffOnSelectedDay
-                                      ? Colors.red.shade900
-                                      : Colors.brown.shade800,
-                                ),
-                              ),
+                          const Icon(Icons.route,
+                              size: 15, color: Color(0xff087f80)),
+                          const SizedBox(width: 6),
+                          const Text(
+                            'Click to view train-style route & stop schedule',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xff087f80),
                             ),
-                          if (offTimings != null && offTimings.isNotEmpty)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                'ℹ️ Note: $offTimings',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade800,
-                                ),
-                              ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'View Timeline',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Colors.grey.shade600,
                             ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.arrow_forward_ios,
+                              size: 11, color: Colors.grey.shade500),
                         ],
                       ),
                     ],
-                  ],
+                  ),
                 ),
               ),
             );
@@ -2004,4 +2035,778 @@ class _BusHomeState extends State<BusHome> {
           ),
         ),
       );
+
+  void openTrainRouteSheet(
+    Map<String, dynamic> data,
+    String fromQ,
+    String toQ,
+    String day,
+  ) {
+    final isWide = MediaQuery.of(context).size.width > 650;
+    if (isWide) {
+      showDialog(
+        context: context,
+        builder: (ctx) => Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 580, maxHeight: 760),
+            child: TrainRouteView(
+              data: data,
+              queryFrom: fromQ,
+              queryTo: toQ,
+              effectiveDay: day,
+              onClose: () => Navigator.pop(ctx),
+            ),
+          ),
+        ),
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (ctx) => DraggableScrollableSheet(
+          initialChildSize: 0.88,
+          minChildSize: 0.5,
+          maxChildSize: 0.95,
+          builder: (ctx, scroll) => Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: TrainRouteView(
+              data: data,
+              queryFrom: fromQ,
+              queryTo: toQ,
+              effectiveDay: day,
+              scrollController: scroll,
+              onClose: () => Navigator.pop(ctx),
+            ),
+          ),
+        ),
+      );
+    }
+  }
 }
+
+class TrainRouteView extends StatelessWidget {
+  final Map<String, dynamic> data;
+  final String queryFrom;
+  final String queryTo;
+  final String effectiveDay;
+  final ScrollController? scrollController;
+  final VoidCallback? onClose;
+
+  const TrainRouteView({
+    super.key,
+    required this.data,
+    required this.queryFrom,
+    required this.queryTo,
+    required this.effectiveDay,
+    this.scrollController,
+    this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final busName = data['busName']?.toString() ?? 'Bus';
+    final businessName = data['businessName']?.toString() ?? 'Bus Operator';
+    final routeName = data['routeName']?.toString() ?? 'Route';
+    final stopsList = (data['stops'] as List<dynamic>? ?? [])
+        .map((e) => e.toString())
+        .toList();
+    final offDays = (data['offDays'] as List<dynamic>? ?? [])
+        .map((e) => e.toString())
+        .toList();
+    final offTimings = data['offTimingsNote']?.toString();
+    final depM = (data['departureMinutes'] as num?)?.toInt() ?? 0;
+    final stopTimings = data['stopTimings'] as Map<String, dynamic>?;
+
+    final isOffToday = offDays.contains(effectiveDay);
+    final isToday = (effectiveDay == todayName());
+    final curMinutes = minutesNow();
+
+    // Compute times for each stop
+    final List<int> times = [];
+    int prevTime = depM;
+    for (int i = 0; i < stopsList.length; i++) {
+      final stop = stopsList[i];
+      if (stopTimings != null && stopTimings.containsKey(stop)) {
+        prevTime = (stopTimings[stop] as num).toInt();
+      } else if (i > 0) {
+        prevTime += 15;
+      }
+      times.add(prevTime);
+    }
+
+    final int originTime = times.isNotEmpty ? times.first : depM;
+    final int finalTime = times.isNotEmpty ? times.last : (depM + 30);
+    final int totalDuration = (finalTime - originTime);
+
+    // Identify user's selected segment
+    final int boardIdx = stopsList.indexWhere(
+      (s) => s.trim().toLowerCase() == queryFrom.trim().toLowerCase(),
+    );
+    final int destIdx = stopsList.indexWhere(
+      (s) => s.trim().toLowerCase() == queryTo.trim().toLowerCase(),
+    );
+    final bool hasSegment = boardIdx >= 0 && destIdx > boardIdx;
+
+    // Determine current live bus location index (if running today)
+    int liveBusStopIndex = -1;
+    bool tripCompleted = false;
+    bool tripNotStarted = false;
+
+    if (isToday && !isOffToday && times.isNotEmpty) {
+      if (curMinutes < times.first) {
+        tripNotStarted = true;
+      } else if (curMinutes > times.last) {
+        tripCompleted = true;
+      } else {
+        for (int i = times.length - 1; i >= 0; i--) {
+          if (curMinutes >= times[i]) {
+            liveBusStopIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
+    String statusText;
+    Color statusBg;
+    Color statusFg;
+    IconData statusIcon;
+
+    if (isOffToday) {
+      statusText = 'No service on $effectiveDay (Off: ${offDays.join(', ')})';
+      statusBg = Colors.deepOrange.shade50;
+      statusFg = Colors.deepOrange.shade900;
+      statusIcon = Icons.warning_amber_rounded;
+    } else if (!isToday) {
+      statusText =
+          'Scheduled for $effectiveDay • Departs at ${timeLabel(originTime)}';
+      statusBg = const Color(0xffe0f2f1);
+      statusFg = const Color(0xff087f80);
+      statusIcon = Icons.calendar_today;
+    } else if (tripNotStarted) {
+      final waitM = times.first - curMinutes;
+      statusText =
+          'Yet to depart • Starts in $waitM mins (${timeLabel(times.first)})';
+      statusBg = Colors.teal.shade50;
+      statusFg = Colors.teal.shade900;
+      statusIcon = Icons.timer_outlined;
+    } else if (tripCompleted) {
+      statusText = 'Completed today\'s run (${timeLabel(times.last)})';
+      statusBg = Colors.grey.shade100;
+      statusFg = Colors.grey.shade800;
+      statusIcon = Icons.task_alt;
+    } else {
+      final nextIdx = (liveBusStopIndex + 1 < stopsList.length)
+          ? liveBusStopIndex + 1
+          : liveBusStopIndex;
+      final nextStop = stopsList[nextIdx];
+      final nextTime = times[nextIdx];
+      final diff = nextTime - curMinutes;
+      statusText = diff > 0
+          ? 'Live: Arriving at $nextStop in $diff mins (${timeLabel(nextTime)})'
+          : 'Live: At $nextStop station now';
+      statusBg = Colors.green.shade50;
+      statusFg = Colors.green.shade900;
+      statusIcon = Icons.directions_bus;
+    }
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Train app style top bar
+        Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 16, 18),
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xff0e2844), Color(0xff087f80)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: Colors.white24,
+                    foregroundColor: Colors.white,
+                    child: Icon(Icons.directions_bus),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          busName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          '$businessName • $routeName',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (onClose != null)
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white),
+                      onPressed: onClose,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              // Route Overview with train style arrow
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          timeLabel(originTime),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          stopsList.isNotEmpty ? stopsList.first : 'Origin',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Column(
+                      children: [
+                        Text(
+                          '${totalDuration ~/ 60 > 0 ? "${totalDuration ~/ 60}h " : ""}${totalDuration % 60}m',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            Container(
+                              width: 60,
+                              height: 2,
+                              color: Colors.white54,
+                            ),
+                            const Icon(
+                              Icons.arrow_forward,
+                              size: 14,
+                              color: Colors.white,
+                            ),
+                          ],
+                        ),
+                        Text(
+                          '${stopsList.length} Stops',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 10,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          timeLabel(finalTime),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          stopsList.isNotEmpty ? stopsList.last : 'Final',
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+
+        // Live status chip
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          color: statusBg,
+          child: Row(
+            children: [
+              Icon(statusIcon, size: 16, color: statusFg),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  statusText,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: statusFg,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Passenger's Trip Highlight banner (if matched)
+        if (hasSegment)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xfff0fdf4),
+              border: Border(
+                bottom: BorderSide(color: Colors.green.shade200),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle_outline,
+                    size: 16, color: Colors.green),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Your Trip: ${stopsList[boardIdx]} (${timeLabel(times[boardIdx])}) → ${stopsList[destIdx]} (${timeLabel(times[destIdx])}) • ${times[destIdx] - times[boardIdx]} mins (${destIdx - boardIdx} stops)',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green.shade900,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Non-service note (if any)
+        if (offTimings != null && offTimings.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            color: Colors.amber.shade50,
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline, size: 14, color: Colors.brown),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Schedule Note: $offTimings',
+                    style: const TextStyle(fontSize: 11, color: Colors.brown),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Vertical Train Route Station Ladder
+        Expanded(
+          child: ListView.builder(
+            controller: scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            itemCount: stopsList.length,
+            itemBuilder: (context, i) {
+              final stopName = stopsList[i];
+              final stopTime = times[i];
+              final isFirst = i == 0;
+              final isLast = i == stopsList.length - 1;
+              final isBoarding = i == boardIdx;
+              final isDest = i == destIdx;
+              final inSegment = hasSegment && (i >= boardIdx && i <= destIdx);
+              final isPassed = isToday &&
+                  !isOffToday &&
+                  !tripNotStarted &&
+                  (tripCompleted || i <= liveBusStopIndex);
+              final isLiveHere = isToday &&
+                  !isOffToday &&
+                  !tripNotStarted &&
+                  !tripCompleted &&
+                  (i == liveBusStopIndex);
+
+              // Ladder line colors
+              final Color topTrackColor =
+                  (hasSegment && i > boardIdx && i <= destIdx)
+                      ? const Color(0xff087f80)
+                      : (isPassed
+                          ? Colors.teal.shade200
+                          : Colors.grey.shade300);
+              final Color bottomTrackColor =
+                  (hasSegment && i >= boardIdx && i < destIdx)
+                      ? const Color(0xff087f80)
+                      : (isPassed && i < liveBusStopIndex
+                          ? Colors.teal.shade200
+                          : Colors.grey.shade300);
+
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Column 1: Station Scheduled Time
+                    SizedBox(
+                      width: 72,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const SizedBox(height: 10),
+                          Text(
+                            timeLabel(stopTime),
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: (isBoarding || isDest || isLiveHere)
+                                  ? FontWeight.bold
+                                  : FontWeight.w600,
+                              color: isBoarding
+                                  ? Colors.green.shade800
+                                  : (isDest
+                                      ? Colors.red.shade800
+                                      : (isPassed
+                                          ? Colors.grey.shade500
+                                          : Colors.black87)),
+                            ),
+                          ),
+                          if (i > 0)
+                            Text(
+                              '+${stopTime - times[i - 1]}m',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                          if (isPassed && !isLiveHere)
+                            Text(
+                              'Passed',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 10),
+
+                    // Column 2: Railway Track / Station Ladder Node
+                    SizedBox(
+                      width: 32,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Top connector track line
+                          if (!isFirst)
+                            Positioned(
+                              top: 0,
+                              bottom: 24,
+                              child: Container(
+                                width: (hasSegment &&
+                                        i > boardIdx &&
+                                        i <= destIdx)
+                                    ? 4
+                                    : 2,
+                                color: topTrackColor,
+                              ),
+                            ),
+                          // Bottom connector track line
+                          if (!isLast)
+                            Positioned(
+                              top: 24,
+                              bottom: 0,
+                              child: Container(
+                                width: (hasSegment &&
+                                        i >= boardIdx &&
+                                        i < destIdx)
+                                    ? 4
+                                    : 2,
+                                color: bottomTrackColor,
+                              ),
+                            ),
+
+                          // Station Node Marker
+                          Positioned(
+                            top: 10,
+                            child: isLiveHere
+                                ? Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.green
+                                              .withValues(alpha: 0.5),
+                                          blurRadius: 8,
+                                          spreadRadius: 2,
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.directions_bus,
+                                      size: 14,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : isBoarding
+                                    ? Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.green,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.my_location,
+                                          size: 12,
+                                          color: Colors.white,
+                                        ),
+                                      )
+                                    : isDest
+                                        ? Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(
+                                              color: Colors.red,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: const Icon(
+                                              Icons.location_on,
+                                              size: 12,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : Container(
+                                            width: 12,
+                                            height: 12,
+                                            decoration: BoxDecoration(
+                                              color: inSegment
+                                                  ? const Color(0xff087f80)
+                                                  : (isPassed
+                                                      ? Colors.teal.shade300
+                                                      : Colors.white),
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: inSegment
+                                                    ? const Color(0xff087f80)
+                                                    : Colors.grey.shade400,
+                                                width: 2,
+                                              ),
+                                            ),
+                                          ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(width: 10),
+
+                    // Column 3: Station Name & Status Information
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    stopName,
+                                    style: TextStyle(
+                                      fontSize:
+                                          (isBoarding || isDest) ? 15 : 14,
+                                      fontWeight: (isBoarding ||
+                                              isDest ||
+                                              isFirst ||
+                                              isLast)
+                                          ? FontWeight.bold
+                                          : FontWeight.w500,
+                                      color: isBoarding
+                                          ? Colors.green.shade900
+                                          : (isDest
+                                              ? Colors.red.shade900
+                                              : (isPassed && !isLiveHere
+                                                  ? Colors.grey.shade600
+                                                  : Colors.black87)),
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  'Stop #${i + 1}',
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+
+                            // Tags / Badges for Station
+                            Wrap(
+                              spacing: 6,
+                              runSpacing: 4,
+                              children: [
+                                if (isLiveHere)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.shade100,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      '🚌 BUS IS HERE NOW',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  ),
+                                if (isBoarding)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green.shade50,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: Colors.green.shade400,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      '🟢 YOUR BOARDING STOP',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green.shade900,
+                                      ),
+                                    ),
+                                  ),
+                                if (isDest)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.shade50,
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: Colors.red.shade400,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      '🔴 YOUR DESTINATION STOP',
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.red.shade900,
+                                      ),
+                                    ),
+                                  ),
+                                if (isFirst && !isBoarding)
+                                  Text(
+                                    'Origin Terminal Station',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                if (isLast && !isDest)
+                                  Text(
+                                    'Final Destination Terminal',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+
+        // Bottom close bar
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            border: Border(top: BorderSide(color: Colors.grey.shade200)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Train-style timetable track',
+                style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+              ),
+              FilledButton.tonal(
+                onPressed: onClose ?? () => Navigator.pop(context),
+                child: const Text('Close Route'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
