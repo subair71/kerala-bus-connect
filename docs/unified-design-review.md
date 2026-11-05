@@ -4,7 +4,7 @@ The white-and-orange home-screen style now extends to Routes, owner sign-in and 
 
 Shared tokens define the white surfaces, subtle grey outlines, orange actions, muted text and rounded controls. Every tab uses the same header and flat mobile navigation. Timetable controls wrap their content for long stop names and enlarged text.
 
-The existing Riverpod providers, Firebase repositories, validation and write guards remain in place. Sponsored ads remain confined to home, and mobile results continue to open in a bottom sheet.
+The existing Riverpod architecture, Firebase repositories, validation and write guards remain in place. Tracking and Crew show labelled previews while Firebase is pending, expose unavailable-data notices after errors, and switch to live records when the subscription recovers. These optional streams let Firestore handle reconnection rather than repeatedly restarting denied queries. Sponsored ads remain confined to home, and mobile results continue to open in a bottom sheet.
 
 ## Reviewed screenshots
 
@@ -23,7 +23,9 @@ These are native Flutter captures using isolated test repositories. Owner record
 
 ## Verification
 
-The design review passed architecture enforcement (84 Dart files, zero application setState), flutter analyze, all 52 tests and all 30 screenshot/layout checks. Coverage includes 320–1440px widths, 2× text, an open keyboard, all tabs, signed-in owner fixtures, editors and delete confirmation.
+The design review passed architecture enforcement (84 Dart files, zero application setState), flutter analyze, all 52 original tests and all 30 screenshot/layout checks. Coverage includes 320–1440px widths, 2× text, an open keyboard, all tabs, signed-in owner fixtures, editors and delete confirmation.
+
+Two additional regression tests cover pending/error/empty preview sources and recovery to real records, including a valid current-stop index of zero.
 
 The pull-request validation workflow additionally enforces formatting, repeats the regression checks, produces a release web build, and runs Chromium desktop, Android Chrome and iPhone WebKit checks. Browser checks now visit all feature tabs, confirm ads stay out of those tabs, and check Firebase startup and reload.
 
