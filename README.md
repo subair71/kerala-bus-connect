@@ -1,61 +1,74 @@
-# FindMyBus — Riverpod edition
+# FindMyBus
 
-Fresh feature-first rebuild of Kerala Bus Connect on `feature/riverpod-clean-architecture`.
-This branch is separate from the deployed main branch.
+Native Flutter web and mobile interface, based on the supplied Stitch references.
+This redesign is delivered on `feature/stitch-redesign`.
 
 ## Features
 
-| Feature | Implementation |
+| Feature | Behavior |
 | --- | --- |
-| Passenger search | Boarding/destination partial search, direction-aware matching, day filters, stop timings |
-| Route directory | Debounced search of published timetables |
-| Owner authentication | Firebase email/password sign-in and registration |
-| Owner management | Create/rename businesses; create/edit/delete routes; generate return routes; publish/edit/delete timetables |
-| Tracking | Explicitly labelled timetable demo; no GPS backend |
-| Crew | Explicitly labelled sample roster with search and shift filters; no staff backend |
+| Find bus | Debounced boarding/destination search, direction and operating-day filters, stop timings |
+| Routes | Searchable published timetable directory |
+| Owner | Firebase email/password sign-in and registration; business, route, return-route and timetable management |
+| Tracking | Route position preview; never presented as live GPS |
+| Crew | Searchable duty roster and shift filters |
+| Sponsors | Home-only carousel selected by boarding location; no placements in results, directory or stop details |
 
-## Feature-first clean architecture
+## Design
 
-- `lib/app/`: bootstrap, shell and Riverpod navigation.
-- `lib/core/`: theme, shared widgets, time utilities and Firebase composition.
-- `lib/features/<feature>/domain/`: framework-independent entities, contracts and use cases.
-- `lib/features/<feature>/data/`: repository implementations and Firebase or demo adapters.
-- `lib/features/<feature>/presentation/`: Riverpod controllers, selectors, pages and widgets.
+The archive `stitch_findmybus_minimal_redesign.zip` contains Aluva mobile/desktop and Thrissur mobile references. The implementation uses their light canvas, deep teal accents, Plus Jakarta Sans typography, white cards, pale input wells, timetable bands and stop timeline. Desktop uses top navigation and a timetable sidebar; mobile uses five bottom tabs and scrolling cards.
 
-Shared transit entities and persistence live in `features/timetables`; passenger, route and owner features consume them. Providers are the composition boundary. Widgets invoke provider actions; business validation lives in use cases.
+The reference's unverified fares, registration numbers, platforms, GPS indicators and ratings are omitted unless supported by the existing feature/data model. Broken remote reference images are replaced with native placeholders. The supplied hotel image is bundled as a compressed JPEG. Plus Jakarta Sans is bundled locally under the SIL Open Font License in `assets/fonts/OFL.txt`.
 
-All application state uses Riverpod 3 Notifier, AsyncNotifier and StreamProvider APIs. There is no application `setState`, StatefulWidget, BLoC, GetIt, ChangeNotifier or ValueNotifier. Flutter Hooks only manages text-controller lifecycles; editable text remains inside its controller while semantic form state lives in Riverpod. Framework internals are outside this application-level guarantee.
+## Firebase and sample selection
 
-## Performance measures
+Existing Firebase configuration, authentication, `businesses`, `routes`, `services` and security rules are unchanged.
 
-- One shared published-timetable subscription, retained for 30 seconds of inactivity across navigation.
-- Normalized search index and cached query results, with 200 ms typing debounce.
-- Lazily built passenger, route and owner lists; hidden tabs are unmounted.
-- Narrow selectors for busy/filter state and memoized business timetable filtering/sorting.
-- Automatic disposal of editor state, search timers and inactive streams.
-- Owner data and selection recompute when authentication changes.
-- Kerala-local timetable calculations independent of the browser's timezone.
+Providers select an entire live result or an explicitly labelled sample result. They never append fictional buses to a real catalogue. A no-match search in a populated live catalogue stays empty. Failed reads show “Live data unavailable” before sample content; streams replace the fallback when valid data arrives. Empty cache-only snapshots are reported as unavailable until the server responds.
 
-These are implemented optimizations, not a measured device FPS or startup-time guarantee. The existing Firestore catalogue still downloads all published services: statewide scale requires indexed server queries/pagination and schema backfill. The current schema and security rules are preserved.
+Sample fixtures have stable `demo:` identifiers and consistent businesses/routes/buses/crew/tracking references. Owner previews are read-only. Both domain commands and the Firebase repository reject sample IDs on write paths. Nothing seeds Firebase automatically.
 
-## Development and verification
+Missing display text uses neutral placeholders. Missing schedule times stay unavailable; valid midnight `0` and boolean `false` remain intact. Unknown operating days cannot satisfy a running-today filter. Publishing requires explicit times for every stop.
 
-Use Flutter stable with Dart >=3.11 and Flutter >=3.41.
+Optional, read-only integrations use these collections:
+
+| Collection | Fields used |
+| --- | --- |
+| `sponsored_ads` | `location` (canonical display name, e.g. Aluva or Thrissur), `active` (boolean), `advertiser`, `title`, `description`, optional HTTPS `imageUrl`, `website` |
+| `crew_assignments` | `ownerId` (signed-in owner query), `name`, `role`, `vehicle`, `shift`, `duty` |
+| `tracking_previews` | `vehicle`, `stops` (string list), `currentStop` (zero-based index) |
+
+The existing rules do not grant access to these optional collections. This branch deliberately preserves those rules: missing or denied optional data produces labelled previews. Enabling production records requires separately reviewed permissions and data. No location permission or GPS tracking was added. Sample sponsor actions explain the preview instead of contacting an invented advertiser.
+
+## Architecture and performance
+
+Feature-first Clean Architecture: domain contracts/use cases, data adapters/fixtures, presentation providers/widgets. Shared transit data lives in `features/timetables`; providers are the composition boundary.
+
+Riverpod owns application state. No application `setState`, StatefulWidget, BLoC, GetIt, ChangeNotifier or ValueNotifier. Flutter Hooks manages text and page-controller lifecycles.
+
+- One shared published-timetable subscription, retained for 30 seconds of inactivity.
+- Cached normalized search index and 200 ms query debounce.
+- Lazy passenger, route and owner lists; hidden tabs unmount.
+- Narrow state selectors and automatic disposal of timers, controllers and streams.
+- Auth-scoped owner and crew reads reset when accounts change.
+- Bundled font and compressed image; bounded thumbnail decoding; no blur or animation packages.
+
+The current schema still downloads the published catalogue. Statewide-scale server queries/pagination and device FPS profiling remain outside this visual redesign.
+
+## Validation
 
 ```sh
 flutter pub get
 python3 tool/check_architecture.py
-dart format --output=none --set-exit-if-changed lib test
+dart format --output=none --set-exit-if-changed lib test tool/capture_screenshots.dart
 flutter analyze
 flutter test
-flutter run -d chrome
+flutter test tool/capture_screenshots.dart --update-goldens
 flutter build web --release --base-href /kerala-bus-connect/
 ```
 
-CI checks architecture boundaries, forbidden state APIs, formatting, static analysis, domain/provider/widget tests and a release web build. Tests cover search semantics, lazy rendering with 200 services, stream sharing/disposal/retry, authentication changes, editor lifetimes, route creation, service conflict validation and overnight timings.
+CI checks architecture, formatting, analysis, domain/provider/widget behavior, eight screenshot layouts and the release web build. Browser smoke tests open the compiled application at desktop/mobile sizes and check navigation and ad placement. Artifacts are retained for 14 days.
 
-Firebase configuration is in `lib/core/config/firebase_config.dart`. Authentication and Firestore adapters use the existing project and collections (`businesses`, `routes`, `services`). Public Firebase client configuration is not a substitute for Firestore access rules.
+Tests include populated/empty/error/recovery states, no sample/live mixing, missing numeric/boolean fields, sample-write guards, owner operations through repository doubles, lazy rendering with 200 services, controller preservation, 320/390/768/1440-pixel layouts, long text, keyboard visibility, stream disposal and authentication changes.
 
-No demo timetables are silently substituted when Firebase is empty or fails. Empty, loading and retry states are shown. Tracking/crew production integrations and physical-device performance profiling remain separate work.
-
-Successful validation runs publish a `riverpod-web` download in GitHub Actions artifacts for 14 days. This is a review build, not a deployment.
+Production owner accounts are not used for test writes. Physical Android/iOS devices and production authenticated CRUD require a separate acceptance run; this branch does not deploy or merge itself.

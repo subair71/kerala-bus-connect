@@ -14,6 +14,7 @@ class ServiceEntity extends Equatable {
   final List<String> offDays;
   final String? offTimingsNote;
   final bool published;
+  final bool operatingDaysKnown;
 
   const ServiceEntity({
     required this.id,
@@ -29,7 +30,22 @@ class ServiceEntity extends Equatable {
     required this.offDays,
     this.offTimingsNote,
     this.published = true,
+    this.operatingDaysKnown = true,
   });
+
+  /// Returns only supplied times; an unknown stop never inherits a departure.
+  int? scheduledTime(String stop) {
+    for (final entry in stopTimings.entries) {
+      if (entry.key.trim().toLowerCase() == stop.trim().toLowerCase())
+        return entry.value;
+    }
+    if (stops.isNotEmpty &&
+        stops.first.toLowerCase() == stop.toLowerCase() &&
+        departureMinutes >= 0) {
+      return departureMinutes;
+    }
+    return null;
+  }
 
   int getBoardingTime(String boardingQuery) {
     if (boardingQuery.isNotEmpty) {
@@ -68,5 +84,6 @@ class ServiceEntity extends Equatable {
     offDays,
     offTimingsNote,
     published,
+    operatingDaysKnown,
   ];
 }

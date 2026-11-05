@@ -1,3 +1,4 @@
+import '../../../../core/data/display_fields.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/business_entity.dart';
 
@@ -15,7 +16,7 @@ class BusinessModel extends BusinessEntity {
     return BusinessModel(
       id: snap.id,
       ownerId: data['ownerId']?.toString() ?? '',
-      name: data['name']?.toString() ?? '',
+      name: displayText(data['name'], 'Business name unavailable'),
     );
   }
 

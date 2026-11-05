@@ -1,3 +1,5 @@
+import '../../../../core/widgets/data_notice.dart';
+import '../../../../core/widgets/async_status.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/widgets/page_heading.dart';
@@ -8,8 +10,12 @@ class TrackingPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final preview = ref.watch(trackingPreviewProvider);
-    final vehicles = ref.watch(trackingRepositoryProvider).previews();
-    final selected = ref.watch(trackingSelectionProvider);
+    final data = ref.watch(trackingDataProvider);
+    if (preview == null) return const Center(child: AsyncStatus(loading: true));
+    final vehicles = data.asData!.value.records;
+    final selected = ref
+        .watch(trackingSelectionProvider)
+        .clamp(0, vehicles.length - 1);
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 860),
@@ -18,7 +24,12 @@ class TrackingPage extends ConsumerWidget {
           children: [
             const PageHeading(
               title: 'Bus tracking preview',
-              subtitle: 'Demo only • no live GPS data is connected.',
+              subtitle: 'Route position preview • not live GPS tracking.',
+            ),
+            DataNotice(
+              demo: data.asData!.value.isDemo,
+              unavailable: data.asData!.value.unavailable,
+              retry: () => ref.invalidate(liveTrackingProvider),
             ),
             DropdownButton<int>(
               value: selected,
@@ -48,7 +59,11 @@ class TrackingPage extends ConsumerWidget {
                       ),
                       title: Text(preview.stops[i]),
                       subtitle: i == preview.currentStop
-                          ? const Text('Example position')
+                          ? Text(
+                              data.asData!.value.isDemo
+                                  ? 'Example position'
+                                  : 'Reported position',
+                            )
                           : null,
                     ),
                 ],

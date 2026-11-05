@@ -1,3 +1,6 @@
+import '../../../../core/data/data_set.dart';
+import '../../../../core/providers/sample_fallback.dart';
+import '../../data/fixtures/transit_samples.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/providers/firebase_providers.dart';
 import '../../../../core/providers/cache_lifetime.dart';
@@ -49,3 +52,14 @@ final ownerServicesProvider = StreamProvider.autoDispose<List<ServiceEntity>>((
       ? Stream.value(const [])
       : ref.watch(watchTimetablesProvider).ownerServices(owner);
 });
+
+final serviceCatalogProvider =
+    Provider.autoDispose<AsyncValue<DataSet<ServiceEntity>>>(
+      (ref) => sampleFallback(
+        ref.watch(publishedServicesProvider),
+        TransitSamples.services,
+      ),
+    );
+final sampleBusinessesProvider = Provider((ref) => TransitSamples.businesses);
+final sampleRoutesProvider = Provider((ref) => TransitSamples.routes);
+final sampleServicesProvider = Provider((ref) => TransitSamples.services);

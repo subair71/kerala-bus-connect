@@ -1,3 +1,4 @@
+import '../../../../core/data/display_fields.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../domain/entities/route_entity.dart';
 
@@ -22,12 +23,10 @@ class RouteModel extends RouteEntity {
       ownerId: data['ownerId']?.toString() ?? '',
       businessId: data['businessId']?.toString() ?? '',
       businessName: data['businessName']?.toString() ?? '',
-      name: data['name']?.toString() ?? '',
+      name: displayText(data['name'], 'Route name unavailable'),
       startStop: data['startStop']?.toString() ?? '',
       endStop: data['endStop']?.toString() ?? '',
-      stops: (data['stops'] as List<dynamic>? ?? [])
-          .map((e) => e.toString())
-          .toList(),
+      stops: stringList(data['stops']),
       isReturn: data['isReturn'] == true,
       returnOfRouteId: data['returnOfRouteId']?.toString(),
     );

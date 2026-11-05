@@ -31,8 +31,10 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
     return _firestore
         .collection('services')
         .where('published', isEqualTo: true)
-        .snapshots()
+        .snapshots(includeMetadataChanges: true)
         .map((snap) {
+          if (snap.docs.isEmpty && snap.metadata.isFromCache)
+            throw StateError('Live timetable data is unavailable.');
           final list = snap.docs
               .map((d) => ServiceModel.fromSnapshot(d))
               .toList();
@@ -45,11 +47,12 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
     return _firestore
         .collection('businesses')
         .where('ownerId', isEqualTo: ownerId)
-        .snapshots()
-        .map(
-          (snap) =>
-              snap.docs.map((d) => BusinessModel.fromSnapshot(d)).toList(),
-        );
+        .snapshots(includeMetadataChanges: true)
+        .map((snap) {
+          if (snap.docs.isEmpty && snap.metadata.isFromCache)
+            throw StateError('Live data is unavailable.');
+          return snap.docs.map((d) => BusinessModel.fromSnapshot(d)).toList();
+        });
   }
 
   @override
@@ -57,10 +60,12 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
     return _firestore
         .collection('routes')
         .where('businessId', isEqualTo: businessId)
-        .snapshots()
-        .map(
-          (snap) => snap.docs.map((d) => RouteModel.fromSnapshot(d)).toList(),
-        );
+        .snapshots(includeMetadataChanges: true)
+        .map((snap) {
+          if (snap.docs.isEmpty && snap.metadata.isFromCache)
+            throw StateError('Live data is unavailable.');
+          return snap.docs.map((d) => RouteModel.fromSnapshot(d)).toList();
+        });
   }
 
   @override
@@ -68,10 +73,12 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
     return _firestore
         .collection('services')
         .where('ownerId', isEqualTo: ownerId)
-        .snapshots()
-        .map(
-          (snap) => snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList(),
-        );
+        .snapshots(includeMetadataChanges: true)
+        .map((snap) {
+          if (snap.docs.isEmpty && snap.metadata.isFromCache)
+            throw StateError('Live data is unavailable.');
+          return snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList();
+        });
   }
 
   @override

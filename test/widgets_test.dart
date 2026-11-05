@@ -1,3 +1,8 @@
+import 'package:kerala_bus_connect/features/sponsors/domain/entities/sponsored_ad.dart';
+import 'package:kerala_bus_connect/core/theme/app_theme.dart';
+import 'package:kerala_bus_connect/features/sponsors/presentation/providers/sponsor_providers.dart';
+import 'package:kerala_bus_connect/features/tracking/presentation/providers/tracking_providers.dart';
+import 'package:kerala_bus_connect/features/crew/presentation/providers/crew_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -15,15 +20,21 @@ import 'support/fakes.dart';
 Widget harness(
   Widget child,
   FakeTransitRepository repository,
-  FakeAuthRepository auth,
-) => ProviderScope(
+  FakeAuthRepository auth, {
+  Stream<List<SponsoredAd>>? sponsorStream,
+}) => ProviderScope(
   overrides: [
+    liveSponsorsProvider.overrideWith(
+      (ref, location) => sponsorStream ?? Stream.value([]),
+    ),
+    liveTrackingProvider.overrideWith((ref) => Stream.value([])),
+    liveCrewProvider.overrideWith((ref) => Stream.value([])),
     transitRepositoryProvider.overrideWithValue(repository),
     authRepositoryProvider.overrideWithValue(auth),
     catalogCacheDurationProvider.overrideWithValue(Duration.zero),
     clockProvider.overrideWith((ref) => Stream.value(DateTime(2026, 11, 5, 8))),
   ],
-  child: MaterialApp(home: child),
+  child: MaterialApp(theme: AppTheme.lightTheme, home: child),
 );
 
 void main() {

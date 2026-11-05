@@ -12,7 +12,14 @@ class ServiceSearchIndex {
     : _services = services.map(_IndexedService.new).toList()
         ..sort(
           (a, b) =>
-              a.service.departureMinutes.compareTo(b.service.departureMinutes),
+              (a.service.departureMinutes < 0
+                      ? 99999
+                      : a.service.departureMinutes)
+                  .compareTo(
+                    b.service.departureMinutes < 0
+                        ? 99999
+                        : b.service.departureMinutes,
+                  ),
         );
 
   List<ServiceEntity> search({
@@ -29,9 +36,12 @@ class ServiceSearchIndex {
     _lastSearch = key;
     _searchResults = List.unmodifiable([
       for (final entry in _services)
-        if ((!onlyRunningToday || !entry.service.offDays.contains(today)) &&
+        if ((!onlyRunningToday ||
+                (entry.service.operatingDaysKnown &&
+                    !entry.service.offDays.contains(today))) &&
             (filterDay == 'All Days' ||
-                !entry.service.offDays.contains(filterDay)) &&
+                (entry.service.operatingDaysKnown &&
+                    !entry.service.offDays.contains(filterDay))) &&
             entry.matchesStops(fromTerm, toTerm))
           entry.service,
     ]);

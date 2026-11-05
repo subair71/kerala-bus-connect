@@ -1,3 +1,4 @@
+import '../../../../core/utils/sample_ids.dart';
 import '../../domain/entities/business_entity.dart';
 import '../../domain/entities/route_entity.dart';
 import '../../domain/entities/service_entity.dart';
@@ -30,6 +31,7 @@ class TransitRepositoryImpl implements TransitRepository {
     required String ownerId,
     required String name,
   }) {
+    requireLiveIds([ownerId]);
     return _remoteDataSource.addBusiness({'ownerId': ownerId, 'name': name});
   }
 
@@ -39,6 +41,7 @@ class TransitRepositoryImpl implements TransitRepository {
     required String ownerId,
     required String name,
   }) {
+    requireLiveIds([ownerId, businessId]);
     return _remoteDataSource.updateBusiness(businessId, {
       'name': name,
       'ownerId': ownerId,
@@ -57,6 +60,7 @@ class TransitRepositoryImpl implements TransitRepository {
     bool isReturn = false,
     String? returnOfRouteId,
   }) {
+    requireLiveIds([ownerId, businessId, returnOfRouteId]);
     return _remoteDataSource.addRoute({
       'ownerId': ownerId,
       'businessId': businessId,
@@ -79,6 +83,7 @@ class TransitRepositoryImpl implements TransitRepository {
     required String endStop,
     required List<String> stops,
   }) {
+    requireLiveIds([ownerId, routeId]);
     return _remoteDataSource.updateRoute(routeId, {
       'ownerId': ownerId,
       'name': name,
@@ -89,8 +94,10 @@ class TransitRepositoryImpl implements TransitRepository {
   }
 
   @override
-  Future<void> deleteRoute(String routeId) =>
-      _remoteDataSource.deleteRoute(routeId);
+  Future<void> deleteRoute(String routeId) async {
+    requireLiveIds([routeId]);
+    await _remoteDataSource.deleteRoute(routeId);
+  }
 
   @override
   Future<void> publishService({
@@ -106,6 +113,7 @@ class TransitRepositoryImpl implements TransitRepository {
     required List<String> offDays,
     required String offTimingsNote,
   }) {
+    requireLiveIds([ownerId, businessId, routeId]);
     return _remoteDataSource.addService({
       'ownerId': ownerId,
       'businessId': businessId,
@@ -137,6 +145,7 @@ class TransitRepositoryImpl implements TransitRepository {
     required List<String> offDays,
     required String offTimingsNote,
   }) {
+    requireLiveIds([ownerId, businessId, routeId, serviceId]);
     return _remoteDataSource.updateService(serviceId, {
       'ownerId': ownerId,
       'businessId': businessId,
@@ -154,6 +163,8 @@ class TransitRepositoryImpl implements TransitRepository {
   }
 
   @override
-  Future<void> deleteService(String serviceId) =>
-      _remoteDataSource.deleteService(serviceId);
+  Future<void> deleteService(String serviceId) async {
+    requireLiveIds([serviceId]);
+    await _remoteDataSource.deleteService(serviceId);
+  }
 }

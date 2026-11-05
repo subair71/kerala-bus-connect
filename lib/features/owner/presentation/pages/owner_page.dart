@@ -1,3 +1,6 @@
+import '../../../../core/utils/sample_ids.dart';
+import '../../../../core/widgets/data_notice.dart';
+import '../widgets/sample_owner_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/widgets/async_status.dart';
@@ -26,9 +29,16 @@ class OwnerPage extends ConsumerWidget {
           retry: () => ref.invalidate(authUserProvider),
         ),
         data: (user) => user == null
-            ? const SingleChildScrollView(
+            ? SingleChildScrollView(
                 padding: EdgeInsets.all(16),
-                child: AuthPanel(),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: const Column(
+                      children: [AuthPanel(), SampleOwnerPreview()],
+                    ),
+                  ),
+                ),
               )
             : _OwnerWorkspace(key: ValueKey(user.id)),
       );
@@ -39,6 +49,7 @@ class _OwnerWorkspace extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final businesses = ref.watch(ownerBusinessesProvider);
+    final businessDisplay = ref.watch(ownerBusinessDisplayProvider);
     final selected = ref.watch(selectedBusinessProvider);
     final action = ref.watch(ownerActionsProvider);
     final authAction = ref.watch(authActionProvider);
@@ -94,6 +105,8 @@ class _OwnerWorkspace extends ConsumerWidget {
                         ),
                       ),
                     const SizedBox(height: 16),
+                    if (businesses.hasError)
+                      const DataNotice(demo: true, unavailable: true),
                     businesses.when(
                       loading: () => const AsyncStatus(loading: true),
                       error: (_, stack) => AsyncStatus(
@@ -165,6 +178,8 @@ class _OwnerWorkspace extends ConsumerWidget {
                               ],
                             ),
                     ),
+                    if (businessDisplay.asData?.value.isDemo ?? false)
+                      const SampleOwnerPreview(),
                   ],
                 ),
               ),
@@ -191,7 +206,7 @@ class _OwnerRoutes extends ConsumerWidget {
   const _OwnerRoutes({required this.business});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final routes = ref.watch(businessRoutesProvider(business.id));
+    final routes = ref.watch(ownerRoutesDisplayProvider(business.id));
     final busy = ref.watch(
       ownerActionsProvider.select((value) => value.isLoading),
     );
@@ -204,13 +219,21 @@ class _OwnerRoutes extends ConsumerWidget {
           retry: () => ref.invalidate(businessRoutesProvider(business.id)),
         ),
       ),
-      data: (list) => list.isEmpty
+      data: (data) => data.records.isEmpty
           ? const SliverToBoxAdapter(
               child: AsyncStatus(message: 'No routes yet. Add one above.'),
             )
           : SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
-                final route = list[index];
+                if (index == 0)
+                  return DataNotice(
+                    demo: data.isDemo,
+                    unavailable: data.unavailable,
+                    retry: () =>
+                        ref.invalidate(businessRoutesProvider(business.id)),
+                  );
+                final route = data.records[index - 1];
+                final readOnly = busy || isSampleId(route.id);
                 return Card(
                   key: ValueKey(route.id),
                   child: Padding(
@@ -218,6 +241,11 @@ class _OwnerRoutes extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (isSampleId(route.id))
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: DemoBadge(),
+                          ),
                         Text(
                           route.name,
                           style: Theme.of(context).textTheme.titleMedium,
@@ -228,7 +256,7 @@ class _OwnerRoutes extends ConsumerWidget {
                           runSpacing: 8,
                           children: [
                             TextButton(
-                              onPressed: busy
+                              onPressed: readOnly
                                   ? null
                                   : () => openEditor(
                                       context,
@@ -240,7 +268,7 @@ class _OwnerRoutes extends ConsumerWidget {
                               child: const Text('Edit route'),
                             ),
                             TextButton(
-                              onPressed: busy
+                              onPressed: readOnly
                                   ? null
                                   : () => ref
                                         .read(ownerActionsProvider.notifier)
@@ -248,7 +276,7 @@ class _OwnerRoutes extends ConsumerWidget {
                               child: const Text('Create return'),
                             ),
                             TextButton(
-                              onPressed: busy
+                              onPressed: readOnly
                                   ? null
                                   : () async {
                                       if (await confirmDelete(
@@ -264,7 +292,7 @@ class _OwnerRoutes extends ConsumerWidget {
                               child: const Text('Delete route'),
                             ),
                             FilledButton.tonal(
-                              onPressed: busy
+                              onPressed: readOnly
                                   ? null
                                   : () => openEditor(
                                       context,
@@ -281,7 +309,7 @@ class _OwnerRoutes extends ConsumerWidget {
                     ),
                   ),
                 );
-              }, childCount: list.length),
+              }, childCount: data.records.length + 1),
             ),
     );
   }
@@ -292,7 +320,7 @@ class _OwnerServices extends ConsumerWidget {
   const _OwnerServices({required this.business});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final services = ref.watch(businessServicesProvider(business.id));
+    final services = ref.watch(ownerServicesDisplayProvider(business.id));
     final routes =
         ref.watch(businessRoutesProvider(business.id)).asData?.value ??
         const <RouteEntity>[];
@@ -308,18 +336,30 @@ class _OwnerServices extends ConsumerWidget {
           retry: () => ref.invalidate(ownerServicesProvider),
         ),
       ),
-      data: (list) {
+      data: (data) {
+        final list = data.records;
         return SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             if (index == 0)
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Text(
-                  'Published timetables (${list.length})',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DataNotice(
+                    demo: data.isDemo,
+                    unavailable: data.unavailable,
+                    retry: () => ref.invalidate(ownerServicesProvider),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      '${data.isDemo ? 'Sample' : 'Published'} timetables (${list.length})',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                ],
               );
             final service = list[index - 1];
+            final readOnly = busy || isSampleId(service.id);
             final route = routes
                 .where((r) => r.id == service.routeId)
                 .firstOrNull;
@@ -330,15 +370,22 @@ class _OwnerServices extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    if (isSampleId(service.id))
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: DemoBadge(),
+                      ),
                     Text(
                       service.busName,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     Text(
-                      '${service.routeName} • ${timeLabel(service.departureMinutes)}',
+                      '${service.routeName} • ${service.departureMinutes < 0 ? 'Time unavailable' : timeLabel(service.departureMinutes)}',
                     ),
                     Text(
-                      service.offDays.isEmpty
+                      !service.operatingDaysKnown
+                          ? 'Operating days unavailable'
+                          : service.offDays.isEmpty
                           ? 'Runs every day'
                           : 'Off: ${service.offDays.join(', ')}',
                     ),
@@ -346,7 +393,7 @@ class _OwnerServices extends ConsumerWidget {
                       spacing: 12,
                       children: [
                         TextButton(
-                          onPressed: busy || route == null
+                          onPressed: readOnly || route == null
                               ? null
                               : () => openEditor(
                                   context,
@@ -359,7 +406,7 @@ class _OwnerServices extends ConsumerWidget {
                           child: const Text('Edit timetable'),
                         ),
                         TextButton(
-                          onPressed: busy
+                          onPressed: readOnly
                               ? null
                               : () async {
                                   if (await confirmDelete(

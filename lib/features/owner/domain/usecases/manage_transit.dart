@@ -1,3 +1,4 @@
+import '../../../../core/utils/sample_ids.dart';
 import '../../../../core/constants/transit_constants.dart';
 import '../../../../core/errors/app_failure.dart';
 import '../../../timetables/domain/entities/business_entity.dart';
@@ -10,6 +11,7 @@ class ManageTransit {
   const ManageTransit(this.repository);
 
   Future<String> saveBusiness(String ownerId, String name, {String? id}) async {
+    requireLiveIds([ownerId, id]);
     final clean = name.trim();
     if (ownerId.isEmpty || clean.isEmpty)
       throw const AppFailure('Enter a business name.');
@@ -34,6 +36,7 @@ class ManageTransit {
     required bool returnRoute,
     String? routeId,
   }) async {
+    requireLiveIds([ownerId, business.id, routeId]);
     if (business.ownerId != ownerId)
       throw const AppFailure('This business belongs to another account.');
     final start = from.trim(), end = to.trim();
@@ -93,6 +96,7 @@ class ManageTransit {
   }
 
   Future<void> generateReturn(RouteEntity route, String ownerId) async {
+    requireLiveIds([ownerId, route.id, route.businessId]);
     if (route.ownerId != ownerId)
       throw const AppFailure('This route belongs to another account.');
     if (route.stops.length < 2)
@@ -111,9 +115,13 @@ class ManageTransit {
     );
   }
 
-  Future<void> deleteService(String id) => repository.deleteService(id);
+  Future<void> deleteService(String id) async {
+    requireLiveIds([id]);
+    await repository.deleteService(id);
+  }
 
   Future<void> deleteRoute(String id, List<ServiceEntity> existing) async {
+    requireLiveIds([id]);
     if (existing.any((s) => s.routeId == id)) {
       throw const AppFailure(
         'Remove this route’s published timetables before deleting it.',
@@ -134,6 +142,7 @@ class ManageTransit {
     required List<ServiceEntity> existing,
     String? serviceId,
   }) async {
+    requireLiveIds([ownerId, business.id, route.id, serviceId]);
     if (business.ownerId != ownerId ||
         route.ownerId != ownerId ||
         route.businessId != business.id) {
@@ -168,7 +177,12 @@ class ManageTransit {
     var previous = departure;
     for (var i = 0; i < route.stops.length; i++) {
       final stop = route.stops[i];
-      var minutes = i == 0 ? departure : (timings[stop] ?? previous + 15);
+      if (i > 0 && (timings[stop] == null || timings[stop]! < 0)) {
+        throw const AppFailure(
+          'Enter a time for every stop before publishing.',
+        );
+      }
+      var minutes = i == 0 ? departure : timings[stop]!;
       if (i > 0 && minutes < previous) minutes += 1440;
       if (minutes < previous || minutes - departure >= 1440) {
         throw const AppFailure(

@@ -1,3 +1,5 @@
+import '../../../../core/widgets/data_notice.dart';
+import '../../../../core/widgets/async_status.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -15,6 +17,7 @@ class CrewPage extends HookConsumerWidget {
       crewFilterProvider.select((filter) => filter.shift),
     );
     final crew = ref.watch(filteredCrewProvider);
+    final data = ref.watch(crewDataProvider);
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 860),
@@ -28,9 +31,14 @@ class CrewPage extends HookConsumerWidget {
                 children: [
                   const PageHeading(
                     title: 'Crew duty roster',
-                    subtitle:
-                        'Demo preview • sample assignments, not live staff records.',
+                    subtitle: 'Assignments, vehicles and operating shifts.',
                   ),
+                  DataNotice(
+                    demo: data.asData?.value.isDemo ?? false,
+                    unavailable: data.asData?.value.unavailable ?? false,
+                    retry: () => ref.invalidate(liveCrewProvider),
+                  ),
+                  if (data.isLoading) const AsyncStatus(loading: true),
                   TextField(
                     controller: controller,
                     onChanged: ref.read(crewFilterProvider.notifier).search,
