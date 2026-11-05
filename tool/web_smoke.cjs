@@ -85,8 +85,8 @@ async function verifyStartup(page) {
         ]) {
           await page.locator('[aria-label^="' + tab + '"]').or(page.getByText(tab, {exact:true})).first().click();
           try {
-            // Flutter cards can expose their heading in a grouped ARIA label.
-            await page.getByText(heading, {exact:true})
+            // Flutter may merge a heading and subtitle into one text or ARIA label.
+            await page.getByText(heading, {exact:false})
               .or(page.getByLabel(heading, {exact:false})).first().waitFor();
           } catch (error) {
             await page.screenshot({path:'browser-screenshots/' + name + '-failure.png'});
