@@ -70,7 +70,9 @@ class AppShell extends ConsumerWidget {
                             child: Row(
                               children: [
                                 if (home)
-                                  const _HomeBrandMark()
+                                  const ExcludeSemantics(
+                                    child: _HomeBrandMark(),
+                                  )
                                 else
                                   const AppIconTile(
                                     Icons.directions_bus_outlined,
