@@ -20,7 +20,14 @@ const server = http.createServer((req, res) => {
 async function verifyStartup(page) {
   const placeholder = page.locator('flt-semantics-placeholder');
   await placeholder.waitFor({state:'attached', timeout:90000});
-  await placeholder.evaluate(element => element.click());
+  await placeholder.evaluate(element => {
+    // Mobile Flutter enables semantics only for a centered accessibility click.
+    const rect = element.getBoundingClientRect();
+    element.dispatchEvent(new MouseEvent('click', {
+      bubbles: true, clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2,
+    }));
+  });
   const failed = page.getByText('Unable to start FindMyBus. Please check your connection.', {exact:true});
   const home = page.getByText('FindMyBus', {exact:true});
   await home.or(failed).first().waitFor({timeout:90000});
