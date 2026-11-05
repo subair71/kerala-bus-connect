@@ -78,7 +78,7 @@ class SearchPanel extends HookConsumerWidget {
     Widget running() => Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text('Running today', style: TextStyle(fontSize: 12)),
+        const Flexible(child: Text('Running today', style: TextStyle(fontSize: 13))),
         const SizedBox(width: 4),
         Switch(
           value: query.onlyRunningToday,
