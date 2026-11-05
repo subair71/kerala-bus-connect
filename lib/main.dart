@@ -1,10 +1,11 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'core/di/injection.dart';
 import 'core/theme/app_theme.dart';
+import 'domain/repositories/transit_repository.dart';
+import 'presentation/blocs/passenger/published_services_cubit.dart';
 import 'presentation/blocs/auth/auth_bloc.dart';
 import 'presentation/blocs/auth/auth_event.dart';
 import 'presentation/blocs/navigation/navigation_cubit.dart';
@@ -26,15 +27,6 @@ Future<void> main() async {
   await Firebase.initializeApp(options: firebaseOptions);
   await initDI();
 
-  // Ensure Firestore rules allow reads by unauthenticated users or anonymous session
-  if (FirebaseAuth.instance.currentUser == null) {
-    try {
-      await FirebaseAuth.instance.signInAnonymously();
-    } catch (_) {
-      // Data layer handles offline/fallback mode seamlessly
-    }
-  }
-
   runApp(const KeralaBusConnectApp());
 }
 
@@ -45,6 +37,9 @@ class KeralaBusConnectApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider<PublishedServicesCubit>(
+          create: (_) => PublishedServicesCubit(sl<TransitRepository>()),
+        ),
         BlocProvider<AuthBloc>(
           create: (_) => sl<AuthBloc>()..add(const AuthCheckRequested()),
         ),

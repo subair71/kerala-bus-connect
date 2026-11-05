@@ -1,27 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/colors.dart';
-import '../../core/di/injection.dart';
 import '../../domain/entities/service_entity.dart';
-import '../../domain/repositories/transit_repository.dart';
+import '../blocs/passenger/published_services_cubit.dart';
+import '../widgets/debounced_builder.dart';
 import '../widgets/train_route_view.dart';
 
-class RoutesDirectoryScreen extends StatelessWidget {
+class RoutesDirectoryScreen extends StatefulWidget {
   const RoutesDirectoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final transitRepo = sl<TransitRepository>();
-    final searchController = TextEditingController();
-    final ValueNotifier<String> queryNotifier = ValueNotifier<String>('');
+  State<RoutesDirectoryScreen> createState() => _RoutesDirectoryScreenState();
+}
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 820),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+class _RoutesDirectoryScreenState extends State<RoutesDirectoryScreen> {
+  final searchController = TextEditingController();
+  final queryNotifier = ValueNotifier<String>('');
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    queryNotifier.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 852),
+        child: CustomScrollView(
+          key: const PageStorageKey('routes-directory'),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
               // Header
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -94,56 +110,80 @@ class RoutesDirectoryScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // Stream of Services
-              StreamBuilder<List<ServiceEntity>>(
-                stream: transitRepo.getPublishedServices(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting &&
-                      !snapshot.hasData) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: CircularProgressIndicator(color: AppColors.primary),
+
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+              sliver: BlocBuilder<PublishedServicesCubit, PublishedServicesState>(
+                builder: (context, catalog) {
+                  if (catalog.hasError) {
+                    return SliverToBoxAdapter(
+                      child: Column(
+                        children: [
+                          const Text('Unable to load routes. Please retry.'),
+                          TextButton(
+                            onPressed: () =>
+                                context.read<PublishedServicesCubit>().reload(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
                       ),
                     );
                   }
-
-                  final services = snapshot.data ?? [];
-
+                  if (catalog.index == null) {
+                    return const SliverToBoxAdapter(
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(40),
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
                   return ValueListenableBuilder<String>(
                     valueListenable: queryNotifier,
-                    builder: (context, query, _) {
-                      final filtered = services.where((s) {
-                        if (query.isEmpty) return true;
-                        final nameMatches = s.routeName.toLowerCase().contains(query);
-                        final stopMatches = s.stops.any((st) => st.toLowerCase().contains(query));
-                        return nameMatches || stopMatches;
-                      }).toList();
-
-                      if (filtered.isEmpty) {
-                        return Container(
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            color: AppColors.card,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: AppColors.border),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'No matching routes found in network',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: AppColors.onSurfaceVariant,
+                    builder: (context, query, _) => DebouncedBuilder<String>(
+                      value: query,
+                      builder: (context, term) {
+                        final filtered = catalog.index!.directory(term);
+                        if (filtered.isEmpty) {
+                          return const SliverToBoxAdapter(
+                            child: Padding(
+                              padding: EdgeInsets.all(32),
+                              child: Center(
+                                child: Text('No matching routes found in network'),
                               ),
                             ),
+                          );
+                        }
+                        return SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => KeyedSubtree(
+                              key: ValueKey(filtered[index].id),
+                              child: _buildRouteCard(context, filtered[index]),
+                            ),
+                            childCount: filtered.length,
                           ),
                         );
-                      }
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
-                      return Column(
-                        children: [
-                          for (final svc in filtered)
-                            Container(
+  Widget _buildRouteCard(BuildContext context, ServiceEntity svc) {
+    return Container(
                               margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
                                 color: AppColors.card,
@@ -286,19 +326,6 @@ class RoutesDirectoryScreen extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                            ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
-      ),
-    );
+                            );
   }
 }
-

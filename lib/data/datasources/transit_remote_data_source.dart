@@ -153,9 +153,6 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
         .map((snap) {
           final list = snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList();
           return list.isEmpty ? _fallbackServices : list;
-        })
-        .handleError((dynamic error) {
-          return _fallbackServices;
         });
   }
 

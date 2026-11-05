@@ -2,69 +2,130 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/constants/colors.dart';
 import '../../core/constants/transit_constants.dart';
-import '../../core/di/injection.dart';
 import '../../core/utils/time_utils.dart';
 import '../../domain/entities/service_entity.dart';
-import '../../domain/repositories/transit_repository.dart';
 import '../blocs/passenger/search_cubit.dart';
+import '../blocs/passenger/published_services_cubit.dart';
+import '../widgets/debounced_builder.dart';
 import '../blocs/passenger/search_state.dart';
 import '../widgets/train_route_view.dart';
 
-class PassengerSearchScreen extends StatelessWidget {
+class PassengerSearchScreen extends StatefulWidget {
   const PassengerSearchScreen({super.key});
 
   @override
+  State<PassengerSearchScreen> createState() => _PassengerSearchScreenState();
+}
+
+class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
+  late final TextEditingController _fromController;
+  late final TextEditingController _toController;
+
+  @override
+  void initState() {
+    super.initState();
+    final search = context.read<SearchCubit>().state;
+    _fromController = TextEditingController(text: search.from);
+    _toController = TextEditingController(text: search.to);
+  }
+
+  void _syncController(TextEditingController controller, String text) {
+    if (controller.text == text) return;
+    controller.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+
+  @override
+  void dispose() {
+    _fromController.dispose();
+    _toController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final transitRepo = sl<TransitRepository>();
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 820),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Hero Banner from Stitch design
-              _buildHeroBanner(),
-              const SizedBox(height: 16),
-
-              // Search Box Card with Floating Swap & Quick Chips
-              _buildSearchCard(context),
-              const SizedBox(height: 20),
-
-              // Live Departures Section Streamed from Clean Repository
-              StreamBuilder<List<ServiceEntity>>(
-                stream: transitRepo.getPublishedServices(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting &&
-                      !snapshot.hasData) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: CircularProgressIndicator(color: AppColors.primary),
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 852),
+        child: CustomScrollView(
+          key: const PageStorageKey('passenger-search'),
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _buildHeroBanner(),
+                    const SizedBox(height: 16),
+                    _buildSearchCard(context),
+                  ],
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: BlocBuilder<PublishedServicesCubit, PublishedServicesState>(
+                builder: (context, catalog) {
+                  if (catalog.hasError) {
+                    return SliverToBoxAdapter(
+                      child: Column(
+                        children: [
+                          const Text('Unable to load timetables. Please retry.'),
+                          TextButton(
+                            onPressed: () =>
+                                context.read<PublishedServicesCubit>().reload(),
+                            child: const Text('Retry'),
+                          ),
+                        ],
                       ),
                     );
                   }
-
-                  final allServices = snapshot.data ?? [];
-
+                  if (catalog.index == null) {
+                    return const SliverToBoxAdapter(
+                      child: Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(40),
+                          child: CircularProgressIndicator(
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
                   return BlocBuilder<SearchCubit, SearchState>(
-                    builder: (context, state) {
-                      final filtered = _filterServices(allServices, state);
-                      return _buildDeparturesList(context, filtered, state);
-                    },
+                    builder: (context, state) => DebouncedBuilder<SearchState>(
+                      value: state,
+                      builder: (context, query) {
+                        final filtered = catalog.index!.search(
+                          from: query.from,
+                          to: query.to,
+                          filterDay: query.filterDay,
+                          onlyRunningToday: query.onlyRunningToday,
+                          today: todayName(),
+                        );
+                        return _buildDeparturesList(context, filtered, query);
+                      },
+                    ),
                   );
                 },
               ),
-
-              const SizedBox(height: 16),
-              _buildQuickActions(context),
-              const SizedBox(height: 16),
-              _buildAdvisoryTip(),
-              const SizedBox(height: 40),
-            ],
-          ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    _buildQuickActions(context),
+                    const SizedBox(height: 16),
+                    _buildAdvisoryTip(),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -129,7 +190,11 @@ class PassengerSearchScreen extends StatelessWidget {
   }
 
   Widget _buildSearchCard(BuildContext context) {
-    return BlocBuilder<SearchCubit, SearchState>(
+    return BlocConsumer<SearchCubit, SearchState>(
+      listener: (context, state) {
+        _syncController(_fromController, state.from);
+        _syncController(_toController, state.to);
+      },
       builder: (context, state) {
         return Container(
           decoration: BoxDecoration(
@@ -183,8 +248,8 @@ class PassengerSearchScreen extends StatelessWidget {
                                     ),
                                   ),
                                   TextFormField(
-                                    key: ValueKey('from_${state.from}'),
-                                    initialValue: state.from,
+                                    key: const ValueKey('search-from'),
+                                    controller: _fromController,
                                     onChanged: (val) => context
                                         .read<SearchCubit>()
                                         .updateFrom(val),
@@ -244,8 +309,8 @@ class PassengerSearchScreen extends StatelessWidget {
                                     ),
                                   ),
                                   TextFormField(
-                                    key: ValueKey('to_${state.to}'),
-                                    initialValue: state.to,
+                                    key: const ValueKey('search-to'),
+                                    controller: _toController,
                                     onChanged: (val) => context
                                         .read<SearchCubit>()
                                         .updateTo(val),
@@ -418,44 +483,15 @@ class PassengerSearchScreen extends StatelessWidget {
     );
   }
 
-  List<ServiceEntity> _filterServices(
-      List<ServiceEntity> allServices, SearchState state) {
-    final fromTerm = state.from.trim().toLowerCase();
-    final toTerm = state.to.trim().toLowerCase();
-    final dayTerm =
-        state.filterDay == 'All Days' ? todayName() : state.filterDay;
-
-    return allServices.where((svc) {
-      if (state.onlyRunningToday && svc.offDays.contains(todayName())) {
-        return false;
-      }
-      if (state.filterDay != 'All Days' && svc.offDays.contains(dayTerm)) {
-        return false;
-      }
-
-      final stopsLower = svc.stops.map((s) => s.toLowerCase()).toList();
-
-      if (fromTerm.isNotEmpty && toTerm.isNotEmpty) {
-        final iFrom = stopsLower.indexWhere((s) => s.contains(fromTerm));
-        final iTo = stopsLower.indexWhere((s) => s.contains(toTerm));
-        return iFrom != -1 && iTo != -1 && iFrom < iTo;
-      } else if (fromTerm.isNotEmpty) {
-        return stopsLower.any((s) => s.contains(fromTerm));
-      } else if (toTerm.isNotEmpty) {
-        return stopsLower.any((s) => s.contains(toTerm));
-      }
-      return true;
-    }).toList()
-      ..sort((a, b) => a.departureMinutes.compareTo(b.departureMinutes));
-  }
-
   Widget _buildDeparturesList(
       BuildContext context, List<ServiceEntity> services, SearchState state) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Section Header with Live Beacon
-        Row(
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          if (index == 0) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
@@ -510,10 +546,10 @@ class PassengerSearchScreen extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 12),
-
-        if (services.isEmpty)
-          Container(
+            );
+          }
+          if (services.isEmpty) {
+            return Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
               color: AppColors.card,
@@ -547,10 +583,16 @@ class PassengerSearchScreen extends StatelessWidget {
                 ),
               ],
             ),
-          )
-        else
-          for (final svc in services) _buildServiceCard(context, svc, state),
-      ],
+          );
+          }
+          final service = services[index - 1];
+          return KeyedSubtree(
+            key: ValueKey(service.id),
+            child: _buildServiceCard(context, service, state),
+          );
+        },
+        childCount: services.isEmpty ? 2 : services.length + 1,
+      ),
     );
   }
 

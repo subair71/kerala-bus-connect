@@ -14,13 +14,62 @@ import '../blocs/auth/auth_state.dart';
 import '../blocs/owner/owner_bloc.dart';
 import '../blocs/owner/owner_event.dart';
 import '../blocs/owner/owner_state.dart';
+import '../widgets/query_stream_builder.dart';
 
-class OwnerDashboardScreen extends StatelessWidget {
+class OwnerDashboardScreen extends StatefulWidget {
   const OwnerDashboardScreen({super.key});
 
   @override
+  State<OwnerDashboardScreen> createState() => _OwnerDashboardScreenState();
+}
+
+class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final ValueNotifier<bool> isRegister = ValueNotifier<bool>(false);
+  final businessNameCtrl = TextEditingController();
+  final routeNameCtrl = TextEditingController();
+  final fromCtrl = TextEditingController();
+  final toCtrl = TextEditingController();
+  final stopsCtrl = TextEditingController();
+  final busNameCtrl = TextEditingController(text: 'KL-07-CK-4219');
+  final noteCtrl = TextEditingController();
+  final ValueNotifier<bool> createReturnToo = ValueNotifier<bool>(true);
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    isRegister.dispose();
+    businessNameCtrl.dispose();
+    routeNameCtrl.dispose();
+    fromCtrl.dispose();
+    toCtrl.dispose();
+    stopsCtrl.dispose();
+    busNameCtrl.dispose();
+    noteCtrl.dispose();
+    createReturnToo.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listenWhen: (previous, current) => previous.user?.uid != current.user?.uid,
+      listener: (context, state) {
+        emailController.clear();
+        passwordController.clear();
+        businessNameCtrl.clear();
+        routeNameCtrl.clear();
+        fromCtrl.clear();
+        toCtrl.clear();
+        stopsCtrl.clear();
+        busNameCtrl.clear();
+        noteCtrl.clear();
+        busNameCtrl.text = 'KL-07-CK-4219';
+        isRegister.value = false;
+        createReturnToo.value = true;
+      },
       builder: (context, authState) {
         if (authState.status == AuthStatus.unauthenticated ||
             authState.user == null) {
@@ -34,9 +83,6 @@ class OwnerDashboardScreen extends StatelessWidget {
   }
 
   Widget _buildAuthRequiredView(BuildContext context) {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
-    final ValueNotifier<bool> isRegister = ValueNotifier<bool>(false);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -702,17 +748,10 @@ class OwnerDashboardScreen extends StatelessWidget {
 
   Widget _buildManagementSection(BuildContext context, String ownerId,
       TransitRepository transitRepo) {
-    final businessNameCtrl = TextEditingController();
-    final routeNameCtrl = TextEditingController();
-    final fromCtrl = TextEditingController();
-    final toCtrl = TextEditingController();
-    final stopsCtrl = TextEditingController();
-    final busNameCtrl = TextEditingController(text: 'KL-07-CK-4219');
-    final noteCtrl = TextEditingController();
-    final ValueNotifier<bool> createReturnToo = ValueNotifier<bool>(true);
 
-    return StreamBuilder<List<BusinessEntity>>(
-      stream: transitRepo.getOwnerBusinesses(ownerId),
+    return QueryStreamBuilder<List<BusinessEntity>>(
+      identity: (transitRepo, 'businesses', ownerId),
+          createStream: () => transitRepo.getOwnerBusinesses(ownerId),
       builder: (context, bSnap) {
         final businesses = bSnap.data ?? [];
 
@@ -1053,8 +1092,9 @@ class OwnerDashboardScreen extends StatelessWidget {
         const SizedBox(height: 12),
 
         // List of Business Routes
-        StreamBuilder<List<RouteEntity>>(
-          stream: transitRepo.getBusinessRoutes(businessId),
+        QueryStreamBuilder<List<RouteEntity>>(
+          identity: (transitRepo, 'routes', businessId),
+          createStream: () => transitRepo.getBusinessRoutes(businessId),
           builder: (context, snap) {
             final routes = snap.data ?? [];
             if (routes.isEmpty) {
@@ -1312,8 +1352,9 @@ class OwnerDashboardScreen extends StatelessWidget {
               const SizedBox(height: 12),
 
               // Publish Service Button
-              StreamBuilder<List<ServiceEntity>>(
-                stream: transitRepo.getOwnerServices(ownerId),
+              QueryStreamBuilder<List<ServiceEntity>>(
+                identity: (transitRepo, 'services', ownerId),
+          createStream: () => transitRepo.getOwnerServices(ownerId),
                 builder: (context, sSnap) {
                   final existing = sSnap.data ?? [];
 
