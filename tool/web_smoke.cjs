@@ -51,7 +51,17 @@ async function verifyStartup(page) {
       try {
         const page = await browser.newPage(options);
         const errors = [];
-        page.on('pageerror', error => errors.push(error.message));
+        let phase = 'cold-start';
+        page.on('pageerror', error => {
+          // WebKit reports an aborted Firestore listen as a page error when the
+          // old document unloads. Keep steady-state and all other errors fatal.
+          if (phase === 'reload' && engine === webkit &&
+              /\/firestore\.googleapis\.com\/google\.firestore\.v1\.Firestore\/Listen\/channel\?.*due to access control checks\./.test(error.message)) {
+            console.log('WEB_SMOKE_RELOAD_ABORT ' + name + ': previous Firestore listener closed during navigation.');
+            return;
+          }
+          errors.push({phase, message:error.message});
+        });
         await page.goto(baseUrl, {waitUntil:'domcontentloaded'});
         await verifyStartup(page);
         await page.screenshot({path:'browser-screenshots/' + name + '-home.png'});
@@ -59,7 +69,11 @@ async function verifyStartup(page) {
         await page.getByText('Routes directory', {exact:true}).waitFor();
         assert.equal(await page.getByText('Local sponsors near Aluva', {exact:true}).count(), 0);
         await page.screenshot({path:'browser-screenshots/' + name + '-routes.png'});
+        assert.deepEqual(errors, [], name + ': cold startup and navigation must not raise page errors');
+        console.log('WEB_SMOKE_COLD_START_PASS ' + name);
+        phase = 'reload';
         await page.reload({waitUntil:'domcontentloaded'});
+        phase = 'after-reload';
         await verifyStartup(page);
         assert.deepEqual(errors, []);
         console.log('WEB_SMOKE_PASS ' + name + ': cold start, Firebase initialization, Routes navigation and reload passed.');
