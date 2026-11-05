@@ -24,7 +24,9 @@ Widget harness(
   Stream<List<SponsoredAd>>? sponsorStream,
 }) => ProviderScope(
   overrides: [
-    liveSponsorsProvider.overrideWith((ref, location) => sponsorStream ?? Stream.value([])),
+    liveSponsorsProvider.overrideWith(
+      (ref, location) => sponsorStream ?? Stream.value([]),
+    ),
     liveTrackingProvider.overrideWith((ref) => Stream.value([])),
     liveCrewProvider.overrideWith((ref) => Stream.value([])),
     transitRepositoryProvider.overrideWithValue(repository),

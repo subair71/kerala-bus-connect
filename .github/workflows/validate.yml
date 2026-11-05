@@ -21,16 +21,8 @@ jobs:
       - run: flutter pub get
       - name: Enforce architecture and state management
         run: python3 tool/check_architecture.py
-      - name: Format and capture source
-        run: |
-          dart format lib test tool/capture_screenshots.dart
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          paths = list(Path('lib').rglob('*.dart')) + list(Path('test').rglob('*.dart')) + [Path('pubspec.lock'), Path('tool/capture_screenshots.dart')]
-          for path in paths:
-              print('VALIDATED_FILE:' + json.dumps({'path': str(path), 'content': path.read_text()}))
-          PY
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test tool/capture_screenshots.dart
       - name: Analyze
         run: flutter analyze
       - name: Tests
@@ -44,20 +36,6 @@ jobs:
           name: stitch-screenshots
           path: tool/screenshots
           retention-days: 14
-      - name: Inspect screenshots
-        run: |
-          python3 -m pip install --quiet Pillow
-          python3 - <<'PY'
-          import base64, json, io
-          from pathlib import Path
-          from PIL import Image
-          for path in Path('tool/screenshots').glob('*.png'):
-              picture = Image.open(path).convert('RGB')
-              picture.thumbnail((1200, 1800))
-              output = io.BytesIO()
-              picture.save(output, format='JPEG', quality=70)
-              print('SCREENSHOT:' + json.dumps({'path': path.name, 'data': base64.b64encode(output.getvalue()).decode()}))
-          PY
       - name: Release web build
         run: flutter build web --release --base-href /kerala-bus-connect/
       - name: Browser smoke test

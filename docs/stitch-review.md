@@ -18,3 +18,12 @@ Reference-only GPS claims, unsupported fares/platforms/ratings and nonfunctional
 Automated captures in the `stitch-screenshots` artifact cover desktop, mobile, narrow mobile, full-height mobile, Routes, Owner, Tracking and Crew. The `stitch-browser-screenshots` artifact captures the compiled release web application, with the current Firebase response, at desktop and mobile viewports.
 
 Validation includes 31 domain/provider/widget tests and eight capture scenarios. Real production owner records are not mutated during validation. Existing production authentication/security configuration is unchanged; physical Android/iOS devices and authenticated production CRUD still need an acceptance run.
+
+## Saved visual evidence
+
+- [Desktop sample layout](screenshots/desktop.jpg)
+- [Mobile sample layout](screenshots/mobile.jpg)
+- [Desktop release browser](screenshots/browser-desktop.jpg)
+- [Mobile release browser](screenshots/browser-mobile.jpg)
+
+Sample layout captures use deterministic repository fixtures. Browser captures use the configured Firebase project without test writes. The current Aluva → Kaloor live query has no matching service, so the browser correctly shows zero results instead of inserting fictional schedules.

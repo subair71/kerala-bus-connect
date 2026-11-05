@@ -19,7 +19,9 @@ class SponsoredCarousel extends ConsumerWidget {
               const SizedBox(height: 160, child: AsyncStatus(loading: true)),
           error: (_, _) => const SizedBox.shrink(),
           data: (data) => _Slides(
-            key: ValueKey('$location:${data.isDemo}:${data.records.map((ad) => ad.id).join(',')}'),
+            key: ValueKey(
+              '$location:${data.isDemo}:${data.records.map((ad) => ad.id).join(',')}',
+            ),
             location: location,
             ads: data.records,
             demo: data.isDemo,

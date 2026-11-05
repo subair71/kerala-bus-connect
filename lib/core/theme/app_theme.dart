@@ -105,7 +105,11 @@ class AppTheme {
         selectedColor: AppColors.secondaryContainer,
         side: BorderSide.none,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        labelStyle: const TextStyle(fontFamily: 'Plus Jakarta Sans', fontSize: 12, color: AppColors.onSurface),
+        labelStyle: const TextStyle(
+          fontFamily: 'Plus Jakarta Sans',
+          fontSize: 12,
+          color: AppColors.onSurface,
+        ),
       ),
       navigationBarTheme: const NavigationBarThemeData(
         backgroundColor: Colors.white,

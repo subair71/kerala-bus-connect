@@ -241,7 +241,11 @@ class _OwnerRoutes extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (isSampleId(route.id)) const Align(alignment: Alignment.centerLeft, child: DemoBadge()),
+                        if (isSampleId(route.id))
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: DemoBadge(),
+                          ),
                         Text(
                           route.name,
                           style: Theme.of(context).textTheme.titleMedium,
@@ -366,7 +370,11 @@ class _OwnerServices extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    if (isSampleId(service.id)) const Align(alignment: Alignment.centerLeft, child: DemoBadge()),
+                    if (isSampleId(service.id))
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: DemoBadge(),
+                      ),
                     Text(
                       service.busName,
                       style: Theme.of(context).textTheme.titleMedium,
