@@ -85,17 +85,11 @@ async function verifyStartup(page) {
         ]) {
           await page.locator('[aria-label^="' + tab + '"]').or(page.getByText(tab, {exact:true})).first().click();
           try {
-            await page.getByText(heading, {exact:true}).waitFor();
+            // Flutter cards can expose their heading in a grouped ARIA label.
+            await page.getByText(heading, {exact:true})
+              .or(page.getByLabel(heading, {exact:false})).first().waitFor();
           } catch (error) {
-            console.log('WEB_SMOKE_NAVIGATION_FAILURE ' + name + ' ' + tab + ': ' +
-              JSON.stringify(await page.locator('flt-semantics').evaluateAll(elements =>
-                elements.map(element => ({
-                  role: element.getAttribute('role'),
-                  label: element.getAttribute('aria-label'),
-                  text: element.textContent,
-                })).filter(item => item.label || item.text).slice(0, 60))));
-            const screenshot = await page.screenshot({path:'browser-screenshots/' + name + '-failure.png'});
-            console.log('WEB_SMOKE_FAILURE_IMAGE ' + screenshot.toString('base64'));
+            await page.screenshot({path:'browser-screenshots/' + name + '-failure.png'});
             throw error;
           }
           assert.equal(await page.getByText('Local sponsors near Aluva', {exact:true}).count(), 0);
