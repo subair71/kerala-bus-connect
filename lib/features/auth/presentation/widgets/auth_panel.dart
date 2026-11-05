@@ -3,6 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../providers/auth_providers.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../../core/widgets/app_components.dart';
 
 class AuthPanel extends HookConsumerWidget {
   const AuthPanel({super.key});
@@ -24,13 +25,10 @@ class AuthPanel extends HookConsumerWidget {
               children: [
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: AppColors.secondaryContainer,
-                    child: Icon(
-                      Icons.business_outlined,
-                      color: AppColors.primary,
-                    ),
+                  child: AppIconTile(
+                    Icons.business_outlined,
+                    size: 48,
+                    emphasized: true,
                   ),
                 ),
                 const SizedBox(height: 20),

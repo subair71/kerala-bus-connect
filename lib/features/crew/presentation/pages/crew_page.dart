@@ -5,6 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/widgets/page_heading.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../../core/widgets/app_components.dart';
 import '../providers/crew_providers.dart';
 
 class CrewPage extends HookConsumerWidget {
@@ -82,14 +83,7 @@ class CrewPage extends HookConsumerWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const CircleAvatar(
-                      radius: 22,
-                      backgroundColor: AppColors.secondaryContainer,
-                      child: Icon(
-                        Icons.badge_outlined,
-                        color: AppColors.primary,
-                      ),
-                    ),
+                    const AppIconTile(Icons.badge_outlined),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
@@ -112,22 +106,10 @@ class CrewPage extends HookConsumerWidget {
                             runSpacing: 8,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 5,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceLow,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  person.shift,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                              AppStatusBadge(
+                                label: person.shift,
+                                foreground: AppColors.onSurfaceVariant,
+                                background: AppColors.surfaceLow,
                               ),
                               Text(
                                 person.duty,

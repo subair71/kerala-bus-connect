@@ -5,6 +5,7 @@ import '../../../../core/providers/clock_provider.dart';
 import '../../../../core/utils/sample_ids.dart';
 import '../../../../core/utils/time_utils.dart';
 import '../../../../core/widgets/data_notice.dart';
+import '../../../../core/widgets/app_components.dart';
 import '../../domain/entities/service_entity.dart';
 import 'train_route_view.dart';
 
@@ -53,34 +54,6 @@ class ServiceCard extends ConsumerWidget {
               remaining < 120
         ? 'Scheduled in $remaining min'
         : 'Scheduled service';
-    Widget endpoint(String stop, int? minutes, bool right) => Expanded(
-      child: Column(
-        crossAxisAlignment: right
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
-        children: [
-          Text(
-            minutes == null ? 'Time unavailable' : timeLabel(minutes),
-            style: TextStyle(
-              fontSize: minutes == null ? 12 : 21,
-              fontWeight: FontWeight.w700,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            stop.isEmpty ? 'Stop unavailable' : stop,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: right ? TextAlign.right : TextAlign.left,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.onSurfaceVariant,
-            ),
-          ),
-        ],
-      ),
-    );
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -90,18 +63,9 @@ class ServiceCard extends ConsumerWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryContainer,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.directions_bus_outlined,
-                    size: 23,
-                    color: AppColors.primary,
-                  ),
+                const AppIconTile(
+                  Icons.directions_bus_outlined,
+                  emphasized: true,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -131,57 +95,13 @@ class ServiceCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 20),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceLow,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  endpoint(boarding, departure, false),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Column(
-                      children: [
-                        Text(
-                          duration == null ? '—' : '$duration min',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: AppColors.primary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        const SizedBox(
-                          width: 58,
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.circle,
-                                size: 5,
-                                color: AppColors.primary,
-                              ),
-                              Expanded(
-                                child: Divider(color: AppColors.outlineVariant),
-                              ),
-                              Icon(
-                                Icons.circle,
-                                size: 5,
-                                color: AppColors.primary,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          '${service.stops.length} stops',
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ),
-                  endpoint(destination, arrival, true),
-                ],
-              ),
+            _JourneyTimes(
+              boarding: boarding,
+              destination: destination,
+              departure: departure,
+              arrival: arrival,
+              duration: duration,
+              stopCount: service.stops.length,
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -190,26 +110,21 @@ class ServiceCard extends ConsumerWidget {
               runSpacing: 4,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: running
-                        ? AppColors.secondaryContainer
-                        : AppColors.errorContainer,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: running ? AppColors.primary : AppColors.error,
-                    ),
-                  ),
+                AppStatusBadge(
+                  label: status,
+                  icon: Icons.schedule_rounded,
+                  foreground: !service.operatingDaysKnown
+                      ? AppColors.onSurfaceVariant
+                      : running
+                      ? AppColors.primary
+                      : AppColors.error,
+                  background: !service.operatingDaysKnown
+                      ? AppColors.surfaceLow
+                      : running
+                      ? AppColors.secondaryContainer
+                      : AppColors.errorContainer,
                 ),
-                TextButton.icon(
+                FilledButton.tonalIcon(
                   iconAlignment: IconAlignment.end,
                   icon: const Icon(Icons.arrow_forward, size: 18),
                   label: const Text('View stop timings'),
@@ -273,4 +188,170 @@ class ServiceCard extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Adapts the existing schedule display without changing operational values.
+class _JourneyTimes extends StatelessWidget {
+  final String boarding, destination;
+  final int? departure, arrival, duration;
+  final int stopCount;
+  const _JourneyTimes({
+    required this.boarding,
+    required this.destination,
+    required this.departure,
+    required this.arrival,
+    required this.duration,
+    required this.stopCount,
+  });
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: AppColors.journeySurface,
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(color: AppColors.secondaryContainer),
+    ),
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final compact = constraints.maxWidth < 320 || scale > 1.2;
+        final stacked = scale > 1.6;
+        Widget endpoint(bool end) {
+          final minutes = end ? arrival : departure;
+          final stop = end ? destination : boarding;
+          final alignRight = end && !stacked;
+          return Column(
+            crossAxisAlignment: alignRight
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            children: [
+              Text(
+                end ? 'Arrival' : 'Departure',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                minutes == null ? 'Time unavailable' : timeLabel(minutes),
+                style: TextStyle(
+                  fontSize: minutes == null ? 13 : 22,
+                  height: 1.2,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: -.5,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                stop.isEmpty ? 'Stop unavailable' : stop,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: alignRight ? TextAlign.right : TextAlign.left,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppColors.onSurfaceVariant,
+                ),
+              ),
+            ],
+          );
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (stacked) ...[
+              endpoint(false),
+              const SizedBox(height: 16),
+              endpoint(true),
+            ] else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: endpoint(false)),
+                  if (!compact)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      child: Column(
+                        children: [
+                          Text(
+                            duration == null ? '—' : '$duration min',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const SizedBox(
+                            width: 72,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.trip_origin,
+                                  size: 10,
+                                  color: AppColors.primary,
+                                ),
+                                Expanded(
+                                  child: Divider(
+                                    color: AppColors.outlineVariant,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 16,
+                                  color: AppColors.primary,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            '$stopCount stops',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 16),
+                  Expanded(child: endpoint(true)),
+                ],
+              ),
+            if (compact) ...[
+              const Divider(height: 24),
+              Wrap(
+                spacing: 16,
+                runSpacing: 6,
+                children: [
+                  Text(
+                    duration == null ? 'Duration unavailable' : '$duration min',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                  Text(
+                    '$stopCount stops',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ],
+        );
+      },
+    ),
+  );
 }

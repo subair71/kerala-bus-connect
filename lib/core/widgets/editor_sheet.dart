@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 
 Future<T?> openEditor<T>(BuildContext context, Widget child) =>
     showModalBottomSheet<T>(
@@ -26,6 +27,7 @@ Future<bool> confirmDelete(BuildContext context, String label) async =>
     await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
         title: const Text('Confirm deletion'),
         content: Text('Delete $label?'),
         actions: [
@@ -34,6 +36,10 @@ Future<bool> confirmDelete(BuildContext context, String label) async =>
             child: const Text('Cancel'),
           ),
           FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete'),
           ),
