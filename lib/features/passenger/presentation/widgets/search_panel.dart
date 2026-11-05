@@ -19,7 +19,9 @@ class SearchPanel extends HookConsumerWidget {
 
     // Keep corridor previews ready while the mobile results sheet is closed.
     ref.watch(
-      departureResultsProvider.select((result) => result.asData?.value.firstOrNull),
+      departureResultsProvider.select(
+        (result) => result.asData?.value.firstOrNull,
+      ),
     );
     final query = ref.watch(searchQueryProvider);
     final from = useTextEditingController(text: query.from);
@@ -141,7 +143,10 @@ class SearchPanel extends HookConsumerWidget {
     );
     final days = ['All Days', ...weekDays];
     Widget dayPicker(double maxWidth) => SizedBox(
-      width: (MediaQuery.textScalerOf(context).scale(72) + 64).clamp(0.0, maxWidth),
+      width: (MediaQuery.textScalerOf(context).scale(72) + 64).clamp(
+        0.0,
+        maxWidth,
+      ),
       height: 48,
       child: Stack(
         children: [

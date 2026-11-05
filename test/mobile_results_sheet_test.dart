@@ -53,6 +53,14 @@ void main() {
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
         expect(find.byType(MobileBusResultsSheet), findsNothing);
+        await tester.tap(find.byKey(const ValueKey('show-bus-results')));
+        await tester.pumpAndSettle();
+        await tester.drag(
+          find.byKey(const ValueKey('mobile-bus-results-list')),
+          const Offset(0, 700),
+        );
+        await tester.pumpAndSettle();
+        expect(find.byType(MobileBusResultsSheet), findsNothing);
         expect(tester.takeException(), isNull);
       },
     );

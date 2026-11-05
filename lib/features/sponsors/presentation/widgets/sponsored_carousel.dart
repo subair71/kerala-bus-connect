@@ -189,7 +189,8 @@ class _Slides extends HookConsumerWidget {
                 final wide = constraints.maxWidth >= 700;
                 final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
                 return SizedBox(
-                  height: (wide ? 188 : 228) * scale.clamp(1, 2.5),
+                  // Reserve room for sponsor labels wrapping on narrow screens.
+                  height: (wide ? 188 : 260) * scale.clamp(1, 2.5),
                   child: PageView.builder(
                     controller: controller,
                     itemCount: ads.length,
