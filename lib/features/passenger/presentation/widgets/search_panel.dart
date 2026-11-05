@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/constants/transit_constants.dart';
+import '../../../../core/constants/colors.dart';
+import '../../../../core/widgets/app_components.dart';
 import '../../domain/entities/search_query.dart';
 import '../providers/search_providers.dart';
 
@@ -45,18 +47,22 @@ class SearchPanel extends HookConsumerWidget {
         ),
       ),
     );
-    Widget swap(bool wide) => IconButton(
+    Widget swap(bool wide) => IconButton.filledTonal(
       key: const ValueKey('swap-stops'),
       tooltip: 'Swap stops',
       onPressed: controller.swap,
-      color: Theme.of(context).colorScheme.primary,
+      style: IconButton.styleFrom(
+        backgroundColor: AppColors.secondaryContainer,
+        foregroundColor: AppColors.primary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
       icon: Icon(wide ? Icons.swap_horiz : Icons.swap_vert),
     );
     Widget dayPicker() => Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: Theme.of(context).inputDecorationTheme.fillColor,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -75,7 +81,7 @@ class SearchPanel extends HookConsumerWidget {
         ),
       ),
     );
-    Widget running() => Row(
+    Widget running() => MergeSemantics(child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         const Flexible(
@@ -87,7 +93,7 @@ class SearchPanel extends HookConsumerWidget {
           onChanged: controller.runningToday,
         ),
       ],
-    );
+    ));
     final thrissur = query.from.toLowerCase().contains('thrissur');
     final stops = thrissur
         ? [
@@ -118,6 +124,8 @@ class SearchPanel extends HookConsumerWidget {
               children: [
                 Row(
                   children: [
+                    const AppIconTile(Icons.search_rounded, size: 36),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Find a bus',

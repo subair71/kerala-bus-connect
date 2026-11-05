@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/widgets/page_heading.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../../core/widgets/app_components.dart';
 import '../providers/tracking_providers.dart';
 
 class TrackingPage extends ConsumerWidget {
@@ -69,15 +70,11 @@ class TrackingPage extends ConsumerWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        leading: Icon(
-                          i == preview.currentStop
-                              ? Icons.directions_bus
-                              : Icons.location_on_outlined,
-                          color: i <= preview.currentStop
-                              ? Theme.of(context).colorScheme.primary
-                              : AppColors.outline,
-                        ),
-                        title: Text(preview.stops[i]),
+                        leading: i == preview.currentStop
+                        ? const AppIconTile(Icons.directions_bus_outlined, size: 36, emphasized: true)
+                        : Icon(Icons.location_on_outlined, color: i < preview.currentStop
+                          ? AppColors.primary : AppColors.outline),
+                      title: Text(preview.stops[i]),
                         subtitle: i == preview.currentStop
                             ? Text(
                                 data.asData!.value.isDemo

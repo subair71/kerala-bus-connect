@@ -4,6 +4,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/constants/colors.dart';
 import '../../../../core/widgets/data_notice.dart';
+import '../../../../core/widgets/app_components.dart';
 import '../../domain/entities/sponsored_ad.dart';
 import '../providers/sponsor_providers.dart';
 
@@ -175,7 +176,7 @@ class _Slides extends HookConsumerWidget {
                 final wide = constraints.maxWidth >= 700;
                 final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
                 return SizedBox(
-                  height: (wide ? 168 : 210) * scale.clamp(1, 2.5),
+                  height: (wide ? 188 : 228) * scale.clamp(1, 2.5),
                   child: PageView.builder(
                     controller: controller,
                     itemCount: ads.length,
@@ -232,10 +233,10 @@ class _AdCard extends ConsumerWidget {
       ),
     );
     final picture = ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(14),
       child: SizedBox(
         width: wide ? 96 : 74,
-        height: wide ? 96 : 86,
+        height: wide ? 96 : 80,
         child: ad.imageUrl == 'asset:hotel'
             ? Image.asset(
                 'assets/images/sponsor-hotel.jpg',
@@ -252,7 +253,7 @@ class _AdCard extends ConsumerWidget {
             : fallback,
       ),
     );
-    final action = TextButton.icon(
+    final action = FilledButton.tonalIcon(
       onPressed: demo || ad.website == null
           ? () => info(context)
           : () async {
@@ -272,25 +273,17 @@ class _AdCard extends ConsumerWidget {
     );
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceHigh,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: const Text(
-                    'SPONSORED',
-                    style: TextStyle(fontSize: 10, letterSpacing: .5),
-                  ),
+                const AppStatusBadge(
+                  label: 'SPONSORED',
+                  foreground: AppColors.onSurfaceVariant,
+                  background: AppColors.surfaceLow,
+                  fontSize: 10,
                 ),
                 const SizedBox(width: 6),
                 Expanded(

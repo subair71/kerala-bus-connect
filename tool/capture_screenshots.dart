@@ -23,6 +23,8 @@ void main() {
     'mobile-home': const Size(390, 844),
     'mobile-home-full': const Size(390, 1700),
     'narrow-home': const Size(320, 740),
+    'narrow-home-full-no-ads': const Size(320, 1700),
+    'mobile-large-text-no-ads': const Size(390, 1700),
   }.entries) {
     testWidgets('capture ${entry.key}', (tester) async {
       tester.view.physicalSize = entry.value;
@@ -35,7 +37,9 @@ void main() {
         harness(
           RepaintBoundary(
             key: const ValueKey('capture'),
-            child: Theme(data: AppTheme.lightTheme, child: const AppShell()),
+            child: Builder(builder: (context) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(entry.key.contains('large-text') ? 2 : 1)),
+              child: Theme(data: AppTheme.lightTheme, child: const AppShell()))),
           ),
           FakeTransitRepository(),
           auth,

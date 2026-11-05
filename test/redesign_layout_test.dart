@@ -75,7 +75,7 @@ void main() {
     });
   }
 
-  for (final size in [const Size(320, 740), const Size(844, 390)]) {
+  for (final size in [const Size(320, 740), const Size(844, 390), const Size(390, 844)]) {
     testWidgets('all sections remain usable with large text at $size', (
       tester,
     ) async {
@@ -91,7 +91,7 @@ void main() {
             builder: (context) => MediaQuery(
               data: MediaQuery.of(
                 context,
-              ).copyWith(textScaler: const TextScaler.linear(1.5)),
+              ).copyWith(textScaler: TextScaler.linear(size.width == 390 ? 2 : 1.5)),
               child: const AppShell(),
             ),
           ),
@@ -99,6 +99,7 @@ void main() {
             services: [service('real', bus: 'Long bus service name')],
           ),
           auth,
+          sampleSponsors: size.width == 320,
         ),
       );
       await tester.pumpAndSettle();

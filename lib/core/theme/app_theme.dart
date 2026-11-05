@@ -9,13 +9,16 @@ class AppTheme {
       primary: AppColors.primary,
       onPrimary: Colors.white,
       primaryContainer: AppColors.secondaryContainer,
+      onPrimaryContainer: AppColors.onSecondaryContainer,
+      secondaryContainer: AppColors.secondaryContainer,
+      onSecondaryContainer: AppColors.onSecondaryContainer,
       surface: Colors.white,
       onSurface: AppColors.onSurface,
       outline: AppColors.outline,
       outlineVariant: AppColors.border,
     );
     final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(14),
       borderSide: const BorderSide(color: AppColors.outlineVariant),
     );
     return ThemeData(
@@ -59,17 +62,18 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: Colors.white,
-        elevation: 0,
+        elevation: .5,
+        shadowColor: const Color(0x1422394a),
         surfaceTintColor: Colors.transparent,
         margin: const EdgeInsets.only(bottom: 12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(22),
           side: const BorderSide(color: AppColors.border),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.white,
+        fillColor: AppColors.surfaceLow,
         border: border,
         enabledBorder: border,
         focusedBorder: border.copyWith(
@@ -80,12 +84,16 @@ class AppTheme {
           vertical: 16,
         ),
         labelStyle: const TextStyle(color: AppColors.onSurfaceVariant),
+        prefixIconColor: AppColors.primary,
+        suffixIconColor: AppColors.onSurfaceVariant,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(48, 48),
+          minimumSize: const Size(48, 52),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          textStyle: const TextStyle(fontFamily: 'Plus Jakarta Sans', fontSize: 14, fontWeight: FontWeight.w700),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
         ),
       ),
@@ -93,7 +101,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(48, 48),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
           side: const BorderSide(color: AppColors.border),
         ),
@@ -102,14 +110,15 @@ class AppTheme {
         style: TextButton.styleFrom(
           minimumSize: const Size(48, 48),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(14),
           ),
         ),
       ),
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.surfaceLow,
         selectedColor: AppColors.secondaryContainer,
-        side: BorderSide.none,
+        side: const BorderSide(color: AppColors.border),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         labelStyle: const TextStyle(
           fontFamily: 'Plus Jakarta Sans',
@@ -121,7 +130,7 @@ class AppTheme {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         indicatorColor: AppColors.secondaryContainer,
-        height: 76,
+        height: 72,
         labelTextStyle: WidgetStatePropertyAll(
           TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
         ),
@@ -131,7 +140,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         constraints: BoxConstraints(maxWidth: 720),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
       ),
       iconButtonTheme: IconButtonThemeData(
@@ -141,6 +150,25 @@ class AppTheme {
         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         iconColor: AppColors.primary,
       ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.disabled) ? AppColors.outlineVariant : Colors.white),
+        trackColor: WidgetStateProperty.resolveWith((states) =>
+          states.contains(WidgetState.selected) ? AppColors.primary : AppColors.outlineVariant),
+        trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.onSurface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.primary, linearMinHeight: 3),
       dividerTheme: const DividerThemeData(color: AppColors.border),
     );
   }

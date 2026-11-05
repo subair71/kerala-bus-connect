@@ -19,6 +19,7 @@ class AppColors {
   static const surfaceHigh = Color(0xffeaf0f4);
   static const surfaceContainerHigh = Color(0xffe3ebf0);
   static const surfaceContainerHighest = Color(0xffd8e3ea);
+  static const journeySurface = Color(0xfff0f8f6);
   static const card = Color(0xffffffff);
   static const onSurface = Color(0xff172a3a);
   static const onSurfaceVariant = Color(0xff58697a);
