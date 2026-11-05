@@ -6,7 +6,8 @@ class AppIconTile extends StatelessWidget {
   final IconData icon;
   final double size;
   final bool emphasized;
-  const AppIconTile(this.icon, {
+  const AppIconTile(
+    this.icon, {
     super.key,
     this.size = 44,
     this.emphasized = false,
@@ -20,10 +21,16 @@ class AppIconTile extends StatelessWidget {
       color: emphasized ? AppColors.primary : AppColors.secondaryContainer,
       borderRadius: BorderRadius.circular(size * .32),
       border: Border.all(
-        color: emphasized ? AppColors.primary : AppColors.primary.withValues(alpha: .10)),
+        color: emphasized
+            ? AppColors.primary
+            : AppColors.primary.withValues(alpha: .10),
+      ),
     ),
-    child: Icon(icon, size: size * .52,
-      color: emphasized ? Colors.white : AppColors.primary),
+    child: Icon(
+      icon,
+      size: size * .52,
+      color: emphasized ? Colors.white : AppColors.primary,
+    ),
   );
 }
 
@@ -56,9 +63,17 @@ class AppStatusBadge extends StatelessWidget {
           Icon(icon, size: 14, color: foreground),
           const SizedBox(width: 6),
         ],
-        Flexible(child: Text(label, style: TextStyle(
-          fontSize: fontSize, height: 1.25,
-          fontWeight: FontWeight.w600, color: foreground))),
+        Flexible(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: fontSize,
+              height: 1.25,
+              fontWeight: FontWeight.w600,
+              color: foreground,
+            ),
+          ),
+        ),
       ],
     ),
   );

@@ -71,10 +71,18 @@ class TrackingPage extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         leading: i == preview.currentStop
-                        ? const AppIconTile(Icons.directions_bus_outlined, size: 36, emphasized: true)
-                        : Icon(Icons.location_on_outlined, color: i < preview.currentStop
-                          ? AppColors.primary : AppColors.outline),
-                      title: Text(preview.stops[i]),
+                            ? const AppIconTile(
+                                Icons.directions_bus_outlined,
+                                size: 36,
+                                emphasized: true,
+                              )
+                            : Icon(
+                                Icons.location_on_outlined,
+                                color: i < preview.currentStop
+                                    ? AppColors.primary
+                                    : AppColors.outline,
+                              ),
+                        title: Text(preview.stops[i]),
                         subtitle: i == preview.currentStop
                             ? Text(
                                 data.asData!.value.isDemo

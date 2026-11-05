@@ -56,8 +56,11 @@ class AppShell extends ConsumerWidget {
                           height: headerHeight,
                           child: Row(
                             children: [
-                              const AppIconTile(Icons.directions_bus_outlined,
-                                size: 40, emphasized: true),
+                              const AppIconTile(
+                                Icons.directions_bus_outlined,
+                                size: 40,
+                                emphasized: true,
+                              ),
                               const SizedBox(width: 12),
                               Expanded(
                                 flex: wide ? 0 : 1,
@@ -140,34 +143,41 @@ class AppShell extends ConsumerWidget {
             ),
           ),
           body: SafeArea(top: false, bottom: false, child: page),
-          bottomNavigationBar: wide ? null : SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-              child: Material(
-                color: Colors.white,
-                elevation: 3,
-                shadowColor: const Color(0x1822394a),
-                clipBehavior: Clip.antiAlias,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(26),
-                  side: const BorderSide(color: AppColors.border),
-                ),
-                child: NavigationBar(
-                  selectedIndex: tab.index,
-                  onDestinationSelected: select,
-                  destinations: [
-                    for (var i = 0; i < _labels.length; i++)
-                      NavigationDestination(
-                        icon: Icon(_icons[i], color: AppColors.onSurfaceVariant),
-                        selectedIcon: Icon(_icons[i], color: AppColors.primary),
-                        label: _labels[i],
+          bottomNavigationBar: wide
+              ? null
+              : SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                    child: Material(
+                      color: Colors.white,
+                      elevation: 0,
+                      clipBehavior: Clip.antiAlias,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(26),
+                        side: const BorderSide(color: AppColors.border),
                       ),
-                  ],
+                      child: NavigationBar(
+                        selectedIndex: tab.index,
+                        onDestinationSelected: select,
+                        destinations: [
+                          for (var i = 0; i < _labels.length; i++)
+                            NavigationDestination(
+                              icon: Icon(
+                                _icons[i],
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                              selectedIcon: Icon(
+                                _icons[i],
+                                color: AppColors.primary,
+                              ),
+                              label: _labels[i],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ),
         );
       },
     );

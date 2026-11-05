@@ -54,7 +54,8 @@ class SearchPanel extends HookConsumerWidget {
       style: IconButton.styleFrom(
         backgroundColor: AppColors.secondaryContainer,
         foregroundColor: AppColors.primary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
       icon: Icon(wide ? Icons.swap_horiz : Icons.swap_vert),
     );
     Widget dayPicker() => Container(
@@ -81,19 +82,21 @@ class SearchPanel extends HookConsumerWidget {
         ),
       ),
     );
-    Widget running() => MergeSemantics(child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Flexible(
-          child: Text('Running today', style: TextStyle(fontSize: 13)),
-        ),
-        const SizedBox(width: 4),
-        Switch(
-          value: query.onlyRunningToday,
-          onChanged: controller.runningToday,
-        ),
-      ],
-    ));
+    Widget running() => MergeSemantics(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Flexible(
+            child: Text('Running today', style: TextStyle(fontSize: 13)),
+          ),
+          const SizedBox(width: 4),
+          Switch(
+            value: query.onlyRunningToday,
+            onChanged: controller.runningToday,
+          ),
+        ],
+      ),
+    );
     final thrissur = query.from.toLowerCase().contains('thrissur');
     final stops = thrissur
         ? [

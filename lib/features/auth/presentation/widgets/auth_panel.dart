@@ -25,7 +25,11 @@ class AuthPanel extends HookConsumerWidget {
               children: [
                 const Align(
                   alignment: Alignment.centerLeft,
-                  child: AppIconTile(Icons.business_outlined, size: 48, emphasized: true),
+                  child: AppIconTile(
+                    Icons.business_outlined,
+                    size: 48,
+                    emphasized: true,
+                  ),
                 ),
                 const SizedBox(height: 20),
                 Text(

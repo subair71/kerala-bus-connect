@@ -20,7 +20,9 @@ class DataNotice extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.sampleSurface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.onSampleSurface.withValues(alpha: .12)),
+        border: Border.all(
+          color: AppColors.onSampleSurface.withValues(alpha: .12),
+        ),
       ),
       child: Row(
         children: [

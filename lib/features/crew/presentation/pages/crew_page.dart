@@ -106,9 +106,11 @@ class CrewPage extends HookConsumerWidget {
                             runSpacing: 8,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
-                              AppStatusBadge(label: person.shift,
+                              AppStatusBadge(
+                                label: person.shift,
                                 foreground: AppColors.onSurfaceVariant,
-                                background: AppColors.surfaceLow),
+                                background: AppColors.surfaceLow,
+                              ),
                               Text(
                                 person.duty,
                                 style: const TextStyle(

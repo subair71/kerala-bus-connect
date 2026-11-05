@@ -37,9 +37,19 @@ void main() {
         harness(
           RepaintBoundary(
             key: const ValueKey('capture'),
-            child: Builder(builder: (context) => MediaQuery(
-              data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(entry.key.contains('large-text') ? 2 : 1)),
-              child: Theme(data: AppTheme.lightTheme, child: const AppShell()))),
+            child: Builder(
+              builder: (context) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(
+                    entry.key.contains('large-text') ? 2 : 1,
+                  ),
+                ),
+                child: Theme(
+                  data: AppTheme.lightTheme,
+                  child: const AppShell(),
+                ),
+              ),
+            ),
           ),
           FakeTransitRepository(),
           auth,
