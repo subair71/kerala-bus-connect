@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
+import 'app_components.dart';
 
 Future<T?> openEditor<T>(BuildContext context, Widget child) =>
     showModalBottomSheet<T>(
@@ -47,3 +48,39 @@ Future<bool> confirmDelete(BuildContext context, String label) async =>
       ),
     ) ??
     false;
+
+class EditorHeading extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final String? subtitle;
+  const EditorHeading({
+    super.key,
+    required this.title,
+    required this.icon,
+    this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 20),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        AppIconTile(icon),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.headlineSmall),
+              if (subtitle != null) ...[
+                const SizedBox(height: 4),
+                Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}

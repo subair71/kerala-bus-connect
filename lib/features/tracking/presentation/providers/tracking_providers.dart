@@ -12,12 +12,15 @@ final trackingRepositoryProvider = Provider<TrackingRepository>(
 );
 final liveTrackingProvider = StreamProvider.autoDispose<List<TrackingPreview>>(
   (ref) => ref.watch(trackingRepositoryProvider).watch(),
+  // Firestore owns reconnection; expose errors to the labelled preview fallback.
+  retry: (_, _) => null,
 );
 final trackingDataProvider =
     Provider.autoDispose<AsyncValue<DataSet<TrackingPreview>>>(
       (ref) => sampleFallback(
         ref.watch(liveTrackingProvider),
         const DemoTrackingRepository().previews(),
+        previewWhileLoading: true,
       ),
     );
 final trackingSelectionProvider = NotifierProvider<TrackingSelection, int>(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/editor_sheet.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../timetables/domain/entities/business_entity.dart';
@@ -14,17 +15,16 @@ class BusinessEditor extends HookConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          business == null ? 'Create business' : 'Rename business',
-          style: Theme.of(context).textTheme.headlineSmall,
+        EditorHeading(
+          title: business == null ? 'Create business' : 'Rename business',
+          icon: Icons.business_outlined,
         ),
-        const SizedBox(height: 16),
         TextField(
           key: const ValueKey('business-name'),
           controller: name,
           decoration: const InputDecoration(
             labelText: 'Business name',
-            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.business_outlined),
           ),
         ),
         if (action.hasError)

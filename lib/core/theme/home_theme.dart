@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
+import '../constants/colors.dart';
 
-/// Tokens from the supplied home-screen reference; scoped to the passenger tab.
+/// Home-specific surfaces built on the application's shared reference palette.
 abstract final class HomeTheme {
-  static const border = Color(0xffe3e3e7);
-  static const accentInk = Color(0xffa64400);
-  static const primary = Color(0xffe96300);
-  static const mint = Color(0xffffebdc);
-  static const background = Color(0xffffffff);
-  static const field = Color(0xfff5f5f6);
+  static const border = AppColors.border;
+  static const accentInk = AppColors.accentInk;
+  static const primary = AppColors.primary;
+  static const mint = AppColors.secondaryContainer;
+  static const background = AppColors.background;
+  static const field = AppColors.surfaceLow;
   static const timing = Color(0xfff5f8fa);
-  static const text = Color(0xff202124);
-  static const muted = Color(0xff676b78);
+  static const text = AppColors.onSurface;
+  static const muted = AppColors.onSurfaceVariant;
   static const positive = Color(0xff16c997);
   static const positiveSurface = Color(0xffeafbf4);
   static const advisory = Color(0xfffff6ed);
