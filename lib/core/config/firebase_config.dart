@@ -8,4 +8,3 @@ const firebaseOptions = FirebaseOptions(
   authDomain: 'findmybus-535ae.firebaseapp.com',
   storageBucket: 'findmybus-535ae.firebasestorage.app',
 );
-

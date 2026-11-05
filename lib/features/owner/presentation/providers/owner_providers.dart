@@ -8,34 +8,43 @@ import '../../../timetables/domain/entities/service_entity.dart';
 import '../../../timetables/presentation/providers/timetable_providers.dart';
 import '../../domain/usecases/manage_transit.dart';
 
-final manageTransitProvider = Provider<ManageTransit>((ref) =>
-    ManageTransit(ref.watch(transitRepositoryProvider)));
+final manageTransitProvider = Provider<ManageTransit>(
+  (ref) => ManageTransit(ref.watch(transitRepositoryProvider)),
+);
 
-final selectedBusinessIdProvider = NotifierProvider<SelectedBusiness, String?>(SelectedBusiness.new);
+final selectedBusinessIdProvider = NotifierProvider<SelectedBusiness, String?>(
+  SelectedBusiness.new,
+);
+
 class SelectedBusiness extends Notifier<String?> {
   @override
-  String? build() { ref.watch(ownerIdProvider); return null; }
+  String? build() {
+    ref.watch(ownerIdProvider);
+    return null;
+  }
+
   void select(String id) => state = id;
 }
+
 final selectedBusinessProvider = Provider.autoDispose<BusinessEntity?>((ref) {
-  final list = ref.watch(ownerBusinessesProvider).asData?.value ?? const <BusinessEntity>[];
+  final list =
+      ref.watch(ownerBusinessesProvider).asData?.value ??
+      const <BusinessEntity>[];
   final selected = ref.watch(selectedBusinessIdProvider);
   if (list.isEmpty) return null;
   return list.firstWhere((b) => b.id == selected, orElse: () => list.first);
 });
 
-final ownerActionsProvider = AsyncNotifierProvider.autoDispose<OwnerActions, void>(OwnerActions.new);
+final ownerActionsProvider =
+    AsyncNotifierProvider.autoDispose<OwnerActions, void>(OwnerActions.new);
+
 class OwnerActions extends AsyncNotifier<void> {
   @override
-  FutureOr<void> build() { ref.watch(ownerIdProvider); }
-
-  String get _owner {
-    final id = ref.read(ownerIdProvider);
-    if (id == null) throw const AppFailure('Please sign in to manage your business.');
-    return id;
+  FutureOr<void> build() {
+    ref.watch(ownerIdProvider);
   }
 
-  Future<bool> _run(Future<void> Function() action) async {
+  Future<bool> _run(Future<void> Function(String owner) action) async {
     if (state.isLoading) return false;
     final owner = ref.read(ownerIdProvider);
     if (owner == null) {
@@ -43,15 +52,15 @@ class OwnerActions extends AsyncNotifier<void> {
       return false;
     }
     state = const AsyncLoading();
-    final result = await AsyncValue.guard(action);
+    final result = await AsyncValue.guard(() => action(owner));
     if (!ref.mounted || ref.read(ownerIdProvider) != owner) return false;
     state = result;
     return !result.hasError;
   }
 
   Future<bool> saveBusiness(String name, {String? id}) {
-    final owner = _owner, useCase = ref.read(manageTransitProvider);
-    return _run(() async {
+    final useCase = ref.read(manageTransitProvider);
+    return _run((owner) async {
       final saved = await useCase.saveBusiness(owner, name, id: id);
       if (ref.mounted && ref.read(ownerIdProvider) == owner) {
         ref.read(selectedBusinessIdProvider.notifier).select(saved);
@@ -62,40 +71,54 @@ class OwnerActions extends AsyncNotifier<void> {
   Future<bool> saveRoute({required BusinessEntity business, required String name,
     required String from, required String to, required String stops,
     required bool returnRoute, String? id}) {
-    final owner = _owner, useCase = ref.read(manageTransitProvider);
-    return _run(() async { await useCase.saveRoute(ownerId: owner, business: business,
-      name: name, from: from, to: to, intermediateStops: stops,
-      returnRoute: returnRoute, routeId: id); });
+    final useCase = ref.read(manageTransitProvider);
+    return _run((owner) async {
+      await useCase.saveRoute(ownerId: owner, business: business,
+        name: name, from: from, to: to, intermediateStops: stops,
+        returnRoute: returnRoute, routeId: id);
+    });
   }
 
   Future<bool> generateReturn(RouteEntity route) {
-    final owner = _owner, useCase = ref.read(manageTransitProvider);
-    return _run(() => useCase.generateReturn(route, owner));
+    final useCase = ref.read(manageTransitProvider);
+    return _run((owner) => useCase.generateReturn(route, owner));
   }
 
   Future<bool> deleteRoute(String id) {
     final useCase = ref.read(manageTransitProvider);
-    final existing = ref.read(ownerServicesProvider.future);
-    return _run(() async => useCase.deleteRoute(id, await existing));
+    return _run((owner) async {
+      final existing = await ref.read(ownerServicesProvider.future);
+      if (!ref.mounted || ref.read(ownerIdProvider) != owner) {
+        throw const AppFailure('Your account changed. Please try again.');
+      }
+      await useCase.deleteRoute(id, existing);
+    });
   }
 
   Future<bool> deleteService(String id) {
     final useCase = ref.read(manageTransitProvider);
-    return _run(() => useCase.deleteService(id));
+    return _run((owner) => useCase.deleteService(id));
   }
 
   Future<bool> saveService({required BusinessEntity business, required RouteEntity route,
     required String busName, required ServiceDraft draft, required String note, String? id}) {
-    final owner = _owner, useCase = ref.read(manageTransitProvider);
-    final existing = ref.read(ownerServicesProvider.future);
-    return _run(() async => useCase.saveService(ownerId: owner, business: business,
-      route: route, busName: busName, departure: draft.departure,
-      timings: draft.timings, offDays: draft.offDays, note: note,
-      existing: await existing, serviceId: id));
+    final useCase = ref.read(manageTransitProvider);
+    return _run((owner) async {
+      final existing = await ref.read(ownerServicesProvider.future);
+      if (!ref.mounted || ref.read(ownerIdProvider) != owner) {
+        throw const AppFailure('Your account changed. Please try again.');
+      }
+      await useCase.saveService(ownerId: owner, business: business,
+        route: route, busName: busName, departure: draft.departure,
+        timings: draft.timings, offDays: draft.offDays, note: note,
+        existing: existing, serviceId: id);
+    });
   }
 }
 
-final returnRouteProvider = NotifierProvider.autoDispose.family<ReturnRouteChoice, bool, String>(ReturnRouteChoice.new);
+final returnRouteProvider = NotifierProvider.autoDispose
+    .family<ReturnRouteChoice, bool, String>(ReturnRouteChoice.new);
+
 class ReturnRouteChoice extends Notifier<bool> {
   ReturnRouteChoice(this.key);
   final String key;
@@ -105,14 +128,24 @@ class ReturnRouteChoice extends Notifier<bool> {
 }
 
 typedef ServiceEditorArgs = ({RouteEntity route, ServiceEntity? service});
+
 class ServiceDraft {
   final int departure;
   final Map<String, int> timings;
   final Set<String> offDays;
-  ServiceDraft({required this.departure, required Map<String, int> timings, required Set<String> offDays})
-      : timings = Map.unmodifiable(timings), offDays = Set.unmodifiable(offDays);
+  ServiceDraft({
+    required this.departure,
+    required Map<String, int> timings,
+    required Set<String> offDays,
+  }) : timings = Map.unmodifiable(timings),
+       offDays = Set.unmodifiable(offDays);
 }
-final serviceDraftProvider = NotifierProvider.autoDispose.family<ServiceDraftController, ServiceDraft, ServiceEditorArgs>(ServiceDraftController.new);
+
+final serviceDraftProvider = NotifierProvider.autoDispose
+    .family<ServiceDraftController, ServiceDraft, ServiceEditorArgs>(
+      ServiceDraftController.new,
+    );
+
 class ServiceDraftController extends Notifier<ServiceDraft> {
   ServiceDraftController(this.args);
   final ServiceEditorArgs args;
@@ -120,29 +153,56 @@ class ServiceDraftController extends Notifier<ServiceDraft> {
   ServiceDraft build() {
     final service = args.service;
     final departure = service?.departureMinutes ?? 480;
-    return ServiceDraft(departure: departure,
-      timings: {for (var i = 0; i < args.route.stops.length; i++)
-        args.route.stops[i]: service?.stopTimings[args.route.stops[i]] ?? departure + i * 15},
-      offDays: service?.offDays.toSet() ?? {});
+    return ServiceDraft(
+      departure: departure,
+      timings: {
+        for (var i = 0; i < args.route.stops.length; i++)
+          args.route.stops[i]:
+              service?.stopTimings[args.route.stops[i]] ?? departure + i * 15,
+      },
+      offDays: service?.offDays.toSet() ?? {},
+    );
   }
-  void departure(int minutes) => state = ServiceDraft(departure: minutes,
-    timings: {for (var i = 0; i < args.route.stops.length; i++) args.route.stops[i]: minutes + i * 15},
-    offDays: state.offDays);
+
+  void departure(int minutes) => state = ServiceDraft(
+    departure: minutes,
+    timings: {
+      for (var i = 0; i < args.route.stops.length; i++)
+        args.route.stops[i]: minutes + i * 15,
+    },
+    offDays: state.offDays,
+  );
   void stopTime(String stop, int minutes) {
-    if (stop == args.route.stops.first) { departure(minutes); return; }
-    state = ServiceDraft(departure: state.departure,
-      timings: {...state.timings, stop: minutes}, offDays: state.offDays);
+    if (stop == args.route.stops.first) {
+      departure(minutes);
+      return;
+    }
+    state = ServiceDraft(
+      departure: state.departure,
+      timings: {...state.timings, stop: minutes},
+      offDays: state.offDays,
+    );
   }
+
   void toggleDay(String day) {
     final days = {...state.offDays};
     days.contains(day) ? days.remove(day) : days.add(day);
-    state = ServiceDraft(departure: state.departure, timings: state.timings, offDays: days);
+    state = ServiceDraft(
+      departure: state.departure,
+      timings: state.timings,
+      offDays: days,
+    );
   }
 }
 
-final businessServicesProvider = Provider.autoDispose.family<AsyncValue<List<ServiceEntity>>, String>((ref, id) =>
-  ref.watch(ownerServicesProvider).whenData((services) {
-    final list = services.where((service) => service.businessId == id).toList()
-      ..sort((a, b) => a.departureMinutes.compareTo(b.departureMinutes));
-    return List<ServiceEntity>.unmodifiable(list);
-  }));
+final businessServicesProvider = Provider.autoDispose
+    .family<AsyncValue<List<ServiceEntity>>, String>(
+      (ref, id) => ref.watch(ownerServicesProvider).whenData((services) {
+        final list =
+            services.where((service) => service.businessId == id).toList()
+              ..sort(
+                (a, b) => a.departureMinutes.compareTo(b.departureMinutes),
+              );
+        return List<ServiceEntity>.unmodifiable(list);
+      }),
+    );

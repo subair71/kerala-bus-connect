@@ -7,10 +7,23 @@ class PageHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 16),
-    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(title, style: const TextStyle(fontSize: 27, fontWeight: FontWeight.w800, color: AppColors.primary)),
-      const SizedBox(height: 6),
-      Text(subtitle, style: const TextStyle(color: AppColors.onSurfaceVariant)),
-    ]),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 27,
+            fontWeight: FontWeight.w800,
+            color: AppColors.primary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          subtitle,
+          style: const TextStyle(color: AppColors.onSurfaceVariant),
+        ),
+      ],
+    ),
   );
 }

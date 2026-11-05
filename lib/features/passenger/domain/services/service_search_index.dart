@@ -9,9 +9,11 @@ class ServiceSearchIndex {
   List<ServiceEntity> _directoryResults = const [];
 
   ServiceSearchIndex(List<ServiceEntity> services)
-      : _services = services.map(_IndexedService.new).toList()
-          ..sort((a, b) =>
-              a.service.departureMinutes.compareTo(b.service.departureMinutes));
+    : _services = services.map(_IndexedService.new).toList()
+        ..sort(
+          (a, b) =>
+              a.service.departureMinutes.compareTo(b.service.departureMinutes),
+        );
 
   List<ServiceEntity> search({
     required String from,
@@ -57,15 +59,17 @@ class _IndexedService {
   final List<String> stops;
 
   _IndexedService(this.service)
-      : routeName = service.routeName.toLowerCase(),
-        stops = service.stops.map((stop) => stop.toLowerCase()).toList();
+    : routeName = service.routeName.toLowerCase(),
+      stops = service.stops.map((stop) => stop.toLowerCase()).toList();
 
   bool matchesStops(String from, String to) {
     if (from.isEmpty && to.isEmpty) return true;
-    final fromIndex =
-        from.isEmpty ? -1 : stops.indexWhere((stop) => stop.contains(from));
-    final toIndex =
-        to.isEmpty ? -1 : stops.indexWhere((stop) => stop.contains(to));
+    final fromIndex = from.isEmpty
+        ? -1
+        : stops.indexWhere((stop) => stop.contains(from));
+    final toIndex = to.isEmpty
+        ? -1
+        : stops.indexWhere((stop) => stop.contains(to));
     if (from.isNotEmpty && fromIndex == -1) return false;
     if (to.isNotEmpty && toIndex == -1) return false;
     return from.isEmpty || to.isEmpty || fromIndex < toIndex;

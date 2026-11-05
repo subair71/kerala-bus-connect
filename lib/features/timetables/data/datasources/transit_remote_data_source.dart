@@ -33,9 +33,11 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
         .where('published', isEqualTo: true)
         .snapshots()
         .map((snap) {
-      final list = snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList();
-      return List<ServiceModel>.unmodifiable(list);
-    });
+          final list = snap.docs
+              .map((d) => ServiceModel.fromSnapshot(d))
+              .toList();
+          return List<ServiceModel>.unmodifiable(list);
+        });
   }
 
   @override
@@ -44,8 +46,10 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
         .collection('businesses')
         .where('ownerId', isEqualTo: ownerId)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => BusinessModel.fromSnapshot(d)).toList());
+        .map(
+          (snap) =>
+              snap.docs.map((d) => BusinessModel.fromSnapshot(d)).toList(),
+        );
   }
 
   @override
@@ -55,7 +59,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
         .where('businessId', isEqualTo: businessId)
         .snapshots()
         .map(
-            (snap) => snap.docs.map((d) => RouteModel.fromSnapshot(d)).toList());
+          (snap) => snap.docs.map((d) => RouteModel.fromSnapshot(d)).toList(),
+        );
   }
 
   @override
@@ -64,8 +69,9 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
         .collection('services')
         .where('ownerId', isEqualTo: ownerId)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList());
+        .map(
+          (snap) => snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList(),
+        );
   }
 
   @override

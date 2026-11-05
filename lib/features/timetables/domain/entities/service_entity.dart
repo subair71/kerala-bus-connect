@@ -55,18 +55,18 @@ class ServiceEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        ownerId,
-        businessId,
-        routeId,
-        businessName,
-        routeName,
-        busName,
-        stops,
-        departureMinutes,
-        stopTimings,
-        offDays,
-        offTimingsNote,
-        published,
-      ];
+    id,
+    ownerId,
+    businessId,
+    routeId,
+    businessName,
+    routeName,
+    busName,
+    stops,
+    departureMinutes,
+    stopTimings,
+    offDays,
+    offTimingsNote,
+    published,
+  ];
 }

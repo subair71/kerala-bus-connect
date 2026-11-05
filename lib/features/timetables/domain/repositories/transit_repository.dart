@@ -8,8 +8,15 @@ abstract class TransitRepository {
   Stream<List<RouteEntity>> getBusinessRoutes(String businessId);
   Stream<List<ServiceEntity>> getOwnerServices(String ownerId);
 
-  Future<String> createBusiness({required String ownerId, required String name});
-  Future<void> updateBusiness({required String businessId, required String ownerId, required String name});
+  Future<String> createBusiness({
+    required String ownerId,
+    required String name,
+  });
+  Future<void> updateBusiness({
+    required String businessId,
+    required String ownerId,
+    required String name,
+  });
 
   Future<String> createRoute({
     required String ownerId,

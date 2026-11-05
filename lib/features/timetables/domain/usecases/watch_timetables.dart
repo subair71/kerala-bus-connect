@@ -7,7 +7,10 @@ class WatchTimetables {
   final TransitRepository repository;
   const WatchTimetables(this.repository);
   Stream<List<ServiceEntity>> published() => repository.getPublishedServices();
-  Stream<List<BusinessEntity>> businesses(String ownerId) => repository.getOwnerBusinesses(ownerId);
-  Stream<List<RouteEntity>> routes(String businessId) => repository.getBusinessRoutes(businessId);
-  Stream<List<ServiceEntity>> ownerServices(String ownerId) => repository.getOwnerServices(ownerId);
+  Stream<List<BusinessEntity>> businesses(String ownerId) =>
+      repository.getOwnerBusinesses(ownerId);
+  Stream<List<RouteEntity>> routes(String businessId) =>
+      repository.getBusinessRoutes(businessId);
+  Stream<List<ServiceEntity>> ownerServices(String ownerId) =>
+      repository.getOwnerServices(ownerId);
 }

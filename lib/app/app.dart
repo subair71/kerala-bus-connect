@@ -7,20 +7,32 @@ import '../core/widgets/async_status.dart';
 import 'app_shell.dart';
 
 final initializationProvider = FutureProvider<void>((ref) async {
-  if (Firebase.apps.isEmpty) await Firebase.initializeApp(options: firebaseOptions);
+  if (Firebase.apps.isEmpty)
+    await Firebase.initializeApp(options: firebaseOptions);
 });
+
 class FindMyBusApp extends ConsumerWidget {
   const FindMyBusApp({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) => MaterialApp(
-    title: 'FindMyBus - Kerala Bus Connect', debugShowCheckedModeBanner: false,
+    title: 'FindMyBus - Kerala Bus Connect',
+    debugShowCheckedModeBanner: false,
     theme: AppTheme.lightTheme,
-    home: ref.watch(initializationProvider).when(
-      loading: () => const Scaffold(body: Center(child: AsyncStatus(loading: true))),
-      error: (_, stack) => Scaffold(body: Center(child: AsyncStatus(
-        message: 'Unable to start FindMyBus. Please check your connection.',
-        retry: () => ref.invalidate(initializationProvider)))),
-      data: (_) => const AppShell(),
-    ),
+    home: ref
+        .watch(initializationProvider)
+        .when(
+          loading: () =>
+              const Scaffold(body: Center(child: AsyncStatus(loading: true))),
+          error: (_, stack) => Scaffold(
+            body: Center(
+              child: AsyncStatus(
+                message:
+                    'Unable to start FindMyBus. Please check your connection.',
+                retry: () => ref.invalidate(initializationProvider),
+              ),
+            ),
+          ),
+          data: (_) => const AppShell(),
+        ),
   );
 }

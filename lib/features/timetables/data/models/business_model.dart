@@ -8,7 +8,9 @@ class BusinessModel extends BusinessEntity {
     required super.name,
   });
 
-  factory BusinessModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> snap) {
+  factory BusinessModel.fromSnapshot(
+    DocumentSnapshot<Map<String, dynamic>> snap,
+  ) {
     final data = snap.data() ?? {};
     return BusinessModel(
       id: snap.id,
@@ -17,8 +19,5 @@ class BusinessModel extends BusinessEntity {
     );
   }
 
-  Map<String, dynamic> toJson() => {
-        'ownerId': ownerId,
-        'name': name,
-      };
+  Map<String, dynamic> toJson() => {'ownerId': ownerId, 'name': name};
 }

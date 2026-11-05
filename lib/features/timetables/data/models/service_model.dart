@@ -18,7 +18,9 @@ class ServiceModel extends ServiceEntity {
     super.published,
   });
 
-  factory ServiceModel.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> snap) {
+  factory ServiceModel.fromSnapshot(
+    DocumentSnapshot<Map<String, dynamic>> snap,
+  ) {
     final data = snap.data() ?? {};
     final Map<String, int> timings = {};
     if (data['stopTimings'] is Map) {
@@ -36,27 +38,31 @@ class ServiceModel extends ServiceEntity {
       businessName: data['businessName']?.toString() ?? '',
       routeName: data['routeName']?.toString() ?? '',
       busName: data['busName']?.toString() ?? '',
-      stops: (data['stops'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+      stops: (data['stops'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
       departureMinutes: (data['departureMinutes'] as num?)?.toInt() ?? 0,
       stopTimings: timings,
-      offDays: (data['offDays'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+      offDays: (data['offDays'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
       offTimingsNote: data['offTimingsNote']?.toString(),
       published: data['published'] == true,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'ownerId': ownerId,
-        'businessId': businessId,
-        'routeId': routeId,
-        'businessName': businessName,
-        'routeName': routeName,
-        'busName': busName,
-        'stops': stops,
-        'departureMinutes': departureMinutes,
-        'stopTimings': stopTimings,
-        'offDays': offDays,
-        'offTimingsNote': offTimingsNote,
-        'published': published,
-      };
+    'ownerId': ownerId,
+    'businessId': businessId,
+    'routeId': routeId,
+    'businessName': businessName,
+    'routeName': routeName,
+    'busName': busName,
+    'stops': stops,
+    'departureMinutes': departureMinutes,
+    'stopTimings': stopTimings,
+    'offDays': offDays,
+    'offTimingsNote': offTimingsNote,
+    'published': published,
+  };
 }

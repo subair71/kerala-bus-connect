@@ -27,15 +27,15 @@ class RouteEntity extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        ownerId,
-        businessId,
-        businessName,
-        name,
-        startStop,
-        endStop,
-        stops,
-        isReturn,
-        returnOfRouteId,
-      ];
+    id,
+    ownerId,
+    businessId,
+    businessName,
+    name,
+    startStop,
+    endStop,
+    stops,
+    isReturn,
+    returnOfRouteId,
+  ];
 }

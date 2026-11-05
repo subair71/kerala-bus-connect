@@ -30,10 +30,7 @@ class TransitRepositoryImpl implements TransitRepository {
     required String ownerId,
     required String name,
   }) {
-    return _remoteDataSource.addBusiness({
-      'ownerId': ownerId,
-      'name': name,
-    });
+    return _remoteDataSource.addBusiness({'ownerId': ownerId, 'name': name});
   }
 
   @override

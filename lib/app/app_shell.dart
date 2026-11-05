@@ -10,7 +10,13 @@ import 'navigation_provider.dart';
 class AppShell extends ConsumerWidget {
   const AppShell({super.key});
   static const _labels = ['Find bus', 'Routes', 'Owner', 'Tracking', 'Crew'];
-  static const _icons = [Icons.search, Icons.alt_route, Icons.business, Icons.location_on, Icons.groups];
+  static const _icons = [
+    Icons.search,
+    Icons.alt_route,
+    Icons.business,
+    Icons.location_on,
+    Icons.groups,
+  ];
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tab = ref.watch(navigationProvider);
@@ -21,25 +27,46 @@ class AppShell extends ConsumerWidget {
       AppTab.tracking => const TrackingPage(),
       AppTab.crew => const CrewPage(),
     };
-    void select(int index) => ref.read(navigationProvider.notifier).select(AppTab.values[index]);
-    return LayoutBuilder(builder: (context, constraints) {
-      final wide = constraints.maxWidth >= 1000;
-      return Scaffold(
-        appBar: AppBar(title: const Text('FindMyBus'), centerTitle: false),
-        body: Row(children: [
-          if (wide) NavigationRail(selectedIndex: tab.index, onDestinationSelected: select,
-            labelType: NavigationRailLabelType.all, destinations: [
-              for (var i = 0; i < _labels.length; i++)
-                NavigationRailDestination(icon: Icon(_icons[i]), label: Text(_labels[i])),
-            ]),
-          Expanded(child: page),
-        ]),
-        bottomNavigationBar: wide ? null : NavigationBar(selectedIndex: tab.index,
-          onDestinationSelected: select, destinations: [
-            for (var i = 0; i < _labels.length; i++)
-              NavigationDestination(icon: Icon(_icons[i]), label: _labels[i]),
-          ]),
-      );
-    });
+    void select(int index) =>
+        ref.read(navigationProvider.notifier).select(AppTab.values[index]);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 1000;
+        return Scaffold(
+          appBar: AppBar(title: const Text('FindMyBus'), centerTitle: false),
+          body: Row(
+            children: [
+              if (wide)
+                NavigationRail(
+                  selectedIndex: tab.index,
+                  onDestinationSelected: select,
+                  labelType: NavigationRailLabelType.all,
+                  destinations: [
+                    for (var i = 0; i < _labels.length; i++)
+                      NavigationRailDestination(
+                        icon: Icon(_icons[i]),
+                        label: Text(_labels[i]),
+                      ),
+                  ],
+                ),
+              Expanded(child: page),
+            ],
+          ),
+          bottomNavigationBar: wide
+              ? null
+              : NavigationBar(
+                  selectedIndex: tab.index,
+                  onDestinationSelected: select,
+                  destinations: [
+                    for (var i = 0; i < _labels.length; i++)
+                      NavigationDestination(
+                        icon: Icon(_icons[i]),
+                        label: _labels[i],
+                      ),
+                  ],
+                ),
+        );
+      },
+    );
   }
 }

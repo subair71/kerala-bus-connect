@@ -17,4 +17,5 @@ int minutesNow() {
   return now.hour * 60 + now.minute;
 }
 
-DateTime keralaNow() => DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
+DateTime keralaNow() =>
+    DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));

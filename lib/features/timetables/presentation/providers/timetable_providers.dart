@@ -10,25 +10,42 @@ import '../../domain/entities/service_entity.dart';
 import '../../domain/repositories/transit_repository.dart';
 import '../../domain/usecases/watch_timetables.dart';
 
-final transitRepositoryProvider = Provider<TransitRepository>((ref) =>
-    TransitRepositoryImpl(TransitRemoteDataSourceImpl(ref.watch(firestoreProvider))));
-final watchTimetablesProvider = Provider<WatchTimetables>((ref) =>
-    WatchTimetables(ref.watch(transitRepositoryProvider)));
-final catalogCacheDurationProvider = Provider<Duration>((ref) => const Duration(seconds: 30));
+final transitRepositoryProvider = Provider<TransitRepository>(
+  (ref) => TransitRepositoryImpl(
+    TransitRemoteDataSourceImpl(ref.watch(firestoreProvider)),
+  ),
+);
+final watchTimetablesProvider = Provider<WatchTimetables>(
+  (ref) => WatchTimetables(ref.watch(transitRepositoryProvider)),
+);
+final catalogCacheDurationProvider = Provider<Duration>(
+  (ref) => const Duration(seconds: 30),
+);
 
-final publishedServicesProvider = StreamProvider.autoDispose<List<ServiceEntity>>((ref) {
-  retainWhileIdle(ref, ref.watch(catalogCacheDurationProvider));
-  return ref.watch(watchTimetablesProvider).published();
-});
-final ownerBusinessesProvider = StreamProvider.autoDispose<List<BusinessEntity>>((ref) {
+final publishedServicesProvider =
+    StreamProvider.autoDispose<List<ServiceEntity>>((ref) {
+      retainWhileIdle(ref, ref.watch(catalogCacheDurationProvider));
+      return ref.watch(watchTimetablesProvider).published();
+    });
+final ownerBusinessesProvider =
+    StreamProvider.autoDispose<List<BusinessEntity>>((ref) {
+      final owner = ref.watch(ownerIdProvider);
+      return owner == null
+          ? Stream.value(const [])
+          : ref.watch(watchTimetablesProvider).businesses(owner);
+    });
+final businessRoutesProvider = StreamProvider.autoDispose
+    .family<List<RouteEntity>, String>((ref, businessId) {
+      final owner = ref.watch(ownerIdProvider);
+      return owner == null
+          ? Stream.value(const [])
+          : ref.watch(watchTimetablesProvider).routes(businessId);
+    });
+final ownerServicesProvider = StreamProvider.autoDispose<List<ServiceEntity>>((
+  ref,
+) {
   final owner = ref.watch(ownerIdProvider);
-  return owner == null ? Stream.value(const []) : ref.watch(watchTimetablesProvider).businesses(owner);
-});
-final businessRoutesProvider = StreamProvider.autoDispose.family<List<RouteEntity>, String>((ref, businessId) {
-  final owner = ref.watch(ownerIdProvider);
-  return owner == null ? Stream.value(const []) : ref.watch(watchTimetablesProvider).routes(businessId);
-});
-final ownerServicesProvider = StreamProvider.autoDispose<List<ServiceEntity>>((ref) {
-  final owner = ref.watch(ownerIdProvider);
-  return owner == null ? Stream.value(const []) : ref.watch(watchTimetablesProvider).ownerServices(owner);
+  return owner == null
+      ? Stream.value(const [])
+      : ref.watch(watchTimetablesProvider).ownerServices(owner);
 });

@@ -25,21 +25,23 @@ class RouteModel extends RouteEntity {
       name: data['name']?.toString() ?? '',
       startStop: data['startStop']?.toString() ?? '',
       endStop: data['endStop']?.toString() ?? '',
-      stops: (data['stops'] as List<dynamic>? ?? []).map((e) => e.toString()).toList(),
+      stops: (data['stops'] as List<dynamic>? ?? [])
+          .map((e) => e.toString())
+          .toList(),
       isReturn: data['isReturn'] == true,
       returnOfRouteId: data['returnOfRouteId']?.toString(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'ownerId': ownerId,
-        'businessId': businessId,
-        'businessName': businessName,
-        'name': name,
-        'startStop': startStop,
-        'endStop': endStop,
-        'stops': stops,
-        'isReturn': isReturn,
-        if (returnOfRouteId != null) 'returnOfRouteId': returnOfRouteId,
-      };
+    'ownerId': ownerId,
+    'businessId': businessId,
+    'businessName': businessName,
+    'name': name,
+    'startStop': startStop,
+    'endStop': endStop,
+    'stops': stops,
+    'isReturn': isReturn,
+    if (returnOfRouteId != null) 'returnOfRouteId': returnOfRouteId,
+  };
 }
