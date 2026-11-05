@@ -36,9 +36,12 @@ final liveSponsorsProvider = StreamProvider.autoDispose
 final sponsorsProvider = Provider.autoDispose<AsyncValue<DataSet<SponsoredAd>>>(
   (ref) {
     final location = ref.watch(sponsorLocationProvider);
-    return ref.watch(liveSponsorsProvider(location)).whenData(
-      (ads) => DataSet(ads.where((ad) => ad.active && ad.location == location)),
-    );
+    return ref
+        .watch(liveSponsorsProvider(location))
+        .whenData(
+          (ads) =>
+              DataSet(ads.where((ad) => ad.active && ad.location == location)),
+        );
   },
 );
 final sponsorPageProvider = NotifierProvider.autoDispose

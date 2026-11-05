@@ -85,7 +85,12 @@ void main() {
       final auth = FakeAuthRepository();
       addTearDown(auth.changes.close);
       await tester.pumpWidget(
-        harness(const AppShell(), FakeTransitRepository(), auth, sampleSponsors: true),
+        harness(
+          const AppShell(),
+          FakeTransitRepository(),
+          auth,
+          sampleSponsors: true,
+        ),
       );
       await tester.pumpAndSettle();
       final context = tester.element(find.byType(AppShell));

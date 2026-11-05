@@ -18,14 +18,16 @@ class SponsoredCarousel extends ConsumerWidget {
           skipLoadingOnRefresh: false,
           loading: () => const SizedBox.shrink(),
           error: (_, _) => const SizedBox.shrink(),
-          data: (data) => data.records.isEmpty ? const SizedBox.shrink() : _Slides(
-            key: ValueKey(
-              '$location:${data.isDemo}:${data.records.map((ad) => ad.id).join(',')}',
-            ),
-            location: location,
-            ads: data.records,
-            demo: data.isDemo,
-          ),
+          data: (data) => data.records.isEmpty
+              ? const SizedBox.shrink()
+              : _Slides(
+                  key: ValueKey(
+                    '$location:${data.isDemo}:${data.records.map((ad) => ad.id).join(',')}',
+                  ),
+                  location: location,
+                  ads: data.records,
+                  demo: data.isDemo,
+                ),
         );
   }
 }
@@ -52,7 +54,7 @@ class _Slides extends HookConsumerWidget {
     final interval = ref.watch(sponsorRotationIntervalProvider);
     final canRotate =
         ads.length > 1 &&
-        TickerMode.of(context) &&
+        TickerMode.valuesOf(context).enabled &&
         (ModalRoute.of(context)?.isCurrent ?? true) &&
         !MediaQuery.disableAnimationsOf(context) &&
         !MediaQuery.accessibleNavigationOf(context);
@@ -71,20 +73,24 @@ class _Slides extends HookConsumerWidget {
       rotationTimer.value?.cancel();
       rotationTimer.value = null;
     }
+
     void startRotation() {
       stopRotation();
       final lifecycle = WidgetsBinding.instance.lifecycleState;
       if (!canRotate ||
           interval <= Duration.zero ||
-          (lifecycle != null && lifecycle != AppLifecycleState.resumed)) return;
+          (lifecycle != null && lifecycle != AppLifecycleState.resumed))
+        return;
       rotationTimer.value = Timer.periodic(interval, (_) {
         if (!controller.hasClients ||
             controller.position.isScrollingNotifier.value ||
             hovering.value ||
-            touching.value) return;
+            touching.value)
+          return;
         move(1);
       });
     }
+
     // Cancel immediately on backgrounding, even when Flutter stops drawing frames.
     useOnAppLifecycleStateChange((_, state) {
       if (state == AppLifecycleState.resumed) {
@@ -106,76 +112,81 @@ class _Slides extends HookConsumerWidget {
         onPointerUp: (_) => touching.value = false,
         onPointerCancel: (_) => touching.value = false,
         child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(
-              Icons.location_on_outlined,
-              size: 17,
-              color: AppColors.primary,
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Text(
-                'Local sponsors near $location',
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
+            Row(
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: 17,
+                  color: AppColors.primary,
                 ),
-              ),
-            ),
-            if (ads.length > 1) Semantics(
-              label: 'Advertisement ${page + 1} of ${ads.length}',
-              child: Row(
-                children: [
-                  for (var i = 0; i < ads.length; i++)
-                    Container(
-                      width: i == page ? 16 : 5,
-                      height: 5,
-                      margin: const EdgeInsets.only(left: 4),
-                      decoration: BoxDecoration(
-                        color: i == page ? AppColors.primary : AppColors.border,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Local sponsors near $location',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
-                ],
-              ),
+                  ),
+                ),
+                if (ads.length > 1)
+                  Semantics(
+                    label: 'Advertisement ${page + 1} of ${ads.length}',
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < ads.length; i++)
+                          Container(
+                            width: i == page ? 16 : 5,
+                            height: 5,
+                            margin: const EdgeInsets.only(left: 4),
+                            decoration: BoxDecoration(
+                              color: i == page
+                                  ? AppColors.primary
+                                  : AppColors.border,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                if (ads.length > 1)
+                  IconButton(
+                    tooltip: 'Previous sponsor',
+                    onPressed: () => move(-1),
+                    icon: const Icon(Icons.chevron_left),
+                  ),
+                if (ads.length > 1)
+                  IconButton(
+                    tooltip: 'Next sponsor',
+                    onPressed: () => move(1),
+                    icon: const Icon(Icons.chevron_right),
+                  ),
+              ],
             ),
-            if (ads.length > 1) IconButton(
-              tooltip: 'Previous sponsor',
-              onPressed: () => move(-1),
-              icon: const Icon(Icons.chevron_left),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final wide = constraints.maxWidth >= 700;
+                final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+                return SizedBox(
+                  height: (wide ? 168 : 210) * scale.clamp(1, 2.5),
+                  child: PageView.builder(
+                    controller: controller,
+                    itemCount: ads.length,
+                    onPageChanged: ref
+                        .read(sponsorPageProvider(location).notifier)
+                        .select,
+                    itemBuilder: (context, i) =>
+                        _AdCard(ad: ads[i], demo: demo, wide: wide),
+                  ),
+                );
+              },
             ),
-            if (ads.length > 1) IconButton(
-              tooltip: 'Next sponsor',
-              onPressed: () => move(1),
-              icon: const Icon(Icons.chevron_right),
-            ),
+            const SizedBox(height: 16),
           ],
-        ),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 700;
-            final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
-            return SizedBox(
-              height: (wide ? 168 : 210) * scale.clamp(1, 2.5),
-              child: PageView.builder(
-                controller: controller,
-                itemCount: ads.length,
-                onPageChanged: ref
-                    .read(sponsorPageProvider(location).notifier)
-                    .select,
-                itemBuilder: (context, i) =>
-                    _AdCard(ad: ads[i], demo: demo, wide: wide),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 16),
-      ],
         ),
       ),
     );

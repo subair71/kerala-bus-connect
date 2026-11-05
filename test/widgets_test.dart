@@ -29,9 +29,14 @@ Widget harness(
   overrides: [
     sponsorRotationIntervalProvider.overrideWithValue(Duration.zero),
     if (sampleSponsors)
-      sponsorsProvider.overrideWith((ref) => AsyncData(DataSet(
-        sponsorSamples(ref.watch(sponsorLocationProvider)), isDemo: true,
-      ))),
+      sponsorsProvider.overrideWith(
+        (ref) => AsyncData(
+          DataSet(
+            sponsorSamples(ref.watch(sponsorLocationProvider)),
+            isDemo: true,
+          ),
+        ),
+      ),
     liveSponsorsProvider.overrideWith(
       (ref, location) => sponsorStream ?? Stream.value([]),
     ),
