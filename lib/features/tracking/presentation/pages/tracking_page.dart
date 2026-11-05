@@ -3,6 +3,7 @@ import '../../../../core/widgets/async_status.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/widgets/page_heading.dart';
+import '../../../../core/constants/colors.dart';
 import '../providers/tracking_providers.dart';
 
 class TrackingPage extends ConsumerWidget {
@@ -31,12 +32,15 @@ class TrackingPage extends ConsumerWidget {
               unavailable: data.asData!.value.unavailable,
               retry: () => ref.invalidate(liveTrackingProvider),
             ),
-            DropdownButton<int>(
-              value: selected,
+            DropdownButtonFormField<int>(
+              key: ValueKey(selected),
+              initialValue: selected,
+              decoration: const InputDecoration(labelText: 'Vehicle',
+                prefixIcon: Icon(Icons.directions_bus_outlined)),
               isExpanded: true,
               items: [
                 for (var i = 0; i < vehicles.length; i++)
-                  DropdownMenuItem(value: i, child: Text(vehicles[i].vehicle)),
+                  DropdownMenuItem(value: i, child: Text(vehicles[i].vehicle, overflow: TextOverflow.ellipsis)),
               ],
               onChanged: (value) {
                 if (value != null)
@@ -45,17 +49,21 @@ class TrackingPage extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             Card(
-              child: Column(
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
                 children: [
                   for (var i = 0; i < preview.stops.length; i++)
                     ListTile(
+                      tileColor: i == preview.currentStop ? AppColors.secondaryContainer : null,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       leading: Icon(
                         i == preview.currentStop
                             ? Icons.directions_bus
                             : Icons.location_on_outlined,
                         color: i <= preview.currentStop
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.grey,
+                            : AppColors.outline,
                       ),
                       title: Text(preview.stops[i]),
                       subtitle: i == preview.currentStop
@@ -67,6 +75,7 @@ class TrackingPage extends ConsumerWidget {
                           : null,
                     ),
                 ],
+              ),
               ),
             ),
           ],

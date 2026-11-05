@@ -75,6 +75,31 @@ void main() {
     });
   }
 
+  for (final size in [const Size(320, 740), const Size(844, 390)]) {
+    testWidgets('all sections remain usable with large text at $size', (tester) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final auth = FakeAuthRepository();
+      addTearDown(auth.changes.close);
+      await tester.pumpWidget(harness(
+        Builder(builder: (context) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.5)),
+          child: const AppShell())),
+        FakeTransitRepository(services: [service('real', bus: 'Long bus service name')]),
+        auth,
+      ));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      for (final label in ['Routes', 'Owner', 'Tracking', 'Crew']) {
+        await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text(label)));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: label);
+      }
+    });
+  }
+
   testWidgets(
     'boarding changes update the carousel, with a usable narrow keyboard layout',
     (tester) async {
@@ -100,6 +125,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 250));
       await tester.pumpAndSettle();
       expect(find.text('Local sponsors near Thrissur'), findsOneWidget);
+      await tester.ensureVisible(find.byTooltip('Next sponsor'));
       await tester.tap(find.byTooltip('Next sponsor'));
       await tester.pumpAndSettle();
       expect(find.text('Everyday essentials, close by'), findsOneWidget);
@@ -130,6 +156,7 @@ void main() {
       );
       stream.add([sponsor('first'), sponsor('second')]);
       await tester.pumpAndSettle();
+      await tester.ensureVisible(find.byTooltip('Next sponsor'));
       await tester.tap(find.byTooltip('Next sponsor'));
       await tester.pumpAndSettle();
       expect(find.text('Offer second'), findsOneWidget);

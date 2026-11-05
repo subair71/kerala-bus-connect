@@ -32,95 +32,91 @@ class AppShell extends ConsumerWidget {
         ref.read(navigationProvider.notifier).select(AppTab.values[i]);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 1000;
+        final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        final wide = constraints.maxWidth >= 1000 && scale <= 1.3;
+        final headerHeight = scale > 1.5 ? 92.0 : 76.0;
         return Scaffold(
           appBar: PreferredSize(
-            preferredSize: const Size.fromHeight(72),
+            preferredSize: Size.fromHeight(headerHeight),
             child: Material(
               color: Colors.white,
-              child: SafeArea(
-                bottom: false,
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1200),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: SizedBox(
-                        height: 72,
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryContainer,
-                                borderRadius: BorderRadius.circular(8),
+              child: DecoratedBox(
+                decoration: const BoxDecoration(
+                  border: Border(bottom: BorderSide(color: AppColors.border)),
+                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1200),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: SizedBox(
+                          height: headerHeight,
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(Icons.directions_bus_outlined,
+                                  color: Colors.white, size: 24),
                               ),
-                              child: const Icon(
-                                Icons.directions_bus_outlined,
-                                color: Colors.white,
-                                size: 23,
+                              const SizedBox(width: 12),
+                              Expanded(
+                                flex: wide ? 0 : 1,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('FindMyBus',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(fontSize: 19,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -.6)),
+                                    Text(wide ? 'Kerala transit' : _labels[tab.index],
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontSize: 12,
+                                        color: AppColors.onSurfaceVariant)),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              flex: wide ? 0 : 1,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    'FindMyBus',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: -.4,
-                                    ),
-                                  ),
-                                  if (!wide)
-                                    Text(
-                                      _labels[tab.index],
-                                      style: const TextStyle(
-                                        fontSize: 11,
-                                        color: AppColors.onSurfaceVariant,
+                              if (wide) ...[
+                                const Spacer(),
+                                for (var i = 0; i < _labels.length; i++)
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                                    child: TextButton.icon(
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: tab.index == i
+                                          ? AppColors.primary : AppColors.onSurfaceVariant,
+                                        backgroundColor: tab.index == i
+                                          ? AppColors.secondaryContainer : null,
+                                        padding: const EdgeInsets.symmetric(horizontal: 16),
                                       ),
+                                      onPressed: () => select(i),
+                                      icon: Icon(_icons[i], size: 19),
+                                      label: Text(_labels[i]),
                                     ),
-                                ],
-                              ),
-                            ),
-                            if (wide) ...[
-                              const SizedBox(width: 24),
-                              for (var i = 0; i < _labels.length; i++)
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 2,
                                   ),
-                                  child: tab.index == i
-                                      ? FilledButton(
-                                          onPressed: () => select(i),
-                                          child: Text(_labels[i]),
-                                        )
-                                      : TextButton(
-                                          onPressed: () => select(i),
-                                          child: Text(_labels[i]),
-                                        ),
+                                const SizedBox(width: 24),
+                              ],
+                              IconButton.outlined(
+                                tooltip: 'Owner account',
+                                style: IconButton.styleFrom(
+                                  foregroundColor: AppColors.onSurface,
+                                  side: const BorderSide(color: AppColors.border),
                                 ),
-                              const Spacer(),
-                              const Text(
-                                'Kerala transit',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.onSurfaceVariant,
-                                ),
+                                onPressed: () => select(AppTab.owner.index),
+                                icon: const Icon(Icons.person_outline, size: 22),
                               ),
-                              const SizedBox(width: 16),
                             ],
-                            IconButton.filled(
-                              tooltip: 'Owner account',
-                              onPressed: () => select(AppTab.owner.index),
-                              icon: const Icon(Icons.person_outline, size: 21),
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -130,19 +126,23 @@ class AppShell extends ConsumerWidget {
             ),
           ),
           body: SafeArea(top: false, bottom: false, child: page),
-          bottomNavigationBar: wide
-              ? null
-              : NavigationBar(
-                  selectedIndex: tab.index,
-                  onDestinationSelected: select,
-                  destinations: [
-                    for (var i = 0; i < _labels.length; i++)
-                      NavigationDestination(
-                        icon: Icon(_icons[i]),
-                        label: _labels[i],
-                      ),
-                  ],
-                ),
+          bottomNavigationBar: wide ? null : DecoratedBox(
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: AppColors.border)),
+            ),
+            child: NavigationBar(
+              selectedIndex: tab.index,
+              onDestinationSelected: select,
+              destinations: [
+                for (var i = 0; i < _labels.length; i++)
+                  NavigationDestination(
+                    icon: Icon(_icons[i], color: AppColors.onSurfaceVariant),
+                    selectedIcon: Icon(_icons[i], color: AppColors.primary),
+                    label: _labels[i],
+                  ),
+              ],
+            ),
+          ),
         );
       },
     );

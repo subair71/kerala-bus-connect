@@ -18,6 +18,8 @@ void main() {
   });
   for (final entry in {
     'desktop-home': const Size(1440, 1000),
+    'desktop-home-no-ads': const Size(1440, 1000),
+    'mobile-home-no-ads': const Size(390, 844),
     'mobile-home': const Size(390, 844),
     'mobile-home-full': const Size(390, 1700),
     'narrow-home': const Size(320, 740),
@@ -37,7 +39,7 @@ void main() {
           ),
           FakeTransitRepository(),
           auth,
-          sampleSponsors: true,
+          sampleSponsors: !entry.key.endsWith('no-ads'),
         ),
       );
       await tester.pumpAndSettle();

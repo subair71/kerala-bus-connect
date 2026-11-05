@@ -56,7 +56,7 @@ class SearchPanel extends HookConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
         color: Theme.of(context).inputDecorationTheme.fillColor,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -66,7 +66,7 @@ class SearchPanel extends HookConsumerWidget {
             for (final day in ['All Days', ...weekDays])
               DropdownMenuItem(
                 value: day,
-                child: Text(day, style: const TextStyle(fontSize: 12)),
+                child: Text(day, style: const TextStyle(fontSize: 13)),
               ),
           ],
           onChanged: (day) {
@@ -105,43 +105,56 @@ class SearchPanel extends HookConsumerWidget {
           ];
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 1000;
+            final wide = constraints.maxWidth >= 700 && MediaQuery.textScalerOf(context).scale(14) <= 18;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Row(
+                  children: [
+                    Expanded(child: Text('Find a bus',
+                      style: Theme.of(context).textTheme.titleLarge)),
+                    if (!wide) swap(false),
+                  ],
+                ),
+                const SizedBox(height: 16),
                 if (wide)
                   Row(
                     children: [
                       Expanded(child: stopField(true)),
-                      swap(true),
+                      Padding(padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: swap(true)),
                       Expanded(child: stopField(false)),
-                      const SizedBox(width: 12),
-                      dayPicker(),
-                      const SizedBox(width: 12),
-                      running(),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 16),
                       FilledButton.icon(
                         onPressed: () => FocusScope.of(context).unfocus(),
-                        icon: const Icon(Icons.search, size: 18),
+                        icon: const Icon(Icons.search, size: 20),
                         label: const Text('Search'),
                       ),
                     ],
                   )
                 else ...[
                   stopField(true),
-                  Align(alignment: Alignment.centerRight, child: swap(false)),
+                  const SizedBox(height: 12),
                   stopField(false),
                 ],
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 4,
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [dayPicker(), running()],
+                ),
                 const SizedBox(height: 12),
                 const Text(
                   'Frequent corridor stops',
                   style: TextStyle(fontSize: 12),
                 ),
                 SizedBox(
-                  height: 48,
+                  height: MediaQuery.textScalerOf(context).scale(13) + 36,
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: stops.length,
@@ -167,13 +180,7 @@ class SearchPanel extends HookConsumerWidget {
                     },
                   ),
                 ),
-                if (!wide)
-                  Wrap(
-                    alignment: WrapAlignment.spaceBetween,
-                    spacing: 8,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [dayPicker(), running()],
-                  ),
+
               ],
             );
           },

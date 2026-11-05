@@ -10,7 +10,7 @@ concurrency:
 jobs:
   inspect:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
@@ -18,15 +18,26 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - name: Format and inspect source
+        run: |
+          dart format lib/core/widgets/data_notice.dart lib/app/app_shell.dart lib/core/constants/colors.dart lib/features/passenger/presentation/widgets/search_panel.dart lib/core/theme/app_theme.dart lib/features/timetables/presentation/widgets/service_card.dart lib/features/passenger/presentation/pages/passenger_page.dart tool/capture_screenshots.dart lib/core/widgets/page_heading.dart test/redesign_layout_test.dart lib/features/crew/presentation/pages/crew_page.dart lib/features/timetables/presentation/widgets/train_route_view.dart lib/features/owner/presentation/pages/owner_page.dart lib/features/tracking/presentation/pages/tracking_page.dart lib/features/auth/presentation/widgets/auth_panel.dart
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for name in ["lib/core/widgets/data_notice.dart","lib/app/app_shell.dart","lib/core/constants/colors.dart","lib/features/passenger/presentation/widgets/search_panel.dart","lib/core/theme/app_theme.dart","lib/features/timetables/presentation/widgets/service_card.dart","lib/features/passenger/presentation/pages/passenger_page.dart","tool/capture_screenshots.dart","lib/core/widgets/page_heading.dart","test/redesign_layout_test.dart","lib/features/crew/presentation/pages/crew_page.dart","lib/features/timetables/presentation/widgets/train_route_view.dart","lib/features/owner/presentation/pages/owner_page.dart","lib/features/tracking/presentation/pages/tracking_page.dart","lib/features/auth/presentation/widgets/auth_panel.dart"]:
+              print('FORMATTED_SOURCE ' + json.dumps({'path': name, 'content': Path(name).read_text()}))
+          PY
+      - run: python3 tool/check_architecture.py
+      - run: flutter analyze
+      - run: timeout 180s flutter test --reporter expanded --timeout 60s
       - run: flutter test tool/capture_screenshots.dart --update-goldens --reporter expanded
       - name: Inspect screen images
         run: |
           python3 - <<'PY'
           import base64, json
           from pathlib import Path
-          for name in ['desktop-home', 'mobile-home', 'mobile-routes', 'mobile-owner', 'mobile-tracking', 'mobile-crew']:
-              path = Path('tool/screenshots') / (name + '.png')
-              print('REVIEW_IMAGE ' + json.dumps({'name': name, 'data': base64.b64encode(path.read_bytes()).decode()}))
+          for path in sorted(Path('tool/screenshots').glob('*.png')):
+              print('REVIEW_IMAGE ' + json.dumps({'name': path.stem, 'data': base64.b64encode(path.read_bytes()).decode()}))
           PY
       - uses: actions/upload-artifact@v4
         if: always()
