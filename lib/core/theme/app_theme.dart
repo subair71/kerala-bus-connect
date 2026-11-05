@@ -10,16 +10,21 @@ class AppTheme {
       onPrimary: Colors.white,
       primaryContainer: AppColors.secondaryContainer,
       onPrimaryContainer: AppColors.onSecondaryContainer,
+      secondary: AppColors.secondary,
+      onSecondary: Colors.white,
       secondaryContainer: AppColors.secondaryContainer,
       onSecondaryContainer: AppColors.onSecondaryContainer,
       surface: Colors.white,
       onSurface: AppColors.onSurface,
+      onSurfaceVariant: AppColors.onSurfaceVariant,
+      error: AppColors.error,
+      errorContainer: AppColors.errorContainer,
       outline: AppColors.outline,
       outlineVariant: AppColors.border,
     );
     final border = OutlineInputBorder(
       borderRadius: BorderRadius.circular(14),
-      borderSide: const BorderSide(color: AppColors.outlineVariant),
+      borderSide: const BorderSide(color: AppColors.border),
     );
     return ThemeData(
       useMaterial3: true,
@@ -62,18 +67,17 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: Colors.white,
-        elevation: .5,
-        shadowColor: const Color(0x1422394a),
+        elevation: 0,
         surfaceTintColor: Colors.transparent,
         margin: const EdgeInsets.only(bottom: 12),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(18),
           side: const BorderSide(color: AppColors.border),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.surfaceLow,
+        fillColor: AppColors.surface,
         border: border,
         enabledBorder: border,
         focusedBorder: border.copyWith(
@@ -84,12 +88,12 @@ class AppTheme {
           vertical: 16,
         ),
         labelStyle: const TextStyle(color: AppColors.onSurfaceVariant),
-        prefixIconColor: AppColors.primary,
+        prefixIconColor: AppColors.onSurfaceVariant,
         suffixIconColor: AppColors.onSurfaceVariant,
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size(48, 52),
+          minimumSize: const Size(48, 48),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           textStyle: const TextStyle(
             fontFamily: 'Plus Jakarta Sans',
@@ -103,6 +107,7 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.accentInk,
           minimumSize: const Size(48, 48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -112,6 +117,7 @@ class AppTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
+          foregroundColor: AppColors.accentInk,
           minimumSize: const Size(48, 48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -130,13 +136,21 @@ class AppTheme {
           color: AppColors.onSurface,
         ),
       ),
-      navigationBarTheme: const NavigationBarThemeData(
+      navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        indicatorColor: AppColors.secondaryContainer,
-        height: 72,
-        labelTextStyle: WidgetStatePropertyAll(
-          TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        indicatorColor: Colors.transparent,
+        height: 68,
+        elevation: 0,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontFamily: 'Plus Jakarta Sans',
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? AppColors.accentInk
+                : AppColors.onSurfaceVariant,
+          ),
         ),
       ),
       bottomSheetTheme: const BottomSheetThemeData(
@@ -152,7 +166,7 @@ class AppTheme {
       ),
       listTileTheme: const ListTileThemeData(
         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-        iconColor: AppColors.primary,
+        iconColor: AppColors.accentInk,
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
@@ -170,6 +184,15 @@ class AppTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      ),
+      timePickerTheme: TimePickerThemeData(
+        backgroundColor: AppColors.surface,
+        dialBackgroundColor: AppColors.surfaceLow,
+        hourMinuteColor: AppColors.secondaryContainer,
+        hourMinuteTextColor: AppColors.accentInk,
+        dayPeriodColor: AppColors.secondaryContainer,
+        dayPeriodTextColor: AppColors.accentInk,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
       snackBarTheme: SnackBarThemeData(

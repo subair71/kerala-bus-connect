@@ -145,7 +145,7 @@ class ServiceCard extends ConsumerWidget {
                   foreground: !service.operatingDaysKnown
                       ? AppColors.onSurfaceVariant
                       : running
-                      ? AppColors.primary
+                      ? AppColors.accentInk
                       : AppColors.error,
                   background: !service.operatingDaysKnown
                       ? AppColors.surfaceLow
@@ -196,7 +196,7 @@ class _JourneyTimes extends StatelessWidget {
     decoration: BoxDecoration(
       color: AppColors.journeySurface,
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: AppColors.secondaryContainer),
+      border: Border.all(color: AppColors.border),
     ),
     child: LayoutBuilder(
       builder: (context, constraints) {
@@ -270,7 +270,7 @@ class _JourneyTimes extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
+                              color: AppColors.accentInk,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -281,7 +281,7 @@ class _JourneyTimes extends StatelessWidget {
                                 Icon(
                                   Icons.trip_origin,
                                   size: 10,
-                                  color: AppColors.primary,
+                                  color: AppColors.accentInk,
                                 ),
                                 Expanded(
                                   child: Divider(
@@ -291,7 +291,7 @@ class _JourneyTimes extends StatelessWidget {
                                 Icon(
                                   Icons.arrow_forward_rounded,
                                   size: 16,
-                                  color: AppColors.primary,
+                                  color: AppColors.accentInk,
                                 ),
                               ],
                             ),
@@ -322,7 +322,7 @@ class _JourneyTimes extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                      color: AppColors.accentInk,
                     ),
                   ),
                   Text(

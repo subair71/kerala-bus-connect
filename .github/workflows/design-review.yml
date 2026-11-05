@@ -1,0 +1,49 @@
+name: Design review
+on:
+  push:
+    branches: [feature/unified-reference-design]
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Format changed Dart
+        run: |
+          dart format lib/app/app_shell.dart lib/core/constants/colors.dart lib/core/theme/app_theme.dart lib/core/theme/home_theme.dart lib/core/widgets/app_components.dart lib/core/widgets/editor_sheet.dart lib/core/widgets/page_heading.dart lib/features/owner/presentation/widgets/business_editor.dart lib/features/owner/presentation/widgets/route_editor.dart lib/features/owner/presentation/widgets/service_editor.dart lib/features/timetables/presentation/widgets/service_card.dart lib/features/timetables/presentation/widgets/train_route_view.dart tool/capture_screenshots.dart
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for p in ["lib/app/app_shell.dart","lib/core/constants/colors.dart","lib/core/theme/app_theme.dart","lib/core/theme/home_theme.dart","lib/core/widgets/app_components.dart","lib/core/widgets/editor_sheet.dart","lib/core/widgets/page_heading.dart","lib/features/owner/presentation/widgets/business_editor.dart","lib/features/owner/presentation/widgets/route_editor.dart","lib/features/owner/presentation/widgets/service_editor.dart","lib/features/timetables/presentation/widgets/service_card.dart","lib/features/timetables/presentation/widgets/train_route_view.dart","tool/capture_screenshots.dart"]:
+              print("FORMATTED_SOURCE " + json.dumps({"path": p, "content": Path(p).read_text()}))
+          PY
+      - run: python3 tool/check_architecture.py
+      - run: flutter analyze
+      - run: timeout 180s flutter test --reporter expanded --timeout 60s
+      - name: Capture all screens
+        if: always()
+        run: flutter test tool/capture_screenshots.dart --update-goldens --reporter expanded
+      - name: Review images
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, base64
+          from pathlib import Path
+          for name in ["mobile-routes","mobile-owner","mobile-tracking","mobile-crew","desktop-routes","desktop-workspace","route-editor","timetable-editor","timetable-editor-large-text","business-keyboard","delete-confirmation","stop-details"]:
+              p = Path("tool/screenshots") / (name + ".png")
+              if p.exists():
+                  print("REVIEW_IMAGE " + json.dumps({"name": p.name, "data": base64.b64encode(p.read_bytes()).decode()}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: design-review
+          path: tool/screenshots
+          retention-days: 14

@@ -19,7 +19,7 @@ class AppIconTile extends StatelessWidget {
     height: size,
     decoration: BoxDecoration(
       color: emphasized ? AppColors.primary : AppColors.secondaryContainer,
-      borderRadius: BorderRadius.circular(size * .32),
+      borderRadius: BorderRadius.circular(size * .28),
       border: Border.all(
         color: emphasized
             ? AppColors.primary
@@ -29,7 +29,7 @@ class AppIconTile extends StatelessWidget {
     child: Icon(
       icon,
       size: size * .52,
-      color: emphasized ? Colors.white : AppColors.primary,
+      color: emphasized ? Colors.white : AppColors.accentInk,
     ),
   );
 }
@@ -43,7 +43,7 @@ class AppStatusBadge extends StatelessWidget {
     super.key,
     required this.label,
     this.icon,
-    this.foreground = AppColors.primary,
+    this.foreground = AppColors.accentInk,
     this.background = AppColors.secondaryContainer,
     this.fontSize = 12,
   });

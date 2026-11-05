@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/editor_sheet.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/constants/transit_constants.dart';
+import '../../../../core/constants/colors.dart';
 import '../../../../core/utils/time_utils.dart';
 import '../../../timetables/domain/entities/business_entity.dart';
 import '../../../timetables/domain/entities/route_entity.dart';
@@ -45,46 +47,39 @@ class ServiceEditor extends HookConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          service == null ? 'Publish timetable' : 'Edit timetable',
-          style: Theme.of(context).textTheme.headlineSmall,
+        EditorHeading(
+          title: service == null ? 'Publish timetable' : 'Edit timetable',
+          icon: Icons.schedule_outlined,
+          subtitle: route.name,
         ),
-        Text(route.name),
-        const SizedBox(height: 16),
         TextField(
           key: const ValueKey('bus-name'),
           controller: name,
           decoration: const InputDecoration(
             labelText: 'Bus name / registration number',
+            prefixIcon: Icon(Icons.directions_bus_outlined),
           ),
         ),
         const SizedBox(height: 12),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          title: const Text('Departure'),
-          subtitle: const Text(
-            'Changing departure resets stops to 15-minute intervals.',
-          ),
-          trailing: Text(
-            draft.departure < 0 ? 'Choose time' : timeLabel(draft.departure),
-          ),
+        _TimeField(
+          label: 'Departure',
+          note: 'Changing departure resets stops to 15-minute intervals.',
+          value: draft.departure < 0 ? 'Choose time' : timeLabel(draft.departure),
           onTap: () =>
               _pick(context, draft.departure, draftController.departure),
         ),
-        const Divider(),
+        const SizedBox(height: 20),
         const Text(
           'Stop timings',
           style: TextStyle(fontWeight: FontWeight.w700),
         ),
+        const SizedBox(height: 10),
         for (final stop in route.stops)
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(stop),
-            trailing: Text(
-              (draft.timings[stop] ?? -1) < 0
-                  ? 'Choose time'
-                  : timeLabel(draft.timings[stop]!),
-            ),
+          _TimeField(
+            label: stop,
+            value: (draft.timings[stop] ?? -1) < 0
+                ? 'Choose time'
+                : timeLabel(draft.timings[stop]!),
             onTap: () => _pick(
               context,
               draft.timings[stop] ?? draft.departure,
@@ -152,4 +147,61 @@ class ServiceEditor extends HookConsumerWidget {
       ],
     );
   }
+}
+
+/// Wrapping content keeps long stop names and enlarged text usable on phones.
+class _TimeField extends StatelessWidget {
+  final String label, value;
+  final String? note;
+  final VoidCallback onTap;
+  const _TimeField({
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.note,
+  });
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Material(
+      color: AppColors.surfaceLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.schedule_outlined, size: 18, color: AppColors.accentInk),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(value, style: const TextStyle(color: AppColors.accentInk, fontWeight: FontWeight.w600)),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              if (note != null) ...[
+                const SizedBox(height: 6),
+                Text(note!, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 }

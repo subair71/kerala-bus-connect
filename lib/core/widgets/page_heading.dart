@@ -6,21 +6,21 @@ class PageHeading extends StatelessWidget {
   const PageHeading({super.key, required this.title, required this.subtitle});
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 16, bottom: 24),
+    padding: const EdgeInsets.only(top: 16, bottom: 20),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
           style: const TextStyle(
-            fontSize: 26,
+            fontSize: 24,
             fontWeight: FontWeight.w700,
             letterSpacing: -.7,
             height: 1.25,
             color: AppColors.onSurface,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 6),
         Text(
           subtitle,
           style: const TextStyle(color: AppColors.onSurfaceVariant),
