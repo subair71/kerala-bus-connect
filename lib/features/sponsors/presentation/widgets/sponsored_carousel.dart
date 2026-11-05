@@ -84,7 +84,14 @@ class _Slides extends HookConsumerWidget {
         return;
       debugPrint('SPONSOR_START page=$page interval=$interval');
       rotationTimer.value = Timer.periodic(interval, (_) {
-        debugPrint('SPONSOR_TICK page=$page attached=${controller.hasClients} scrolling=${controller.hasClients ? controller.position.isScrollingNotifier.value : null} hover=${hovering.value} touch=${touching.value}');
+        debugPrint('SPONSOR_TICK page=$page');
+        debugPrint('SPONSOR_ATTACHED ${controller.hasClients}');
+        debugPrint('SPONSOR_HOVER ${hovering.value}');
+        debugPrint('SPONSOR_TOUCH ${touching.value}');
+        if (controller.hasClients) {
+          final scrolling = controller.position.isScrollingNotifier.value;
+          debugPrint('SPONSOR_SCROLL $scrolling');
+        }
         if (!controller.hasClients ||
             controller.position.isScrollingNotifier.value ||
             hovering.value ||
