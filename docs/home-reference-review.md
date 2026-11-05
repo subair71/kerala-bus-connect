@@ -17,7 +17,7 @@ The original HTML/design-document attachments could not be opened in the executi
 
 ## Validation
 
-Architecture checks enforce Riverpod, clean feature boundaries and zero application `setState`. Validation includes formatting, Flutter analysis, 45 domain/provider/widget tests, 13 screenshot scenarios, a release web build and Chromium/WebKit browser smoke checks.
+Architecture checks enforce Riverpod, clean feature boundaries and zero application `setState`. Validation includes formatting, Flutter analysis, 49 domain/provider/widget tests, 17 screenshot scenarios, a release web build and Chromium/WebKit browser smoke checks.
 
 The tests cover empty/live/failed/recovering queries, missing fields, sample write guards, owner commands through repository doubles, lazy rendering with 200 services, long labels, 320/390/412/768/1440-pixel layouts, up to 2× text scaling and keyboard visibility. Additional home tests verify advisory/corridor actions, real-record sample-fare rejection, midnight zero preservation and explicit demo-fare labeling.
 
@@ -35,3 +35,15 @@ The home carousel now precedes search at both breakpoints. Existing read-only ca
 
 - [Mobile with sample sponsors](screenshots/sponsors-mobile.png)
 - [Desktop with sample sponsors](screenshots/sponsors-desktop.png)
+
+## Mobile bus-results sheet
+
+Below 768 logical pixels, home keeps the location-specific sponsors and search filters, with a fixed **Search buses** button above navigation. The button or keyboard Search action immediately uses the latest stop fields and opens a draggable results sheet. Close, swipe down or use back to return to the preserved filters. View Stops opens the existing stop-timing sheet and returns to the results. Results stay inline on desktop and tablet.
+
+The same lazy results sliver and shared Riverpod subscriptions serve both layouts. No advertisements are placed in results or stop details. The corridor shortcut retains a narrow subscription so it remains available before the results sheet opens. Narrow-screen sponsor labels, day controls and result sorting labels accommodate 2× text.
+
+Validation covers button/keyboard submission, scroll laziness with 200 records, back/close/swipe dismissal, nested stop details, 320/390-pixel screens at 2× text, loading, failed-data fallback, recovery to live records and empty searches. Release browser checks open and close the sheet on Android Chromium and iPhone WebKit.
+
+- [Mobile search home](screenshots/mobile-search-home.png)
+- [Mobile results sheet](screenshots/mobile-results-sheet.png)
+- [Results with enlarged text](screenshots/mobile-results-large-text.png)
