@@ -90,10 +90,10 @@ void main() {
     await tester.pump(const Duration(seconds: 4));
     expect(currentPage(tester), 0);
     await tester.pump(const Duration(seconds: 1));
-    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
     expect(currentPage(tester), 1);
     await tester.pump(const Duration(seconds: 5));
-    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
     expect(currentPage(tester), 0);
     await tester.tap(find.byTooltip('Next sponsor'));
     await tester.pumpAndSettle();
@@ -122,7 +122,7 @@ void main() {
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pump();
       await tester.pump(const Duration(seconds: 5));
-      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
       expect(currentPage(tester), 1);
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump(const Duration(seconds: 15));
