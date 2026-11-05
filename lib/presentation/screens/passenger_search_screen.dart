@@ -415,10 +415,13 @@ class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
               const SizedBox(height: 12),
 
               // Day Filter & Active Status
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(
                         Icons.calendar_today,
@@ -456,6 +459,7 @@ class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
                     ],
                   ),
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       const Text(
                         'Running today only',

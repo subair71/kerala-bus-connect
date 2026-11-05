@@ -19,7 +19,16 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
+      - name: Format changed sources and capture dependency lock
+        run: |
+          dart format lib/domain/services/service_search_index.dart lib/presentation/blocs/passenger/published_services_cubit.dart lib/presentation/widgets/debounced_builder.dart lib/presentation/widgets/query_stream_builder.dart lib/main.dart lib/data/datasources/transit_remote_data_source.dart lib/presentation/screens/passenger_search_screen.dart lib/presentation/screens/routes_directory_screen.dart lib/presentation/screens/owner_dashboard_screen.dart test/performance_regression_test.dart
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in ["lib/domain/services/service_search_index.dart","lib/presentation/blocs/passenger/published_services_cubit.dart","lib/presentation/widgets/debounced_builder.dart","lib/presentation/widgets/query_stream_builder.dart","lib/main.dart","lib/data/datasources/transit_remote_data_source.dart","lib/presentation/screens/passenger_search_screen.dart","lib/presentation/screens/routes_directory_screen.dart","lib/presentation/screens/owner_dashboard_screen.dart","test/performance_regression_test.dart","pubspec.lock"]:
+              print("VALIDATED_FILE:" + json.dumps({"path": path, "content": Path(path).read_text()}))
+          PY
       - name: Analyze (existing style warnings are non-blocking)
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
-      - run: flutter test
+      - run: flutter test --reporter expanded --timeout 60s
       - run: flutter build web --release --base-href /kerala-bus-connect/

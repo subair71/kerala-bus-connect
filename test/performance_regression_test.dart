@@ -181,7 +181,7 @@ void main() {
       child: MaterialApp(home: Scaffold(body: screen)),
     );
     await tester.pumpWidget(app(const PassengerSearchScreen()));
-    repo.controller.add(List.generate(200, (i) => service('$i')));
+    repo.controller.add(List.generate(200, (i) => service('$i', departure: 480 + i)));
     await tester.pumpAndSettle();
     final field = find.byKey(const ValueKey('search-from'));
     final controller = tester.widget<TextFormField>(field).controller;
@@ -202,6 +202,12 @@ void main() {
     await tester.pumpAndSettle();
     expect(repo.requests, 1);
     expect(find.text('Bus: Bus 199'), findsNothing);
+    // Check the same screen at a common phone width.
+    tester.view.physicalSize = const Size(390, 844);
+    search.swapFromAndTo();
+    await tester.pumpWidget(app(const PassengerSearchScreen()));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     await catalog.close();
     await search.close();
