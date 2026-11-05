@@ -1,0 +1,50 @@
+name: Inspect Stitch reference
+on:
+  push:
+    branches: [feature/stitch-redesign]
+    paths:
+      - .github/workflows/inspect-stitch.yml
+      - stitch_findmybus_minimal_redesign.zip
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 -m pip install --quiet Pillow
+      - name: Inspect design archive
+        run: |
+          python3 - <<'PY'
+          import zipfile, json, io, base64
+          from pathlib import Path
+          from PIL import Image
+          root = Path('stitch-reference').resolve()
+          root.mkdir(exist_ok=True)
+          with zipfile.ZipFile('stitch_findmybus_minimal_redesign.zip') as archive:
+              for member in archive.infolist():
+                  target = (root / member.filename).resolve()
+                  if not target.is_relative_to(root):
+                      raise ValueError('Unsafe archive path')
+                  if member.is_dir():
+                      target.mkdir(parents=True, exist_ok=True)
+                      continue
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  data = archive.read(member)
+                  target.write_bytes(data)
+                  print('REFERENCE_ENTRY:' + json.dumps({'path': member.filename, 'size': len(data)}))
+                  if target.suffix.lower() in ['.html', '.css', '.js', '.json', '.svg']:
+                      print('REFERENCE_TEXT:' + json.dumps({'path': member.filename, 'content': data.decode('utf-8')}))
+                  if target.suffix.lower() in ['.png', '.jpg', '.jpeg', '.webp']:
+                      picture = Image.open(io.BytesIO(data)).convert('RGB')
+                      picture.thumbnail((1200, 1800))
+                      output = io.BytesIO()
+                      picture.save(output, format='JPEG', quality=65)
+                      print('REFERENCE_IMAGE:' + json.dumps({'path': member.filename, 'data': base64.b64encode(output.getvalue()).decode()}))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stitch-reference
+          path: stitch-reference
+          retention-days: 14
