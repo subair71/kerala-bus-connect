@@ -34,7 +34,7 @@ jobs:
                   data = archive.read(member)
                   target.write_bytes(data)
                   print('REFERENCE_ENTRY:' + json.dumps({'path': member.filename, 'size': len(data)}))
-                  if target.suffix.lower() in ['.html', '.css', '.js', '.json', '.svg']:
+                  if target.suffix.lower() in ['.html', '.css', '.js', '.json', '.svg', '.md']:
                       print('REFERENCE_TEXT:' + json.dumps({'path': member.filename, 'content': data.decode('utf-8')}))
                   if target.suffix.lower() in ['.png', '.jpg', '.jpeg', '.webp']:
                       picture = Image.open(io.BytesIO(data)).convert('RGB')
