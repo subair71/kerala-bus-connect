@@ -1,3 +1,4 @@
+import 'package:kerala_bus_connect/features/sponsors/domain/entities/sponsored_ad.dart';
 import 'dart:async';
 import 'package:kerala_bus_connect/features/auth/domain/entities/auth_user.dart';
 import 'package:kerala_bus_connect/features/auth/domain/repositories/auth_repository.dart';
@@ -208,3 +209,16 @@ class FakeTransitRepository implements TransitRepository {
     savedTimings = stopTimings;
   }
 }
+
+SponsoredAd sponsor(
+  String id, {
+  String location = 'Aluva',
+  bool active = true,
+}) => SponsoredAd(
+  id: id,
+  location: location,
+  advertiser: 'Test advertiser',
+  title: 'Offer $id',
+  description: 'Published local offer',
+  active: active,
+);

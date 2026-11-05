@@ -3,10 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/data/data_set.dart';
 import '../../../../core/providers/cache_lifetime.dart';
 import '../../../../core/providers/firebase_providers.dart';
-import '../../../../core/providers/sample_fallback.dart';
 import '../../../../core/utils/sample_ids.dart';
 import '../../../passenger/presentation/providers/search_providers.dart';
-import '../../data/fixtures/sponsor_samples.dart';
 import '../../data/repositories/firebase_sponsor_repository.dart';
 import '../../domain/entities/sponsored_ad.dart';
 import '../../domain/repositories/sponsor_repository.dart';
@@ -19,18 +17,31 @@ final sponsorLocationProvider = Provider.autoDispose(
     ref.watch(debouncedSearchProvider.select((query) => query.from)),
   ),
 );
+final sponsorCacheDurationProvider = Provider<Duration>(
+  (ref) => const Duration(seconds: 30),
+);
+final sponsorRotationIntervalProvider = Provider<Duration>(
+  (ref) => const Duration(seconds: 5),
+);
 final liveSponsorsProvider = StreamProvider.autoDispose
-    .family<List<SponsoredAd>, String>((ref, location) {
-      retainWhileIdle(ref, const Duration(seconds: 30));
-      return ref.watch(sponsorRepositoryProvider).watch(location);
-    });
+    .family<List<SponsoredAd>, String>(
+      (ref, location) {
+        retainWhileIdle(ref, ref.watch(sponsorCacheDurationProvider));
+        return ref.watch(sponsorRepositoryProvider).watch(location);
+      },
+      // Firestore reconnects its own streams. Optional ads must not retry-loop
+      // when a collection is unavailable or permission is denied.
+      retry: (_, _) => null,
+    );
 final sponsorsProvider = Provider.autoDispose<AsyncValue<DataSet<SponsoredAd>>>(
   (ref) {
     final location = ref.watch(sponsorLocationProvider);
-    return sampleFallback(
-      ref.watch(liveSponsorsProvider(location)),
-      sponsorSamples(location),
-    );
+    return ref
+        .watch(liveSponsorsProvider(location))
+        .whenData(
+          (ads) =>
+              DataSet(ads.where((ad) => ad.active && ad.location == location)),
+        );
   },
 );
 final sponsorPageProvider = NotifierProvider.autoDispose

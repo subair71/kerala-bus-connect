@@ -85,7 +85,12 @@ void main() {
       final auth = FakeAuthRepository();
       addTearDown(auth.changes.close);
       await tester.pumpWidget(
-        harness(const AppShell(), FakeTransitRepository(), auth),
+        harness(
+          const AppShell(),
+          FakeTransitRepository(),
+          auth,
+          sampleSponsors: true,
+        ),
       );
       await tester.pumpAndSettle();
       final context = tester.element(find.byType(AppShell));
@@ -109,7 +114,7 @@ void main() {
   );
 
   testWidgets(
-    'carousel recovers from the second sample to a single live advertisement',
+    'carousel safely changes from a second live ad to a single live ad',
     (tester) async {
       final stream = StreamController<List<SponsoredAd>>();
       final auth = FakeAuthRepository();
@@ -123,11 +128,11 @@ void main() {
           sponsorStream: stream.stream,
         ),
       );
-      stream.add([]);
+      stream.add([sponsor('first'), sponsor('second')]);
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Next sponsor'));
       await tester.pumpAndSettle();
-      expect(find.text('Everyday essentials, close by'), findsOneWidget);
+      expect(find.text('Offer second'), findsOneWidget);
       stream.add([
         const SponsoredAd(
           id: 'live-ad',
