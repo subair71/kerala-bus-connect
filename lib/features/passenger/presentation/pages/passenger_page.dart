@@ -118,32 +118,62 @@ class DeparturesSliver extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 16),
               child: Wrap(
                 alignment: WrapAlignment.spaceBetween,
-                spacing: 8, runSpacing: 8,
+                spacing: 8,
+                runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Wrap(spacing: 8, runSpacing: 4,
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
                     crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Text('${services.length} buses found',
-                        style: const TextStyle(fontSize: 22, height: 1.3,
-                          fontWeight: FontWeight.w600, letterSpacing: -.6,
-                          color: HomeTheme.text)),
+                      Text(
+                        '${services.length} buses found',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          height: 1.3,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -.6,
+                          color: HomeTheme.text,
+                        ),
+                      ),
                       if (query.from.trim().isNotEmpty)
-                        Text('from ${query.from}',
-                          style: const TextStyle(fontSize: 12, color: HomeTheme.muted)),
+                        Text(
+                          'from ${query.from}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: HomeTheme.muted,
+                          ),
+                        ),
                     ],
                   ),
-                  Tooltip(message: 'Sorted by earliest scheduled departure',
+                  Tooltip(
+                    message: 'Sorted by earliest scheduled departure',
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(color: Colors.white,
-                        borderRadius: BorderRadius.circular(16)),
-                      child: const Row(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(Icons.sort, size: 15, color: HomeTheme.primary),
-                        SizedBox(width: 6),
-                        Text('Earliest first', style: TextStyle(fontSize: 11, color: HomeTheme.text)),
-                      ]),
-                    )),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.sort, size: 15, color: HomeTheme.primary),
+                          SizedBox(width: 6),
+                          Text(
+                            'Earliest first',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: HomeTheme.text,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -187,15 +217,25 @@ class _TimelinePreview extends ConsumerWidget {
 class _HomeDepartureCard extends ConsumerWidget {
   final ServiceEntity service;
   final String from, to, day;
-  const _HomeDepartureCard({super.key, required this.service,
-    required this.from, required this.to, required this.day});
+  const _HomeDepartureCard({
+    super.key,
+    required this.service,
+    required this.from,
+    required this.to,
+    required this.day,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final details = ref.watch(homeServiceDetailsProvider(service.id));
     return ServiceCard(
-      service: service, from: from, to: to, day: day, compact: true,
-      demoFare: details.fareRupees, demoFareLabel: details.fareLabel,
+      service: service,
+      from: from,
+      to: to,
+      day: day,
+      compact: true,
+      demoFare: details.fareRupees,
+      demoFareLabel: details.fareLabel,
     );
   }
 }

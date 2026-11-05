@@ -61,14 +61,28 @@ class ServiceCard extends ConsumerWidget {
               remaining < 120
         ? 'Scheduled in $remaining min'
         : 'Scheduled service';
-    void openTimings() => showStopTimings(context, service,
-      from: boarding, to: destination, day: effectiveDay);
-    if (compact) return CompactServiceCard(
-      service: service, boarding: boarding, destination: destination,
-      status: status, departure: departure, arrival: arrival, duration: duration,
-      demo: demo, running: running, demoFare: demoFare, demoFareLabel: demoFareLabel,
-      onViewStops: openTimings,
+    void openTimings() => showStopTimings(
+      context,
+      service,
+      from: boarding,
+      to: destination,
+      day: effectiveDay,
     );
+    if (compact)
+      return CompactServiceCard(
+        service: service,
+        boarding: boarding,
+        destination: destination,
+        status: status,
+        departure: departure,
+        arrival: arrival,
+        duration: duration,
+        demo: demo,
+        running: running,
+        demoFare: demoFare,
+        demoFareLabel: demoFareLabel,
+        onViewStops: openTimings,
+      );
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),

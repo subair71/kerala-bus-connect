@@ -16,20 +16,25 @@ abstract final class HomeTheme {
   static ThemeData from(ThemeData base) => base.copyWith(
     scaffoldBackgroundColor: background,
     colorScheme: base.colorScheme.copyWith(
-      primary: primary, onPrimary: Colors.white,
-      primaryContainer: mint, onPrimaryContainer: primary,
-      onSurface: text, onSurfaceVariant: muted,
+      primary: primary,
+      onPrimary: Colors.white,
+      primaryContainer: mint,
+      onPrimaryContainer: primary,
+      onSurface: text,
+      onSurfaceVariant: muted,
     ),
     textTheme: base.textTheme.apply(bodyColor: text, displayColor: text),
     cardTheme: CardThemeData(
-      color: Colors.white, elevation: 0,
+      color: Colors.white,
+      elevation: 0,
       surfaceTintColor: Colors.transparent,
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        foregroundColor: Colors.white, backgroundColor: primary,
+        foregroundColor: Colors.white,
+        backgroundColor: primary,
         minimumSize: const Size(48, 48),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
@@ -39,15 +44,22 @@ abstract final class HomeTheme {
       surfaceTintColor: Colors.transparent,
       indicatorColor: Colors.transparent,
       height: 68,
-      labelTextStyle: WidgetStateProperty.resolveWith((states) => TextStyle(
-        fontFamily: 'Plus Jakarta Sans',
-        fontSize: 11, fontWeight: FontWeight.w500,
-        color: states.contains(WidgetState.selected) ? primary : text)),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(
+          fontFamily: 'Plus Jakarta Sans',
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: states.contains(WidgetState.selected) ? primary : text,
+        ),
+      ),
     ),
     switchTheme: SwitchThemeData(
       thumbColor: const WidgetStatePropertyAll(Colors.white),
-      trackColor: WidgetStateProperty.resolveWith((states) =>
-        states.contains(WidgetState.selected) ? primary : const Color(0xffcdd7d4)),
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? primary
+            : const Color(0xffcdd7d4),
+      ),
       trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
     ),
   );
