@@ -25,7 +25,7 @@ class PassengerPage extends StatelessWidget {
               constraints.maxWidth >= 1050 &&
               constraints.maxHeight >= 760 &&
               MediaQuery.textScalerOf(context).scale(14) <= 18;
-          const top = Column(children: [SearchPanel(), SponsoredCarousel()]);
+          const top = Column(children: [SponsoredCarousel(), SearchPanel()]);
           final results = CustomScrollView(
             key: const PageStorageKey('passenger'),
             slivers: [
@@ -53,7 +53,7 @@ class PassengerPage extends StatelessWidget {
             children: [
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: SearchPanel(),
+                child: top,
               ),
               Expanded(
                 child: Row(
@@ -63,12 +63,7 @@ class PassengerPage extends StatelessWidget {
                     const Expanded(
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(8, 12, 16, 24),
-                        child: Column(
-                          children: [
-                            SponsoredCarousel(),
-                            Expanded(child: _TimelinePreview()),
-                          ],
-                        ),
+                        child: _TimelinePreview(),
                       ),
                     ),
                   ],

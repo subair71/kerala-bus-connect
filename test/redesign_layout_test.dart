@@ -7,11 +7,39 @@ import 'package:kerala_bus_connect/app/app_shell.dart';
 import 'package:kerala_bus_connect/core/theme/app_theme.dart';
 import 'package:kerala_bus_connect/features/passenger/presentation/providers/search_providers.dart';
 import 'package:kerala_bus_connect/features/sponsors/presentation/widgets/sponsored_carousel.dart';
+import 'package:kerala_bus_connect/features/passenger/presentation/widgets/search_panel.dart';
 import 'package:kerala_bus_connect/features/timetables/presentation/widgets/train_route_view.dart';
 import 'support/fakes.dart';
 import 'widgets_test.dart' show harness;
 
 void main() {
+  for (final size in [const Size(390, 844), const Size(1440, 1000)]) {
+    testWidgets('sponsors appear once above search at $size', (tester) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final auth = FakeAuthRepository();
+      addTearDown(auth.changes.close);
+      await tester.pumpWidget(
+        harness(
+          const AppShell(),
+          FakeTransitRepository(),
+          auth,
+          sampleSponsors: true,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(SponsoredCarousel), findsOneWidget);
+      expect(
+        tester.getBottomLeft(find.byType(SponsoredCarousel)).dy,
+        lessThanOrEqualTo(tester.getTopLeft(find.byType(SearchPanel)).dy),
+      );
+      expect(find.text('Sample advertisement'), findsWidgets);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final size in [
     const Size(320, 740),
     const Size(390, 844),

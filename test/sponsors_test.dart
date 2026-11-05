@@ -42,41 +42,52 @@ class TestSponsorRepository implements SponsorRepository {
 }
 
 void main() {
-  testWidgets('pending, empty and failed ads use no space; live ads recover', (
+  testWidgets('sample ads cover pending, empty and failed reads; live ads replace them', (
     tester,
   ) async {
     final stream = StreamController<List<SponsoredAd>>();
     addTearDown(stream.close);
     await tester.pumpWidget(carouselHarness(stream.stream));
-    await tester.pump(const Duration(seconds: 30));
-    void expectHidden() {
+    await tester.pump();
+    void expectSample() {
       expect(find.byType(CircularProgressIndicator), findsNothing);
-      expect(find.textContaining('Local sponsors near'), findsNothing);
-      expect(tester.getSize(find.byType(SponsoredCarousel)).height, 0);
+      expect(find.text('Local sponsors near Aluva'), findsOneWidget);
+      expect(find.text('Sample advertisement'), findsWidgets);
+      expect(find.text('Demo'), findsWidgets);
       expect(find.text('Search buses'), findsOneWidget);
     }
 
-    expectHidden();
+    expectSample();
+    expect(currentPage(tester), 0);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpAndSettle();
+    expect(currentPage(tester), 1);
     stream.add([]);
     await tester.pumpAndSettle();
-    expectHidden();
+    expectSample();
     stream.addError(StateError('unavailable'));
     await tester.pumpAndSettle();
-    expectHidden();
+    expectSample();
+    expect(
+      find.text('Live sponsors unavailable • Sample advertisements'),
+      findsOneWidget,
+    );
     stream.add([
       sponsor('inactive', active: false),
       sponsor('other', location: 'Kaloor'),
     ]);
     await tester.pumpAndSettle();
-    expectHidden();
+    expectSample();
     stream.add([sponsor('live')]);
     await tester.pumpAndSettle();
     expect(find.text('Offer live'), findsOneWidget);
     expect(find.text('Sample advertisement'), findsNothing);
+    expect(find.textContaining('Live sponsors unavailable'), findsNothing);
     stream.add([]);
     await tester.pumpAndSettle();
-    expectHidden();
+    expectSample();
     expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('multiple ads rotate every five seconds and wrap', (
@@ -183,10 +194,12 @@ void main() {
       expect(repository.watches, 1);
       stream.add([]);
       await container.read(liveSponsorsProvider('Aluva').future);
-      expect(container.read(sponsorsProvider).requireValue.records, isEmpty);
+      expect(container.read(sponsorsProvider).requireValue.isDemo, isTrue);
+      expect(container.read(sponsorsProvider).requireValue.records, hasLength(2));
       stream.addError(StateError('permission-denied'));
       await Future<void>.delayed(const Duration(milliseconds: 250));
-      expect(container.read(sponsorsProvider).hasError, isTrue);
+      expect(container.read(sponsorsProvider).requireValue.isDemo, isTrue);
+      expect(container.read(sponsorsProvider).requireValue.unavailable, isTrue);
       expect(repository.watches, 1);
       stream.add([sponsor('real')]);
       await Future<void>.delayed(Duration.zero);

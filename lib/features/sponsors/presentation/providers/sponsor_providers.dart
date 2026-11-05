@@ -5,6 +5,7 @@ import '../../../../core/providers/cache_lifetime.dart';
 import '../../../../core/providers/firebase_providers.dart';
 import '../../../../core/utils/sample_ids.dart';
 import '../../../passenger/presentation/providers/search_providers.dart';
+import '../../data/fixtures/sponsor_samples.dart';
 import '../../data/repositories/firebase_sponsor_repository.dart';
 import '../../domain/entities/sponsored_ad.dart';
 import '../../domain/repositories/sponsor_repository.dart';
@@ -36,12 +37,21 @@ final liveSponsorsProvider = StreamProvider.autoDispose
 final sponsorsProvider = Provider.autoDispose<AsyncValue<DataSet<SponsoredAd>>>(
   (ref) {
     final location = ref.watch(sponsorLocationProvider);
-    return ref
-        .watch(liveSponsorsProvider(location))
-        .whenData(
-          (ads) =>
-              DataSet(ads.where((ad) => ad.active && ad.location == location)),
-        );
+    final live = ref.watch(liveSponsorsProvider(location));
+    final ads = live.asData?.value
+        .where((ad) => ad.active && ad.location == location)
+        .toList();
+    // Read-only previews keep the home carousel usable while optional live ads
+    // are pending, empty or unavailable. Never combine demo and live campaigns.
+    return AsyncData(
+      ads != null && ads.isNotEmpty
+          ? DataSet(ads)
+          : DataSet(
+              sponsorSamples(location),
+              isDemo: true,
+              unavailable: live.hasError,
+            ),
+    );
   },
 );
 final sponsorPageProvider = NotifierProvider.autoDispose
