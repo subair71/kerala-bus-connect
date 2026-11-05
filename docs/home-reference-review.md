@@ -47,3 +47,7 @@ Validation covers button/keyboard submission, scroll laziness with 200 records, 
 - [Mobile search home](screenshots/mobile-search-home.png)
 - [Mobile results sheet](screenshots/mobile-results-sheet.png)
 - [Results with enlarged text](screenshots/mobile-results-large-text.png)
+
+## Compact stop search
+
+The search card starts directly with origin and destination. The redundant “Find a bus / Kerala Transit Corridors” heading and bus tile are removed. On mobile the swap control sits beside the stacked fields, centred between them; on desktop it remains between the horizontal fields. The existing Riverpod swap, clear, filters and mobile results-sheet actions are unchanged.
