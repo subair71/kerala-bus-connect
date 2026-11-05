@@ -8,9 +8,14 @@ import '../../domain/entities/search_query.dart';
 import '../providers/search_providers.dart';
 
 class SearchPanel extends HookConsumerWidget {
-  const SearchPanel({super.key});
+  final VoidCallback? onSearch;
+  const SearchPanel({super.key, this.onSearch});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    void submit() {
+      FocusScope.of(context).unfocus();
+      onSearch?.call();
+    }
     final query = ref.watch(searchQueryProvider);
     final from = useTextEditingController(text: query.from);
     final to = useTextEditingController(text: query.to);
@@ -82,7 +87,7 @@ class SearchPanel extends HookConsumerWidget {
                         : TextInputAction.search,
                     onSubmitted: (_) => origin
                         ? FocusScope.of(context).nextFocus()
-                        : FocusScope.of(context).unfocus(),
+                        : submit(),
                     style: const TextStyle(
                       fontSize: 16,
                       height: 1.3,
@@ -306,7 +311,7 @@ class SearchPanel extends HookConsumerWidget {
                       Expanded(child: stopField(false)),
                       const SizedBox(width: 12),
                       FilledButton.icon(
-                        onPressed: () => FocusScope.of(context).unfocus(),
+                        onPressed: submit,
                         icon: const Icon(Icons.search, size: 18),
                         label: const Text('Search'),
                       ),

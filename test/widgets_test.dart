@@ -25,6 +25,7 @@ Widget harness(
   FakeAuthRepository auth, {
   Stream<List<SponsoredAd>>? sponsorStream,
   bool sampleSponsors = false,
+  TextScaler? textScaler,
 }) => ProviderScope(
   overrides: [
     sponsorRotationIntervalProvider.overrideWithValue(Duration.zero),
@@ -51,7 +52,14 @@ Widget harness(
     catalogCacheDurationProvider.overrideWithValue(Duration.zero),
     clockProvider.overrideWith((ref) => Stream.value(DateTime(2026, 11, 5, 8))),
   ],
-  child: MaterialApp(theme: AppTheme.lightTheme, home: child),
+  child: MaterialApp(
+    theme: AppTheme.lightTheme,
+    builder: textScaler == null ? null : (context, child) => MediaQuery(
+      data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+      child: child!,
+    ),
+    home: child,
+  ),
 );
 
 void main() {
@@ -109,8 +117,11 @@ void main() {
       harness(const Scaffold(body: PassengerPage()), repository, auth),
     );
     await tester.pumpAndSettle();
+    expect(find.byType(ServiceCard), findsNothing);
+    await tester.tap(find.byKey(const ValueKey('show-bus-results')));
+    await tester.pumpAndSettle();
     expect(find.byType(ServiceCard).evaluate().length, lessThan(12));
-    await tester.drag(find.byType(CustomScrollView), const Offset(0, -550));
+    await tester.drag(find.byKey(const ValueKey('mobile-bus-results-list')), const Offset(0, -550));
     await tester.pumpAndSettle();
     expect(find.byType(ServiceCard), findsWidgets);
     expect(find.byType(ServiceCard).evaluate().length, lessThan(12));

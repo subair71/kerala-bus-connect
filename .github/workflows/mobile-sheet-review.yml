@@ -1,0 +1,49 @@
+name: Mobile sheet review
+on:
+  push:
+    branches: [feature/mobile-results-sheet]
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Format source
+        run: |
+          dart format lib/features/passenger/presentation/pages/passenger_page.dart lib/features/passenger/presentation/widgets/search_panel.dart lib/features/passenger/presentation/providers/search_providers.dart test/redesign_layout_test.dart test/widgets_test.dart test/home_reference_test.dart tool/capture_screenshots.dart lib/features/passenger/presentation/widgets/departure_results.dart lib/features/passenger/presentation/widgets/mobile_bus_results_sheet.dart test/mobile_results_sheet_test.dart
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for path in ["lib/features/passenger/presentation/pages/passenger_page.dart","lib/features/passenger/presentation/widgets/search_panel.dart","lib/features/passenger/presentation/providers/search_providers.dart","test/redesign_layout_test.dart","test/widgets_test.dart","test/home_reference_test.dart","tool/capture_screenshots.dart","lib/features/passenger/presentation/widgets/departure_results.dart","lib/features/passenger/presentation/widgets/mobile_bus_results_sheet.dart","test/mobile_results_sheet_test.dart"]:
+              print('FORMATTED_SOURCE ' + json.dumps({'path': path, 'content': Path(path).read_text()}))
+          PY
+      - run: python3 tool/check_architecture.py
+      - run: flutter analyze
+      - run: timeout 180s flutter test --reporter expanded --timeout 60s
+      - name: Capture layouts
+        if: always()
+        run: flutter test tool/capture_screenshots.dart --update-goldens --reporter expanded
+      - name: Review images
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64, json
+          from pathlib import Path
+          for name in ['mobile-home.png', 'mobile-results.png', 'mobile-results-large-text.png', 'desktop-home.png']:
+              path = Path('tool/screenshots') / name
+              if path.exists():
+                  print('REVIEW_IMAGE ' + json.dumps({'name': name, 'data': base64.b64encode(path.read_bytes()).decode()}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-sheet-screenshots
+          path: tool/screenshots/*.png
+          retention-days: 14

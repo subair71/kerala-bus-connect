@@ -31,6 +31,9 @@ final debouncedSearchProvider =
     );
 
 class DebouncedSearch extends Notifier<SearchQuery> {
+  /// Explicit search submissions must use the latest fields immediately.
+  void flush() => state = ref.read(searchQueryProvider);
+
   @override
   SearchQuery build() {
     Timer? timer;

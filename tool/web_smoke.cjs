@@ -68,6 +68,15 @@ async function verifyStartup(page) {
         await page.goto(baseUrl, {waitUntil:'domcontentloaded'});
         await verifyStartup(page);
         await page.screenshot({path:'browser-screenshots/' + name + '-home.png'});
+        if (name !== 'desktop') {
+          await page.getByRole('button', {name:'Search buses', exact:true})
+            .or(page.getByText('Search buses', {exact:true})).first().click();
+          await page.getByText('Bus results', {exact:true}).waitFor();
+          await page.screenshot({path:'browser-screenshots/' + name + '-results.png'});
+          await page.getByRole('button', {name:'Close bus results', exact:true})
+            .or(page.getByText('Close bus results', {exact:true})).first().click();
+          await page.getByText('Bus results', {exact:true}).waitFor({state:'hidden'});
+        }
         await page.locator('[aria-label^="Routes"]').or(page.getByText('Routes', {exact:false})).first().click();
         await page.getByText('Routes directory', {exact:true}).waitFor();
         assert.equal(await page.getByText('Local sponsors near Aluva', {exact:true}).count(), 0);
