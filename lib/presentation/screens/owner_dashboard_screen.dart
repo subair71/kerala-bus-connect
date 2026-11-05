@@ -14,13 +14,63 @@ import '../blocs/auth/auth_state.dart';
 import '../blocs/owner/owner_bloc.dart';
 import '../blocs/owner/owner_event.dart';
 import '../blocs/owner/owner_state.dart';
+import '../widgets/query_stream_builder.dart';
 
-class OwnerDashboardScreen extends StatelessWidget {
+class OwnerDashboardScreen extends StatefulWidget {
   const OwnerDashboardScreen({super.key});
 
   @override
+  State<OwnerDashboardScreen> createState() => _OwnerDashboardScreenState();
+}
+
+class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final ValueNotifier<bool> isRegister = ValueNotifier<bool>(false);
+  final businessNameCtrl = TextEditingController();
+  final routeNameCtrl = TextEditingController();
+  final fromCtrl = TextEditingController();
+  final toCtrl = TextEditingController();
+  final stopsCtrl = TextEditingController();
+  final busNameCtrl = TextEditingController(text: 'KL-07-CK-4219');
+  final noteCtrl = TextEditingController();
+  final ValueNotifier<bool> createReturnToo = ValueNotifier<bool>(true);
+
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    isRegister.dispose();
+    businessNameCtrl.dispose();
+    routeNameCtrl.dispose();
+    fromCtrl.dispose();
+    toCtrl.dispose();
+    stopsCtrl.dispose();
+    busNameCtrl.dispose();
+    noteCtrl.dispose();
+    createReturnToo.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          previous.user?.uid != current.user?.uid,
+      listener: (context, state) {
+        emailController.clear();
+        passwordController.clear();
+        businessNameCtrl.clear();
+        routeNameCtrl.clear();
+        fromCtrl.clear();
+        toCtrl.clear();
+        stopsCtrl.clear();
+        busNameCtrl.clear();
+        noteCtrl.clear();
+        busNameCtrl.text = 'KL-07-CK-4219';
+        isRegister.value = false;
+        createReturnToo.value = true;
+      },
       builder: (context, authState) {
         if (authState.status == AuthStatus.unauthenticated ||
             authState.user == null) {
@@ -34,10 +84,6 @@ class OwnerDashboardScreen extends StatelessWidget {
   }
 
   Widget _buildAuthRequiredView(BuildContext context) {
-    final emailController = TextEditingController();
-    final passwordController = TextEditingController();
-    final ValueNotifier<bool> isRegister = ValueNotifier<bool>(false);
-
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Center(
@@ -146,14 +192,14 @@ class OwnerDashboardScreen extends StatelessWidget {
                             if (email.isEmpty || pass.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content:
-                                        Text('Enter email and password')),
+                                    content: Text('Enter email and password')),
                               );
                               return;
                             }
                             if (reg) {
-                              context.read<AuthBloc>().add(
-                                  AuthRegisterRequested(email, pass));
+                              context
+                                  .read<AuthBloc>()
+                                  .add(AuthRegisterRequested(email, pass));
                             } else {
                               context
                                   .read<AuthBloc>()
@@ -430,11 +476,13 @@ class OwnerDashboardScreen extends StatelessWidget {
             children: [
               Text(
                 'Digital: ₹11,250 (UPI / Smartcard)',
-                style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                style:
+                    TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
               ),
               Text(
                 'Cash: ₹7,200',
-                style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                style:
+                    TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
               ),
             ],
           ),
@@ -519,8 +567,8 @@ class OwnerDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _quickChip(BuildContext context, IconData icon, String label,
-      VoidCallback onTap) {
+  Widget _quickChip(
+      BuildContext context, IconData icon, String label, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ActionChip(
@@ -700,19 +748,11 @@ class OwnerDashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildManagementSection(BuildContext context, String ownerId,
-      TransitRepository transitRepo) {
-    final businessNameCtrl = TextEditingController();
-    final routeNameCtrl = TextEditingController();
-    final fromCtrl = TextEditingController();
-    final toCtrl = TextEditingController();
-    final stopsCtrl = TextEditingController();
-    final busNameCtrl = TextEditingController(text: 'KL-07-CK-4219');
-    final noteCtrl = TextEditingController();
-    final ValueNotifier<bool> createReturnToo = ValueNotifier<bool>(true);
-
-    return StreamBuilder<List<BusinessEntity>>(
-      stream: transitRepo.getOwnerBusinesses(ownerId),
+  Widget _buildManagementSection(
+      BuildContext context, String ownerId, TransitRepository transitRepo) {
+    return QueryStreamBuilder<List<BusinessEntity>>(
+      identity: (transitRepo, 'businesses', ownerId),
+      createStream: () => transitRepo.getOwnerBusinesses(ownerId),
       builder: (context, bSnap) {
         final businesses = bSnap.data ?? [];
 
@@ -994,9 +1034,7 @@ class OwnerDashboardScreen extends StatelessWidget {
                   if (ownerState.isEditingRoute)
                     TextButton(
                       onPressed: () {
-                        context
-                            .read<OwnerBloc>()
-                            .add(OwnerCancelEditRoute());
+                        context.read<OwnerBloc>().add(OwnerCancelEditRoute());
                         routeNameCtrl.clear();
                         fromCtrl.clear();
                         toCtrl.clear();
@@ -1018,7 +1056,8 @@ class OwnerDashboardScreen extends StatelessWidget {
                       if (name.isEmpty || start.isEmpty || end.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text('Provide route name, origin, and destination')),
+                              content: Text(
+                                  'Provide route name, origin, and destination')),
                         );
                         return;
                       }
@@ -1053,15 +1092,16 @@ class OwnerDashboardScreen extends StatelessWidget {
         const SizedBox(height: 12),
 
         // List of Business Routes
-        StreamBuilder<List<RouteEntity>>(
-          stream: transitRepo.getBusinessRoutes(businessId),
+        QueryStreamBuilder<List<RouteEntity>>(
+          identity: (transitRepo, 'routes', businessId),
+          createStream: () => transitRepo.getBusinessRoutes(businessId),
           builder: (context, snap) {
             final routes = snap.data ?? [];
             if (routes.isEmpty) {
               return const Text(
                 'No routes added yet. Add your first route above.',
-                style: TextStyle(
-                    fontSize: 12, color: AppColors.onSurfaceVariant),
+                style:
+                    TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
               );
             }
 
@@ -1087,7 +1127,8 @@ class OwnerDashboardScreen extends StatelessWidget {
                         r.name,
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
-                      subtitle: Text('${r.stops.length} stops: ${r.startStop} ➔ ${r.endStop}'),
+                      subtitle: Text(
+                          '${r.stops.length} stops: ${r.startStop} ➔ ${r.endStop}'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -1113,13 +1154,11 @@ class OwnerDashboardScreen extends StatelessWidget {
                               fromCtrl.text = r.startStop;
                               toCtrl.text = r.endStop;
                               final inter = r.stops
-                                  .where((s) =>
-                                      s != r.startStop && s != r.endStop)
+                                  .where(
+                                      (s) => s != r.startStop && s != r.endStop)
                                   .join(', ');
                               stopsCtrl.text = inter;
-                              context
-                                  .read<OwnerBloc>()
-                                  .add(OwnerStartEditRoute(
+                              context.read<OwnerBloc>().add(OwnerStartEditRoute(
                                     routeId: r.id,
                                     name: r.name,
                                     startStop: r.startStop,
@@ -1179,7 +1218,6 @@ class OwnerDashboardScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -1257,8 +1295,8 @@ class OwnerDashboardScreen extends StatelessWidget {
                         ActionChip(
                           visualDensity: VisualDensity.compact,
                           label: Text(
-                            timeLabel(entry.value.hour * 60 +
-                                entry.value.minute),
+                            timeLabel(
+                                entry.value.hour * 60 + entry.value.minute),
                             style: const TextStyle(fontSize: 11),
                           ),
                           onPressed: () async {
@@ -1312,8 +1350,9 @@ class OwnerDashboardScreen extends StatelessWidget {
               const SizedBox(height: 12),
 
               // Publish Service Button
-              StreamBuilder<List<ServiceEntity>>(
-                stream: transitRepo.getOwnerServices(ownerId),
+              QueryStreamBuilder<List<ServiceEntity>>(
+                identity: (transitRepo, 'services', ownerId),
+                createStream: () => transitRepo.getOwnerServices(ownerId),
                 builder: (context, sSnap) {
                   final existing = sSnap.data ?? [];
 

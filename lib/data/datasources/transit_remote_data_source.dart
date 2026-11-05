@@ -37,7 +37,14 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
       routeName: 'Aluva - Kaloor Fast Passenger',
       busName: 'KL-07-CD-4512 (Rajadhani Express)',
       departureMinutes: 480, // 08:00 AM
-      stops: ['Aluva', 'Companypady', 'Kalamassery', 'Edappally Toll', 'Palarivattom', 'Kaloor'],
+      stops: [
+        'Aluva',
+        'Companypady',
+        'Kalamassery',
+        'Edappally Toll',
+        'Palarivattom',
+        'Kaloor'
+      ],
       stopTimings: {
         'Aluva': 480,
         'Companypady': 492,
@@ -59,7 +66,14 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
       routeName: 'Aluva - Kaloor Metro Feeder',
       busName: 'KL-07-BV-8809 (Kerala Travels)',
       departureMinutes: 525, // 08:45 AM
-      stops: ['Aluva', 'Companypady', 'Kalamassery', 'Edappally Toll', 'Palarivattom', 'Kaloor'],
+      stops: [
+        'Aluva',
+        'Companypady',
+        'Kalamassery',
+        'Edappally Toll',
+        'Palarivattom',
+        'Kaloor'
+      ],
       stopTimings: {
         'Aluva': 525,
         'Companypady': 535,
@@ -81,7 +95,15 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
       routeName: 'Fort Kochi - Infopark Kakkanad Superfast',
       busName: 'KL-43-A-2101 (Malabar Queen)',
       departureMinutes: 540, // 09:00 AM
-      stops: ['Fort Kochi', 'Thoppumpady', 'Menaka', 'Kaloor', 'Edappally Toll', 'Kakkanad', 'Infopark Kakkanad'],
+      stops: [
+        'Fort Kochi',
+        'Thoppumpady',
+        'Menaka',
+        'Kaloor',
+        'Edappally Toll',
+        'Kakkanad',
+        'Infopark Kakkanad'
+      ],
       stopTimings: {
         'Fort Kochi': 540,
         'Thoppumpady': 555,
@@ -104,7 +126,15 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
       routeName: 'Angamaly - Ernakulam South Direct',
       busName: 'KL-40-H-6710 (St. Jude Express)',
       departureMinutes: 570, // 09:30 AM
-      stops: ['Angamaly', 'Aluva', 'Kalamassery', 'Edappally Toll', 'Kaloor', 'Menaka', 'Ernakulam South'],
+      stops: [
+        'Angamaly',
+        'Aluva',
+        'Kalamassery',
+        'Edappally Toll',
+        'Kaloor',
+        'Menaka',
+        'Ernakulam South'
+      ],
       stopTimings: {
         'Angamaly': 570,
         'Aluva': 590,
@@ -127,7 +157,16 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
       routeName: 'Thrissur - Kozhikode Limited Stop',
       busName: 'KL-08-BK-1122 (Silver Arrow)',
       departureMinutes: 600, // 10:00 AM
-      stops: ['Thrissur', 'Kunnamkulam', 'Edappal', 'Kuttipuram', 'Valanchery', 'Kottakkal', 'Malappuram', 'Kozhikode'],
+      stops: [
+        'Thrissur',
+        'Kunnamkulam',
+        'Edappal',
+        'Kuttipuram',
+        'Valanchery',
+        'Kottakkal',
+        'Malappuram',
+        'Kozhikode'
+      ],
       stopTimings: {
         'Thrissur': 600,
         'Kunnamkulam': 635,
@@ -151,12 +190,9 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
         .where('published', isEqualTo: true)
         .snapshots()
         .map((snap) {
-          final list = snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList();
-          return list.isEmpty ? _fallbackServices : list;
-        })
-        .handleError((dynamic error) {
-          return _fallbackServices;
-        });
+      final list = snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList();
+      return list.isEmpty ? _fallbackServices : list;
+    });
   }
 
   @override
@@ -165,7 +201,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
         .collection('businesses')
         .where('ownerId', isEqualTo: ownerId)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => BusinessModel.fromSnapshot(d)).toList())
+        .map((snap) =>
+            snap.docs.map((d) => BusinessModel.fromSnapshot(d)).toList())
         .handleError((dynamic _) => <BusinessModel>[]);
   }
 
@@ -175,7 +212,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
         .collection('routes')
         .where('businessId', isEqualTo: businessId)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => RouteModel.fromSnapshot(d)).toList())
+        .map(
+            (snap) => snap.docs.map((d) => RouteModel.fromSnapshot(d)).toList())
         .handleError((dynamic _) => <RouteModel>[]);
   }
 
@@ -185,7 +223,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
         .collection('services')
         .where('ownerId', isEqualTo: ownerId)
         .snapshots()
-        .map((snap) => snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList())
+        .map((snap) =>
+            snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList())
         .handleError((dynamic _) => <ServiceModel>[]);
   }
 
