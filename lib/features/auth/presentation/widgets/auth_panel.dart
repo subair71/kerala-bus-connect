@@ -63,7 +63,7 @@ class AuthPanel extends HookConsumerWidget {
                   autofillHints: const [AutofillHints.password],
                   decoration: const InputDecoration(
                     labelText: 'Password',
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock_outline),
                   ),
                 ),
                 if (action.hasError)

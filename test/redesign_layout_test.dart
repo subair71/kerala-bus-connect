@@ -85,12 +85,6 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       final auth = FakeAuthRepository();
       addTearDown(auth.changes.close);
-      final report = FlutterError.onError;
-      FlutterError.onError = (details) {
-        FlutterError.dumpErrorToConsole(details);
-        report?.call(details);
-      };
-      addTearDown(() => FlutterError.onError = report);
       await tester.pumpWidget(
         harness(
           Builder(
