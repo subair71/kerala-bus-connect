@@ -53,9 +53,13 @@ final ownerServicesProvider = StreamProvider.autoDispose<List<ServiceEntity>>((
       : ref.watch(watchTimetablesProvider).ownerServices(owner);
 });
 
-final serviceCatalogProvider = Provider.autoDispose<AsyncValue<DataSet<ServiceEntity>>>(
-  (ref) => sampleFallback(ref.watch(publishedServicesProvider), TransitSamples.services),
-);
+final serviceCatalogProvider =
+    Provider.autoDispose<AsyncValue<DataSet<ServiceEntity>>>(
+      (ref) => sampleFallback(
+        ref.watch(publishedServicesProvider),
+        TransitSamples.services,
+      ),
+    );
 final sampleBusinessesProvider = Provider((ref) => TransitSamples.businesses);
 final sampleRoutesProvider = Provider((ref) => TransitSamples.routes);
 final sampleServicesProvider = Provider((ref) => TransitSamples.services);

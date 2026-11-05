@@ -12,7 +12,14 @@ class ServiceSearchIndex {
     : _services = services.map(_IndexedService.new).toList()
         ..sort(
           (a, b) =>
-              (a.service.departureMinutes < 0 ? 99999 : a.service.departureMinutes).compareTo(b.service.departureMinutes < 0 ? 99999 : b.service.departureMinutes),
+              (a.service.departureMinutes < 0
+                      ? 99999
+                      : a.service.departureMinutes)
+                  .compareTo(
+                    b.service.departureMinutes < 0
+                        ? 99999
+                        : b.service.departureMinutes,
+                  ),
         );
 
   List<ServiceEntity> search({

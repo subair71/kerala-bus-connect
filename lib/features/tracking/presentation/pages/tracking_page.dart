@@ -13,7 +13,9 @@ class TrackingPage extends ConsumerWidget {
     final data = ref.watch(trackingDataProvider);
     if (preview == null) return const Center(child: AsyncStatus(loading: true));
     final vehicles = data.asData!.value.records;
-    final selected = ref.watch(trackingSelectionProvider).clamp(0, vehicles.length - 1);
+    final selected = ref
+        .watch(trackingSelectionProvider)
+        .clamp(0, vehicles.length - 1);
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 860),
@@ -24,9 +26,11 @@ class TrackingPage extends ConsumerWidget {
               title: 'Bus tracking preview',
               subtitle: 'Route position preview • not live GPS tracking.',
             ),
-            DataNotice(demo: data.asData!.value.isDemo,
+            DataNotice(
+              demo: data.asData!.value.isDemo,
               unavailable: data.asData!.value.unavailable,
-              retry: () => ref.invalidate(liveTrackingProvider)),
+              retry: () => ref.invalidate(liveTrackingProvider),
+            ),
             DropdownButton<int>(
               value: selected,
               isExpanded: true,
@@ -55,7 +59,11 @@ class TrackingPage extends ConsumerWidget {
                       ),
                       title: Text(preview.stops[i]),
                       subtitle: i == preview.currentStop
-                          ? Text(data.asData!.value.isDemo ? 'Example position' : 'Reported position')
+                          ? Text(
+                              data.asData!.value.isDemo
+                                  ? 'Example position'
+                                  : 'Reported position',
+                            )
                           : null,
                     ),
                 ],

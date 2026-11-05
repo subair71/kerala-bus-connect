@@ -8,15 +8,32 @@ class FirebaseSponsorRepository implements SponsorRepository {
   const FirebaseSponsorRepository(this.firestore);
   @override
   Stream<List<SponsoredAd>> watch(String location) => firestore
-    .collection('sponsored_ads').where('location', isEqualTo: location)
-    .snapshots().map((snapshot) => snapshot.docs.map((doc) {
-      final data = doc.data();
-      return SponsoredAd(id: doc.id, location: location,
-        advertiser: displayText(data['advertiser'], 'Local sponsor'),
-        title: displayText(data['title'], 'Local advertisement'),
-        description: displayText(data['description'], 'Details unavailable'),
-        imageUrl: data['imageUrl'] is String ? data['imageUrl'] as String : null,
-        website: data['website'] is String ? data['website'] as String : null,
-        active: data['active'] == true);
-    }).where((ad) => ad.active).toList());
+      .collection('sponsored_ads')
+      .where('location', isEqualTo: location)
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs
+            .map((doc) {
+              final data = doc.data();
+              return SponsoredAd(
+                id: doc.id,
+                location: location,
+                advertiser: displayText(data['advertiser'], 'Local sponsor'),
+                title: displayText(data['title'], 'Local advertisement'),
+                description: displayText(
+                  data['description'],
+                  'Details unavailable',
+                ),
+                imageUrl: data['imageUrl'] is String
+                    ? data['imageUrl'] as String
+                    : null,
+                website: data['website'] is String
+                    ? data['website'] as String
+                    : null,
+                active: data['active'] == true,
+              );
+            })
+            .where((ad) => ad.active)
+            .toList(),
+      );
 }

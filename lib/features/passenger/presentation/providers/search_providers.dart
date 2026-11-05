@@ -48,8 +48,9 @@ class DebouncedSearch extends Notifier<SearchQuery> {
 
 final serviceIndexProvider =
     Provider.autoDispose<AsyncValue<ServiceSearchIndex>>(
-      (ref) =>
-          ref.watch(serviceCatalogProvider).whenData((data) => ServiceSearchIndex(data.records)),
+      (ref) => ref
+          .watch(serviceCatalogProvider)
+          .whenData((data) => ServiceSearchIndex(data.records)),
     );
 
 final departureResultsProvider =

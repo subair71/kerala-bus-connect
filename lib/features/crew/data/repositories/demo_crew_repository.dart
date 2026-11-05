@@ -4,7 +4,8 @@ import '../../domain/repositories/crew_repository.dart';
 class DemoCrewRepository implements CrewRepository {
   const DemoCrewRepository();
   @override
-  Stream<List<CrewAssignment>> watch(String ownerId) => Stream.value(assignments());
+  Stream<List<CrewAssignment>> watch(String ownerId) =>
+      Stream.value(assignments());
   List<CrewAssignment> assignments() => const [
     CrewAssignment(
       'Demo driver A',

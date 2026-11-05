@@ -178,7 +178,9 @@ class ManageTransit {
     for (var i = 0; i < route.stops.length; i++) {
       final stop = route.stops[i];
       if (i > 0 && (timings[stop] == null || timings[stop]! < 0)) {
-        throw const AppFailure('Enter a time for every stop before publishing.');
+        throw const AppFailure(
+          'Enter a time for every stop before publishing.',
+        );
       }
       var minutes = i == 0 ? departure : timings[stop]!;
       if (i > 0 && minutes < previous) minutes += 1440;

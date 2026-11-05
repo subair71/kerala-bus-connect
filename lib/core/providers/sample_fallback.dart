@@ -8,7 +8,6 @@ AsyncValue<DataSet<T>> sampleFallback<T>(
   skipLoadingOnRefresh: false,
   loading: () => const AsyncLoading(),
   error: (_, _) => AsyncData(DataSet(samples, isDemo: true, unavailable: true)),
-  data: (rows) => AsyncData(rows.isEmpty
-      ? DataSet(samples, isDemo: true)
-      : DataSet(rows)),
+  data: (rows) =>
+      AsyncData(rows.isEmpty ? DataSet(samples, isDemo: true) : DataSet(rows)),
 );

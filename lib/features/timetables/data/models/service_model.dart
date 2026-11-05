@@ -31,7 +31,8 @@ class ServiceModel extends ServiceEntity {
     if (raw is Map) {
       for (final entry in raw.entries) {
         final time = scheduleMinutes(entry.value);
-        if (entry.key is String && time != null) timings[entry.key as String] = time;
+        if (entry.key is String && time != null)
+          timings[entry.key as String] = time;
       }
     }
     return ServiceModel(
@@ -46,7 +47,9 @@ class ServiceModel extends ServiceEntity {
       departureMinutes: scheduleMinutes(data['departureMinutes']) ?? -1,
       stopTimings: Map.unmodifiable(timings),
       offDays: stringList(data['offDays']),
-      offTimingsNote: data['offTimingsNote'] is String ? data['offTimingsNote'] as String : null,
+      offTimingsNote: data['offTimingsNote'] is String
+          ? data['offTimingsNote'] as String
+          : null,
       published: data['published'] == true,
     );
   }

@@ -8,13 +8,19 @@ class FirebaseCrewRepository implements CrewRepository {
   const FirebaseCrewRepository(this.firestore);
   @override
   Stream<List<CrewAssignment>> watch(String ownerId) => firestore
-    .collection('crew_assignments').where('ownerId', isEqualTo: ownerId)
-    .snapshots().map((snapshot) => snapshot.docs.map((doc) {
-      final data = doc.data();
-      return CrewAssignment(displayText(data['name'], 'Name unavailable'),
-        displayText(data['role'], 'Role unavailable'),
-        displayText(data['vehicle'], 'Vehicle unavailable'),
-        displayText(data['shift'], 'Shift unavailable'),
-        displayText(data['duty'], 'Duty unavailable'));
-    }).toList());
+      .collection('crew_assignments')
+      .where('ownerId', isEqualTo: ownerId)
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs.map((doc) {
+          final data = doc.data();
+          return CrewAssignment(
+            displayText(data['name'], 'Name unavailable'),
+            displayText(data['role'], 'Role unavailable'),
+            displayText(data['vehicle'], 'Vehicle unavailable'),
+            displayText(data['shift'], 'Shift unavailable'),
+            displayText(data['duty'], 'Duty unavailable'),
+          );
+        }).toList(),
+      );
 }

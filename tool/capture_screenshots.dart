@@ -20,30 +20,61 @@ void main() {
     'narrow-home': const Size(320, 740),
   }.entries) {
     testWidgets('capture ${entry.key}', (tester) async {
-      tester.view.physicalSize = entry.value; tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize); addTearDown(tester.view.resetDevicePixelRatio);
-      final auth = FakeAuthRepository(); addTearDown(auth.changes.close);
-      await tester.pumpWidget(harness(RepaintBoundary(key: const ValueKey('capture'),
-        child: Theme(data: AppTheme.lightTheme, child: const AppShell())), FakeTransitRepository(), auth));
+      tester.view.physicalSize = entry.value;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final auth = FakeAuthRepository();
+      addTearDown(auth.changes.close);
+      await tester.pumpWidget(
+        harness(
+          RepaintBoundary(
+            key: const ValueKey('capture'),
+            child: Theme(data: AppTheme.lightTheme, child: const AppShell()),
+          ),
+          FakeTransitRepository(),
+          auth,
+        ),
+      );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      await expectLater(find.byKey(const ValueKey('capture')),
-        matchesGoldenFile('screenshots/${entry.key}.png'));
+      await expectLater(
+        find.byKey(const ValueKey('capture')),
+        matchesGoldenFile('screenshots/${entry.key}.png'),
+      );
     });
   }
   for (final tab in ['Routes', 'Owner', 'Tracking', 'Crew']) {
     testWidgets('capture mobile $tab', (tester) async {
-      tester.view.physicalSize = const Size(390, 1000); tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize); addTearDown(tester.view.resetDevicePixelRatio);
-      final auth = FakeAuthRepository(); addTearDown(auth.changes.close);
-      await tester.pumpWidget(harness(RepaintBoundary(key: const ValueKey('capture'),
-        child: Theme(data: AppTheme.lightTheme, child: const AppShell())), FakeTransitRepository(), auth));
+      tester.view.physicalSize = const Size(390, 1000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final auth = FakeAuthRepository();
+      addTearDown(auth.changes.close);
+      await tester.pumpWidget(
+        harness(
+          RepaintBoundary(
+            key: const ValueKey('capture'),
+            child: Theme(data: AppTheme.lightTheme, child: const AppShell()),
+          ),
+          FakeTransitRepository(),
+          auth,
+        ),
+      );
       await tester.pumpAndSettle();
-      await tester.tap(find.descendant(of: find.byType(NavigationBar), matching: find.text(tab)));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.text(tab),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      await expectLater(find.byKey(const ValueKey('capture')),
-        matchesGoldenFile('screenshots/mobile-${tab.toLowerCase()}.png'));
+      await expectLater(
+        find.byKey(const ValueKey('capture')),
+        matchesGoldenFile('screenshots/mobile-${tab.toLowerCase()}.png'),
+      );
     });
   }
 }

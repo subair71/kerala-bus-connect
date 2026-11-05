@@ -11,9 +11,15 @@ final trackingRepositoryProvider = Provider<TrackingRepository>(
   (ref) => FirebaseTrackingRepository(ref.watch(firestoreProvider)),
 );
 final liveTrackingProvider = StreamProvider.autoDispose<List<TrackingPreview>>(
-  (ref) => ref.watch(trackingRepositoryProvider).watch());
-final trackingDataProvider = Provider.autoDispose<AsyncValue<DataSet<TrackingPreview>>>(
-  (ref) => sampleFallback(ref.watch(liveTrackingProvider), const DemoTrackingRepository().previews()));
+  (ref) => ref.watch(trackingRepositoryProvider).watch(),
+);
+final trackingDataProvider =
+    Provider.autoDispose<AsyncValue<DataSet<TrackingPreview>>>(
+      (ref) => sampleFallback(
+        ref.watch(liveTrackingProvider),
+        const DemoTrackingRepository().previews(),
+      ),
+    );
 final trackingSelectionProvider = NotifierProvider<TrackingSelection, int>(
   TrackingSelection.new,
 );
@@ -25,7 +31,9 @@ class TrackingSelection extends Notifier<int> {
 }
 
 final trackingPreviewProvider = Provider.autoDispose((ref) {
-  final list = ref.watch(trackingDataProvider).asData?.value.records ?? <TrackingPreview>[];
+  final list =
+      ref.watch(trackingDataProvider).asData?.value.records ??
+      <TrackingPreview>[];
   if (list.isEmpty) return null;
   final selected = ref.watch(trackingSelectionProvider);
   return list[selected.clamp(0, list.length - 1)];

@@ -31,12 +31,13 @@ class CrewPage extends HookConsumerWidget {
                 children: [
                   const PageHeading(
                     title: 'Crew duty roster',
-                    subtitle:
-                        'Assignments, vehicles and operating shifts.',
+                    subtitle: 'Assignments, vehicles and operating shifts.',
                   ),
-                  DataNotice(demo: data.asData?.value.isDemo ?? false,
+                  DataNotice(
+                    demo: data.asData?.value.isDemo ?? false,
                     unavailable: data.asData?.value.unavailable ?? false,
-                    retry: () => ref.invalidate(liveCrewProvider)),
+                    retry: () => ref.invalidate(liveCrewProvider),
+                  ),
                   if (data.isLoading) const AsyncStatus(loading: true),
                   TextField(
                     controller: controller,

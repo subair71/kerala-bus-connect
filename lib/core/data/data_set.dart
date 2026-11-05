@@ -4,5 +4,5 @@ class DataSet<T> {
   final bool isDemo;
   final bool unavailable;
   DataSet(Iterable<T> records, {this.isDemo = false, this.unavailable = false})
-      : records = List.unmodifiable(records);
+    : records = List.unmodifiable(records);
 }

@@ -1,3 +1,5 @@
+import '../../../../core/data/data_set.dart';
+import '../../../../core/providers/sample_fallback.dart';
 import 'dart:async';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/errors/app_failure.dart';
@@ -236,3 +238,12 @@ final businessServicesProvider = Provider.autoDispose
         return List<ServiceEntity>.unmodifiable(list);
       }),
     );
+
+final ownerBusinessDisplayProvider = Provider.autoDispose<AsyncValue<DataSet<BusinessEntity>>>(
+  (ref) => sampleFallback(ref.watch(ownerBusinessesProvider), ref.watch(sampleBusinessesProvider)));
+
+final ownerRoutesDisplayProvider = Provider.autoDispose.family<AsyncValue<DataSet<RouteEntity>>, String>(
+  (ref, id) => sampleFallback(ref.watch(businessRoutesProvider(id)), ref.watch(sampleRoutesProvider)));
+
+final ownerServicesDisplayProvider = Provider.autoDispose.family<AsyncValue<DataSet<ServiceEntity>>, String>(
+  (ref, id) => sampleFallback(ref.watch(businessServicesProvider(id)), ref.watch(sampleServicesProvider)));

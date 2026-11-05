@@ -26,7 +26,10 @@ class ServiceEditor extends HookConsumerWidget {
   ) async {
     final time = await showTimePicker(
       context: context,
-      initialTime: TimeOfDay(hour: minutes < 0 ? 8 : (minutes ~/ 60) % 24, minute: minutes < 0 ? 0 : minutes % 60),
+      initialTime: TimeOfDay(
+        hour: minutes < 0 ? 8 : (minutes ~/ 60) % 24,
+        minute: minutes < 0 ? 0 : minutes % 60,
+      ),
     );
     if (time != null && context.mounted) update(time.hour * 60 + time.minute);
   }
@@ -62,7 +65,9 @@ class ServiceEditor extends HookConsumerWidget {
           subtitle: const Text(
             'Changing departure resets stops to 15-minute intervals.',
           ),
-          trailing: Text(draft.departure < 0 ? 'Choose time' : timeLabel(draft.departure)),
+          trailing: Text(
+            draft.departure < 0 ? 'Choose time' : timeLabel(draft.departure),
+          ),
           onTap: () =>
               _pick(context, draft.departure, draftController.departure),
         ),
@@ -75,7 +80,11 @@ class ServiceEditor extends HookConsumerWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             title: Text(stop),
-            trailing: Text((draft.timings[stop] ?? -1) < 0 ? 'Choose time' : timeLabel(draft.timings[stop]!)),
+            trailing: Text(
+              (draft.timings[stop] ?? -1) < 0
+                  ? 'Choose time'
+                  : timeLabel(draft.timings[stop]!),
+            ),
             onTap: () => _pick(
               context,
               draft.timings[stop] ?? draft.departure,
