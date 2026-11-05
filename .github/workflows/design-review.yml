@@ -1,7 +1,7 @@
 name: Design review
 on:
   push:
-    branches: [feature/unified-reference-design]
+    branches: [feature/reference-all-screens]
 permissions:
   contents: read
 jobs:
