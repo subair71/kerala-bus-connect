@@ -7,17 +7,24 @@ import '../../../../core/utils/time_utils.dart';
 import '../../../../core/widgets/data_notice.dart';
 import '../../../../core/widgets/app_components.dart';
 import '../../domain/entities/service_entity.dart';
-import 'train_route_view.dart';
+import 'compact_service_card.dart';
+import 'stop_timings_sheet.dart';
 
 class ServiceCard extends ConsumerWidget {
   final ServiceEntity service;
   final String from, to, day;
+  final bool compact;
+  final int? demoFare;
+  final String? demoFareLabel;
   const ServiceCard({
     super.key,
     required this.service,
     this.from = '',
     this.to = '',
     this.day = 'All Days',
+    this.compact = false,
+    this.demoFare,
+    this.demoFareLabel,
   });
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -54,6 +61,28 @@ class ServiceCard extends ConsumerWidget {
               remaining < 120
         ? 'Scheduled in $remaining min'
         : 'Scheduled service';
+    void openTimings() => showStopTimings(
+      context,
+      service,
+      from: boarding,
+      to: destination,
+      day: effectiveDay,
+    );
+    if (compact)
+      return CompactServiceCard(
+        service: service,
+        boarding: boarding,
+        destination: destination,
+        status: status,
+        departure: departure,
+        arrival: arrival,
+        duration: duration,
+        demo: demo,
+        running: running,
+        demoFare: demoFare,
+        demoFareLabel: demoFareLabel,
+        onViewStops: openTimings,
+      );
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -128,50 +157,7 @@ class ServiceCard extends ConsumerWidget {
                   iconAlignment: IconAlignment.end,
                   icon: const Icon(Icons.arrow_forward, size: 18),
                   label: const Text('View stop timings'),
-                  onPressed: () => showModalBottomSheet<void>(
-                    context: context,
-                    isScrollControlled: true,
-                    useSafeArea: true,
-                    showDragHandle: true,
-                    builder: (sheetContext) => FractionallySizedBox(
-                      heightFactor: .9,
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    demo
-                                        ? 'Sample data • not for travel planning'
-                                        : 'Scheduled timings • not live GPS tracking',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                ),
-                                IconButton(
-                                  tooltip: 'Close stop timings',
-                                  onPressed: () => Navigator.pop(sheetContext),
-                                  icon: const Icon(Icons.close),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: TrainRouteView(
-                              service: service,
-                              queryFrom: boarding,
-                              queryTo: destination,
-                              effectiveDay: effectiveDay,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                  onPressed: openTimings,
                 ),
               ],
             ),

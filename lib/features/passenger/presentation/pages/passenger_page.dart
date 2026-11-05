@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/home_theme.dart';
+import '../../../timetables/domain/entities/service_entity.dart';
+import '../providers/home_service_providers.dart';
+import '../widgets/transit_advisory.dart';
 import '../../../../core/widgets/async_status.dart';
 import '../../../../core/widgets/data_notice.dart';
 import '../../../sponsors/presentation/widgets/sponsored_carousel.dart';
@@ -28,7 +31,7 @@ class PassengerPage extends StatelessWidget {
             slivers: [
               if (!wide)
                 const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(16, 20, 16, 0),
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
                   sliver: SliverToBoxAdapter(child: top),
                 ),
               const SliverPadding(
@@ -41,7 +44,7 @@ class PassengerPage extends StatelessWidget {
               ),
               const SliverPadding(
                 padding: EdgeInsets.fromLTRB(16, 8, 16, 32),
-                sliver: SliverToBoxAdapter(child: _ScheduleNote()),
+                sliver: SliverToBoxAdapter(child: TransitAdvisory()),
               ),
             ],
           );
@@ -84,6 +87,7 @@ class _CatalogNotice extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(serviceCatalogProvider).asData?.value;
+    if (!(data?.unavailable ?? false)) return const SizedBox.shrink();
     return DataNotice(
       demo: data?.isDemo ?? false,
       unavailable: data?.unavailable ?? false,
@@ -114,19 +118,60 @@ class DeparturesSliver extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 16),
               child: Wrap(
                 alignment: WrapAlignment.spaceBetween,
-                spacing: 12,
-                runSpacing: 4,
+                spacing: 8,
+                runSpacing: 8,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Text(
-                    '${services.length} buses found',
-                    style: Theme.of(context).textTheme.titleMedium,
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        '${services.length} buses found',
+                        style: const TextStyle(
+                          fontSize: 22,
+                          height: 1.3,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -.6,
+                          color: HomeTheme.text,
+                        ),
+                      ),
+                      if (query.from.trim().isNotEmpty)
+                        Text(
+                          'from ${query.from}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: HomeTheme.muted,
+                          ),
+                        ),
+                    ],
                   ),
-                  const Text(
-                    'Sorted by earliest departure',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.onSurfaceVariant,
+                  Tooltip(
+                    message: 'Sorted by earliest scheduled departure',
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.sort, size: 15, color: HomeTheme.primary),
+                          SizedBox(width: 6),
+                          Text(
+                            'Earliest first',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: HomeTheme.text,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
@@ -138,7 +183,7 @@ class DeparturesSliver extends ConsumerWidget {
                   'No published buses match these stops and operating days.',
             );
           final service = services[index - 1];
-          return ServiceCard(
+          return _HomeDepartureCard(
             key: ValueKey(service.id),
             service: service,
             from: query.from,
@@ -169,31 +214,28 @@ class _TimelinePreview extends ConsumerWidget {
   }
 }
 
-class _ScheduleNote extends StatelessWidget {
-  const _ScheduleNote();
+class _HomeDepartureCard extends ConsumerWidget {
+  final ServiceEntity service;
+  final String from, to, day;
+  const _HomeDepartureCard({
+    super.key,
+    required this.service,
+    required this.from,
+    required this.to,
+    required this.day,
+  });
+
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: AppColors.surfaceLow,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: const Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(Icons.schedule, size: 18, color: AppColors.onSurfaceVariant),
-        SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            'Timetable estimates are scheduled departures, not live GPS tracking. Traffic and route changes may affect actual arrival times.',
-            style: TextStyle(
-              fontSize: 12,
-              height: 1.6,
-              color: AppColors.onSurfaceVariant,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final details = ref.watch(homeServiceDetailsProvider(service.id));
+    return ServiceCard(
+      service: service,
+      from: from,
+      to: to,
+      day: day,
+      compact: true,
+      demoFare: details.fareRupees,
+      demoFareLabel: details.fareLabel,
+    );
+  }
 }

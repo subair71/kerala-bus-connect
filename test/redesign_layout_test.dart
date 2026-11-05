@@ -47,7 +47,7 @@ void main() {
       final scroller = find.byType(CustomScrollView).first;
       await tester.drag(scroller, const Offset(0, -650));
       await tester.pumpAndSettle();
-      final timing = find.text('View stop timings').first;
+      final timing = find.byKey(const ValueKey('stop-timings-real'));
       await tester.ensureVisible(timing);
       await tester.tap(timing);
       await tester.pumpAndSettle();
