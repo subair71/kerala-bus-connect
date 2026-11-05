@@ -111,31 +111,31 @@ class CompactServiceCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Flexible(
                     child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        demo && demoFare != null ? '₹$demoFare' : '—',
-                        style: const TextStyle(
-                          fontSize: 22,
-                          height: 1.2,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: -.5,
-                          color: HomeTheme.primary,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          demo && demoFare != null ? '₹$demoFare' : '—',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            height: 1.2,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -.5,
+                            color: HomeTheme.primary,
+                          ),
                         ),
-                      ),
-                      Text(
-                        demo && demoFare != null
-                            ? demoFareLabel ?? 'Sample fare'
-                            : 'Fare unavailable',
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(
-                          fontSize: 11,
-                          height: 1.4,
-                          color: HomeTheme.muted,
+                        Text(
+                          demo && demoFare != null
+                              ? demoFareLabel ?? 'Sample fare'
+                              : 'Fare unavailable',
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            height: 1.4,
+                            color: HomeTheme.muted,
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
                   ),
                 ],
               ),

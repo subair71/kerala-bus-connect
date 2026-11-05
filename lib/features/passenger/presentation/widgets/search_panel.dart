@@ -335,17 +335,18 @@ class SearchPanel extends HookConsumerWidget {
                   children: [dayPicker(), running()],
                 ),
                 const SizedBox(height: 4),
-                Row(
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
                   children: [
-                    const Expanded(
-                      child: Text(
+                    const Text(
                         'Frequent corridor stops',
                         style: TextStyle(
                           fontSize: 11,
                           height: 1.4,
                           color: HomeTheme.muted,
                         ),
-                      ),
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
