@@ -1,0 +1,24 @@
+name: Diagnose mobile web startup
+on:
+  push:
+    branches: [fix/mobile-web-startup]
+    paths: [.github/workflows/diagnose-startup.yml, tool/diagnose_mobile_startup.cjs]
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check deployed startup in Chromium and WebKit
+        run: |
+          npm install --prefix "$RUNNER_TEMP/startup-browser" --no-audit --no-fund playwright
+          "$RUNNER_TEMP/startup-browser/node_modules/.bin/playwright" install --with-deps chromium webkit
+          NODE_PATH="$RUNNER_TEMP/startup-browser/node_modules" node tool/diagnose_mobile_startup.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: startup-diagnostics
+          path: startup-diagnostics
+          retention-days: 7
