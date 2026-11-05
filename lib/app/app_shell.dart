@@ -77,7 +77,9 @@ class AppShell extends ConsumerWidget {
                                       ),
                                     ),
                                     Text(
-                                      home || wide ? 'Kerala Transit' : _labels[tab.index],
+                                      home || wide
+                                          ? 'Kerala Transit'
+                                          : _labels[tab.index],
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -92,7 +94,9 @@ class AppShell extends ConsumerWidget {
                                 const Spacer(),
                                 for (var i = 0; i < _labels.length; i++)
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 3,
+                                    ),
                                     child: TextButton.icon(
                                       style: TextButton.styleFrom(
                                         foregroundColor: tab.index == i
@@ -101,7 +105,9 @@ class AppShell extends ConsumerWidget {
                                         backgroundColor: tab.index == i
                                             ? AppColors.secondaryContainer
                                             : null,
-                                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
                                       ),
                                       onPressed: () => select(i),
                                       icon: Icon(_icons[i], size: 19),
@@ -127,7 +133,11 @@ class AppShell extends ConsumerWidget {
                                 icon: const CircleAvatar(
                                   radius: 17,
                                   backgroundColor: AppColors.primary,
-                                  child: Icon(Icons.person_outline, size: 19, color: Colors.white),
+                                  child: Icon(
+                                    Icons.person_outline,
+                                    size: 19,
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                             ],
@@ -148,8 +158,16 @@ class AppShell extends ConsumerWidget {
                     destinations: [
                       for (var i = 0; i < _labels.length; i++)
                         NavigationDestination(
-                          icon: Icon(_icons[i], size: 22, color: AppColors.onSurfaceVariant),
-                          selectedIcon: Icon(_icons[i], size: 22, color: AppColors.primary),
+                          icon: Icon(
+                            _icons[i],
+                            size: 22,
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                          selectedIcon: Icon(
+                            _icons[i],
+                            size: 22,
+                            color: AppColors.primary,
+                          ),
                           label: _labels[i],
                         ),
                     ],
@@ -172,7 +190,11 @@ class _BrandMark extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.directions_bus_outlined, size: 20, color: AppColors.primary),
+          Icon(
+            Icons.directions_bus_outlined,
+            size: 20,
+            color: AppColors.primary,
+          ),
           SizedBox(height: 1),
           Text(
             'FindMyBus',

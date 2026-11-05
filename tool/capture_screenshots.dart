@@ -71,55 +71,72 @@ void main() {
     });
   }
   for (final width in [390.0, 1440.0]) {
-  for (final tab in ['Routes', 'Owner', 'Tracking', 'Crew']) {
-    testWidgets('capture $width $tab', (tester) async {
-      tester.view.physicalSize = Size(width, 1000);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-      final auth = FakeAuthRepository();
-      addTearDown(auth.changes.close);
-      await tester.pumpWidget(
-        RepaintBoundary(
-          key: const ValueKey('capture'),
-          child: harness(
-            const AppShell(),
-            FakeTransitRepository(),
-            auth,
-            sampleSponsors: true,
+    for (final tab in ['Routes', 'Owner', 'Tracking', 'Crew']) {
+      testWidgets('capture $width $tab', (tester) async {
+        tester.view.physicalSize = Size(width, 1000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final auth = FakeAuthRepository();
+        addTearDown(auth.changes.close);
+        await tester.pumpWidget(
+          RepaintBoundary(
+            key: const ValueKey('capture'),
+            child: harness(
+              const AppShell(),
+              FakeTransitRepository(),
+              auth,
+              sampleSponsors: true,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(
-        width < 1000
-            ? find.descendant(of: find.byType(NavigationBar), matching: find.text(tab))
-            : find.widgetWithText(TextButton, tab),
-      );
-      await tester.pumpAndSettle();
-      expect(tester.takeException(), isNull);
-      await expectLater(
-        find.byKey(const ValueKey('capture')),
-        matchesGoldenFile('screenshots/${width < 1000 ? 'mobile' : 'desktop'}-${tab.toLowerCase()}.png'),
-      );
-    });
-  }
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(
+          width < 1000
+              ? find.descendant(
+                  of: find.byType(NavigationBar),
+                  matching: find.text(tab),
+                )
+              : find.widgetWithText(TextButton, tab),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await expectLater(
+          find.byKey(const ValueKey('capture')),
+          matchesGoldenFile(
+            'screenshots/${width < 1000 ? 'mobile' : 'desktop'}-${tab.toLowerCase()}.png',
+          ),
+        );
+      });
+    }
   }
   for (final scenario in [
-    'mobile-workspace', 'desktop-workspace', 'business-editor', 'route-editor',
-    'timetable-editor', 'timetable-editor-large-text', 'business-keyboard',
-    'delete-confirmation', 'stop-details',
+    'mobile-workspace',
+    'desktop-workspace',
+    'business-editor',
+    'route-editor',
+    'timetable-editor',
+    'timetable-editor-large-text',
+    'business-keyboard',
+    'delete-confirmation',
+    'stop-details',
   ]) {
     testWidgets('capture $scenario', (tester) async {
       final largeText = scenario.endsWith('large-text');
       tester.view.physicalSize = Size(
-        scenario == 'desktop-workspace' ? 1440 : largeText ? 320 : 390,
+        scenario == 'desktop-workspace'
+            ? 1440
+            : largeText
+            ? 320
+            : 390,
         1000,
       );
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final auth = FakeAuthRepository(user: const AuthUser(id: 'owner', email: 'owner@example.com'));
+      final auth = FakeAuthRepository(
+        user: const AuthUser(id: 'owner', email: 'owner@example.com'),
+      );
       addTearDown(auth.changes.close);
       await tester.pumpWidget(
         RepaintBoundary(
@@ -141,14 +158,30 @@ void main() {
         case 'business-keyboard':
           openEditor<void>(context, const BusinessEditor());
         case 'route-editor':
-          openEditor<void>(context, const RouteEditor(business: business, route: route));
+          openEditor<void>(
+            context,
+            const RouteEditor(business: business, route: route),
+          );
         case 'timetable-editor':
         case 'timetable-editor-large-text':
-          openEditor<void>(context, ServiceEditor(business: business, route: route, service: service('review-service')));
+          openEditor<void>(
+            context,
+            ServiceEditor(
+              business: business,
+              route: route,
+              service: service('review-service'),
+            ),
+          );
         case 'delete-confirmation':
           confirmDelete(context, route.name);
         case 'stop-details':
-          showStopTimings(context, service('review-service'), from: 'Aluva', to: 'Kaloor', day: 'Friday');
+          showStopTimings(
+            context,
+            service('review-service'),
+            from: 'Aluva',
+            to: 'Kaloor',
+            day: 'Friday',
+          );
       }
       await tester.pumpAndSettle();
       if (scenario == 'business-keyboard') {

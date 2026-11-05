@@ -33,19 +33,28 @@ class RouteEditor extends HookConsumerWidget {
         ),
         TextField(
           controller: name,
-          decoration: const InputDecoration(labelText: 'Route name (optional)', prefixIcon: Icon(Icons.alt_route)),
+          decoration: const InputDecoration(
+            labelText: 'Route name (optional)',
+            prefixIcon: Icon(Icons.alt_route),
+          ),
         ),
         const SizedBox(height: 12),
         TextField(
           key: const ValueKey('route-from'),
           controller: from,
-          decoration: const InputDecoration(labelText: 'Starting stop', prefixIcon: Icon(Icons.trip_origin)),
+          decoration: const InputDecoration(
+            labelText: 'Starting stop',
+            prefixIcon: Icon(Icons.trip_origin),
+          ),
         ),
         const SizedBox(height: 12),
         TextField(
           key: const ValueKey('route-to'),
           controller: to,
-          decoration: const InputDecoration(labelText: 'Ending stop', prefixIcon: Icon(Icons.location_on_outlined)),
+          decoration: const InputDecoration(
+            labelText: 'Ending stop',
+            prefixIcon: Icon(Icons.location_on_outlined),
+          ),
         ),
         const SizedBox(height: 12),
         TextField(

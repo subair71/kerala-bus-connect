@@ -64,7 +64,9 @@ class ServiceEditor extends HookConsumerWidget {
         _TimeField(
           label: 'Departure',
           note: 'Changing departure resets stops to 15-minute intervals.',
-          value: draft.departure < 0 ? 'Choose time' : timeLabel(draft.departure),
+          value: draft.departure < 0
+              ? 'Choose time'
+              : timeLabel(draft.departure),
           onTap: () =>
               _pick(context, draft.departure, draftController.departure),
         ),
@@ -181,14 +183,27 @@ class _TimeField extends StatelessWidget {
                 spacing: 12,
                 runSpacing: 8,
                 children: [
-                  Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(
+                    label,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.schedule_outlined, size: 18, color: AppColors.accentInk),
+                      const Icon(
+                        Icons.schedule_outlined,
+                        size: 18,
+                        color: AppColors.accentInk,
+                      ),
                       const SizedBox(width: 6),
                       Flexible(
-                        child: Text(value, style: const TextStyle(color: AppColors.accentInk, fontWeight: FontWeight.w600)),
+                        child: Text(
+                          value,
+                          style: const TextStyle(
+                            color: AppColors.accentInk,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ],
                   ),

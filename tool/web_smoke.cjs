@@ -77,10 +77,17 @@ async function verifyStartup(page) {
             .or(page.getByText('Close bus results', {exact:true})).first().click();
           await page.getByText('Bus results', {exact:true}).waitFor({state:'hidden'});
         }
-        await page.locator('[aria-label^="Routes"]').or(page.getByText('Routes', {exact:false})).first().click();
-        await page.getByText('Routes directory', {exact:true}).waitFor();
-        assert.equal(await page.getByText('Local sponsors near Aluva', {exact:true}).count(), 0);
-        await page.screenshot({path:'browser-screenshots/' + name + '-routes.png'});
+        for (const [tab, heading] of [
+          ['Routes', 'Routes directory'],
+          ['Owner', 'Owner sign in'],
+          ['Tracking', 'Bus tracking preview'],
+          ['Crew', 'Crew duty roster'],
+        ]) {
+          await page.locator('[aria-label^="' + tab + '"]').or(page.getByText(tab, {exact:true})).first().click();
+          await page.getByText(heading, {exact:true}).waitFor();
+          assert.equal(await page.getByText('Local sponsors near Aluva', {exact:true}).count(), 0);
+          await page.screenshot({path:'browser-screenshots/' + name + '-' + tab.toLowerCase() + '.png'});
+        }
         assert.deepEqual(errors, [], name + ': cold startup and navigation must not raise page errors');
         console.log('WEB_SMOKE_COLD_START_PASS ' + name);
         phase = 'reload';
@@ -88,7 +95,7 @@ async function verifyStartup(page) {
         phase = 'after-reload';
         await verifyStartup(page);
         assert.deepEqual(errors, []);
-        console.log('WEB_SMOKE_PASS ' + name + ': cold start, Firebase initialization, Routes navigation and reload passed.');
+        console.log('WEB_SMOKE_PASS ' + name + ': cold start, Firebase initialization, all feature tabs and reload passed.');
       } finally { await browser.close(); }
     }
   } finally { server.close(); }
