@@ -2,7 +2,7 @@ name: Validate Flutter
 on:
   pull_request:
   push:
-    branches: [main, feature/riverpod-clean-architecture, feature/stitch-redesign]
+    branches: [main, feature/riverpod-clean-architecture, feature/stitch-redesign, fix/mobile-web-startup]
 permissions:
   contents: read
 concurrency:
@@ -39,10 +39,10 @@ jobs:
       - name: Release web build
         run: flutter build web --release --base-href /kerala-bus-connect/
       - name: Browser smoke test
-        timeout-minutes: 6
+        timeout-minutes: 9
         run: |
           npm install --prefix "$RUNNER_TEMP/stitch-browser" --no-audit --no-fund playwright
-          "$RUNNER_TEMP/stitch-browser/node_modules/.bin/playwright" install --with-deps chromium
+          "$RUNNER_TEMP/stitch-browser/node_modules/.bin/playwright" install --with-deps chromium webkit
           NODE_PATH="$RUNNER_TEMP/stitch-browser/node_modules" node tool/web_smoke.cjs
       - name: Save browser screenshots
         if: always()

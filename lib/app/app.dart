@@ -7,8 +7,9 @@ import '../core/widgets/async_status.dart';
 import 'app_shell.dart';
 
 final initializationProvider = FutureProvider<void>((ref) async {
-  if (Firebase.apps.isEmpty)
-    await Firebase.initializeApp(options: firebaseOptions);
+  // Initialize before accessing Firebase APIs. Pre-SDK apps reads throw on Safari.
+  // FlutterFire safely reuses the default app when these options already match.
+  await Firebase.initializeApp(options: firebaseOptions);
 });
 
 class FindMyBusApp extends ConsumerWidget {
