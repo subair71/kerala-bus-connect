@@ -1,20 +1,22 @@
 name: kerala_bus_connect
-description: Kerala private bus timetable and departure optimization prototype
+description: FindMyBus with feature-based Clean Architecture and Riverpod.
 publish_to: none
-version: 1.0.0+1
+version: 2.0.0+2
 environment:
-  sdk: '>=3.3.0 <4.0.0'
+  sdk: '>=3.11.0 <4.0.0'
+  flutter: '>=3.41.0'
 dependencies:
   flutter:
     sdk: flutter
   firebase_core: ^3.15.2
   firebase_auth: ^5.7.0
   cloud_firestore: ^5.6.12
-  flutter_bloc: ^8.1.6
-  get_it: ^7.7.0
+  hooks_riverpod: ^3.4.3
+  flutter_hooks: ^0.21.3+1
   equatable: ^2.0.5
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  fake_async: ^1.3.3
 flutter:
   uses-material-design: true

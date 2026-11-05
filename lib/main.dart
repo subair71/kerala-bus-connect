@@ -1,64 +1,8 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'app/app.dart';
 
-import 'core/di/injection.dart';
-import 'core/theme/app_theme.dart';
-import 'domain/repositories/transit_repository.dart';
-import 'presentation/blocs/passenger/published_services_cubit.dart';
-import 'presentation/blocs/auth/auth_bloc.dart';
-import 'presentation/blocs/auth/auth_event.dart';
-import 'presentation/blocs/navigation/navigation_cubit.dart';
-import 'presentation/blocs/owner/owner_bloc.dart';
-import 'presentation/blocs/passenger/search_cubit.dart';
-import 'presentation/screens/home_shell_screen.dart';
-
-const firebaseOptions = FirebaseOptions(
-  apiKey: 'AIzaSyB7h2kuVM8CvhNlkptsPtyKXXHUO4T1RQk',
-  appId: '1:442982526142:web:6daaf45238e0cf8de442ef',
-  messagingSenderId: '442982526142',
-  projectId: 'findmybus-535ae',
-  authDomain: 'findmybus-535ae.firebaseapp.com',
-  storageBucket: 'findmybus-535ae.firebasestorage.app',
-);
-
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: firebaseOptions);
-  await initDI();
-
-  runApp(const KeralaBusConnectApp());
-}
-
-class KeralaBusConnectApp extends StatelessWidget {
-  const KeralaBusConnectApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<PublishedServicesCubit>(
-          create: (_) => PublishedServicesCubit(sl<TransitRepository>()),
-        ),
-        BlocProvider<AuthBloc>(
-          create: (_) => sl<AuthBloc>()..add(const AuthCheckRequested()),
-        ),
-        BlocProvider<NavigationCubit>(
-          create: (_) => sl<NavigationCubit>(),
-        ),
-        BlocProvider<SearchCubit>(
-          create: (_) => sl<SearchCubit>(),
-        ),
-        BlocProvider<OwnerBloc>(
-          create: (_) => sl<OwnerBloc>(),
-        ),
-      ],
-      child: MaterialApp(
-        title: 'FindMyBus - Kerala Bus Connect',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        home: const HomeShellScreen(),
-      ),
-    );
-  }
+  runApp(const ProviderScope(child: FindMyBusApp()));
 }

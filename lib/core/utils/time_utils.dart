@@ -1,7 +1,7 @@
 import '../constants/transit_constants.dart';
 
 String todayName() {
-  final now = DateTime.now();
+  final now = keralaNow();
   return weekDays[now.weekday - 1];
 }
 
@@ -13,6 +13,9 @@ String timeLabel(int minutes) {
 }
 
 int minutesNow() {
-  final now = DateTime.now();
+  final now = keralaNow();
   return now.hour * 60 + now.minute;
 }
+
+DateTime keralaNow() =>
+    DateTime.now().toUtc().add(const Duration(hours: 5, minutes: 30));
