@@ -85,7 +85,9 @@ class JourneyDateStrip extends ConsumerWidget {
                 ),
                 Expanded(
                   child: ListView.separated(
-                    key: PageStorageKey('journey-dates-${dates.first.toIso8601String()}'),
+                    key: PageStorageKey(
+                      'journey-dates-${dates.first.toIso8601String()}',
+                    ),
                     scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.only(right: 16),
                     itemCount: dates.length,

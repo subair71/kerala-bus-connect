@@ -111,7 +111,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(searches, 1);
     expect(container.read(debouncedSearchProvider).filterDay, 'Saturday');
-    await tester.tap(find.byKey(const PageStorageKey('passenger-search-filters')));
+    await tester.tap(
+      find.byKey(const PageStorageKey('passenger-search-filters')),
+    );
     await tester.pumpAndSettle();
     expect(find.text('View corridor stops'), findsOneWidget);
     expect(tester.takeException(), isNull);

@@ -78,7 +78,24 @@ class PassengerPage extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: top,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Expanded(flex: 2, child: SearchPanel()),
+                    const SizedBox(width: 20),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text('Bus schedules across Kerala',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                          SizedBox(height: 12),
+                          SponsoredCarousel(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Expanded(
                 child: Row(

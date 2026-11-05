@@ -414,7 +414,7 @@ class SearchPanel extends HookConsumerWidget {
                 SizedBox(
                   height: MediaQuery.textScalerOf(context).scale(13) + 27,
                   child: ListView.separated(
-                  key: const PageStorageKey('corridor-stops'),
+                    key: const PageStorageKey('corridor-stops'),
                     scrollDirection: Axis.horizontal,
                     itemCount: stops.length,
                     separatorBuilder: (_, _) => const SizedBox(width: 8),
