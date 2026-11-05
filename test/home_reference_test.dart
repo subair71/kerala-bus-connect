@@ -59,6 +59,8 @@ void main() {
     expect(find.byType(TrainRouteView), findsOneWidget);
     await tester.tap(find.byTooltip('Close stop timings'));
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('show-bus-results')));
+    await tester.pumpAndSettle();
     expect(find.text('Fare unavailable'), findsOneWidget);
     expect(find.text('GPS Live Tracked'), findsNothing);
     expect(find.text('On Time'), findsNothing);

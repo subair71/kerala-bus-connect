@@ -72,7 +72,13 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      final scroller = find.byType(CustomScrollView).first;
+      if (size.width < 768) {
+        await tester.tap(find.byKey(const ValueKey('show-bus-results')));
+        await tester.pumpAndSettle();
+      }
+      final scroller = size.width < 768
+          ? find.byKey(const ValueKey('mobile-bus-results-list'))
+          : find.byType(CustomScrollView).first;
       await tester.drag(scroller, const Offset(0, -650));
       await tester.pumpAndSettle();
       final timing = find.byKey(const ValueKey('stop-timings-real'));
@@ -90,6 +96,10 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.tap(find.byTooltip('Close stop timings'));
       await tester.pumpAndSettle();
+      if (size.width < 768) {
+        await tester.tap(find.byTooltip('Close bus results'));
+        await tester.pumpAndSettle();
+      }
       final routes = size.width < 1000
           ? find.descendant(
               of: find.byType(NavigationBar),

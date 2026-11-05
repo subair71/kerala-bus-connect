@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kerala_bus_connect/app/app_shell.dart';
-import 'package:kerala_bus_connect/core/theme/app_theme.dart';
 import '../test/support/fakes.dart';
 import '../test/widgets_test.dart' show harness;
 
@@ -26,6 +25,10 @@ void main() {
     'narrow-home': const Size(320, 740),
     'narrow-home-full-no-ads': const Size(320, 1700),
     'mobile-large-text-no-ads': const Size(390, 1700),
+    'mobile-results': const Size(390, 844),
+    'narrow-results': const Size(320, 740),
+    'mobile-results-large-text': const Size(390, 844),
+    'mobile-results-full': const Size(390, 1700),
   }.entries) {
     testWidgets('capture ${entry.key}', (tester) async {
       tester.view.physicalSize = entry.value;
@@ -35,29 +38,24 @@ void main() {
       final auth = FakeAuthRepository();
       addTearDown(auth.changes.close);
       await tester.pumpWidget(
-        harness(
-          RepaintBoundary(
-            key: const ValueKey('capture'),
-            child: Builder(
-              builder: (context) => MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                  textScaler: TextScaler.linear(
-                    entry.key.contains('large-text') ? 2 : 1,
-                  ),
-                ),
-                child: Theme(
-                  data: AppTheme.lightTheme,
-                  child: const AppShell(),
-                ),
-              ),
+        RepaintBoundary(
+          key: const ValueKey('capture'),
+          child: harness(
+            const AppShell(),
+            FakeTransitRepository(),
+            auth,
+            sampleSponsors: !entry.key.endsWith('no-ads'),
+            textScaler: TextScaler.linear(
+              entry.key.contains('large-text') ? 2 : 1,
             ),
           ),
-          FakeTransitRepository(),
-          auth,
-          sampleSponsors: !entry.key.endsWith('no-ads'),
         ),
       );
       await tester.pumpAndSettle();
+      if (entry.key.contains('results')) {
+        await tester.tap(find.byKey(const ValueKey('show-bus-results')));
+        await tester.pumpAndSettle();
+      }
       expect(tester.takeException(), isNull);
       await expectLater(
         find.byKey(const ValueKey('capture')),
@@ -74,14 +72,14 @@ void main() {
       final auth = FakeAuthRepository();
       addTearDown(auth.changes.close);
       await tester.pumpWidget(
-        harness(
-          RepaintBoundary(
-            key: const ValueKey('capture'),
-            child: Theme(data: AppTheme.lightTheme, child: const AppShell()),
+        RepaintBoundary(
+          key: const ValueKey('capture'),
+          child: harness(
+            const AppShell(),
+            FakeTransitRepository(),
+            auth,
+            sampleSponsors: true,
           ),
-          FakeTransitRepository(),
-          auth,
-          sampleSponsors: true,
         ),
       );
       await tester.pumpAndSettle();

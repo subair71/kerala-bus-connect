@@ -189,7 +189,8 @@ class _Slides extends HookConsumerWidget {
                 final wide = constraints.maxWidth >= 700;
                 final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
                 return SizedBox(
-                  height: (wide ? 188 : 228) * scale.clamp(1, 2.5),
+                  // Reserve room for sponsor labels wrapping on narrow screens.
+                  height: (wide ? 188 : 260) * scale.clamp(1, 2.5),
                   child: PageView.builder(
                     controller: controller,
                     itemCount: ads.length,
@@ -290,7 +291,10 @@ class _AdCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const AppStatusBadge(
                   label: 'SPONSORED',
@@ -298,16 +302,13 @@ class _AdCard extends ConsumerWidget {
                   background: AppColors.surfaceLow,
                   fontSize: 10,
                 ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    '${ad.advertiser} · ${ad.location}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
                 if (demo) const DemoBadge(),
+                Text(
+                  '${ad.advertiser} · ${ad.location}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ],
             ),
             const SizedBox(height: 8),
