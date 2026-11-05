@@ -21,18 +21,17 @@ jobs:
       - run: flutter pub get
       - name: Enforce architecture and state management
         run: python3 tool/check_architecture.py
-      - name: Format sources and capture dependency lock
-        run: |
-          dart format lib test
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          for path in ["lib/core/constants/colors.dart","lib/core/constants/transit_constants.dart","lib/core/theme/app_theme.dart","lib/features/timetables/data/models/business_model.dart","lib/features/timetables/data/models/route_model.dart","lib/features/timetables/data/models/service_model.dart","lib/features/timetables/data/repositories/transit_repository_impl.dart","lib/features/timetables/domain/entities/business_entity.dart","lib/features/timetables/domain/entities/route_entity.dart","lib/features/timetables/domain/entities/service_entity.dart","lib/features/timetables/domain/repositories/transit_repository.dart","lib/core/utils/time_utils.dart","lib/core/errors/app_failure.dart","lib/core/providers/firebase_providers.dart","lib/core/providers/cache_lifetime.dart","lib/core/providers/clock_provider.dart","lib/features/auth/domain/entities/auth_user.dart","lib/features/auth/domain/repositories/auth_repository.dart","lib/features/auth/domain/usecases/authenticate.dart","lib/features/auth/data/repositories/firebase_auth_repository.dart","lib/features/auth/presentation/providers/auth_providers.dart","lib/features/timetables/data/datasources/transit_remote_data_source.dart","lib/features/timetables/domain/usecases/watch_timetables.dart","lib/features/timetables/presentation/providers/timetable_providers.dart","lib/features/passenger/domain/services/service_search_index.dart","lib/features/passenger/domain/entities/search_query.dart","lib/features/passenger/presentation/providers/search_providers.dart","lib/features/routes/presentation/providers/route_query_provider.dart","lib/features/owner/domain/usecases/manage_transit.dart","lib/features/owner/presentation/providers/owner_providers.dart","lib/core/widgets/async_status.dart","lib/core/widgets/page_heading.dart","lib/core/widgets/editor_sheet.dart","lib/features/auth/presentation/widgets/auth_panel.dart","lib/features/timetables/presentation/widgets/train_route_view.dart","lib/features/timetables/presentation/widgets/service_card.dart","lib/features/passenger/presentation/widgets/search_panel.dart","lib/features/passenger/presentation/pages/passenger_page.dart","lib/features/routes/presentation/pages/routes_page.dart","lib/features/owner/presentation/widgets/business_editor.dart","lib/features/owner/presentation/widgets/route_editor.dart","lib/features/owner/presentation/widgets/service_editor.dart","lib/features/owner/presentation/pages/owner_page.dart","lib/features/crew/domain/entities/crew_assignment.dart","lib/features/crew/domain/repositories/crew_repository.dart","lib/features/crew/data/repositories/demo_crew_repository.dart","lib/features/crew/presentation/providers/crew_providers.dart","lib/features/crew/presentation/pages/crew_page.dart","lib/features/tracking/domain/entities/tracking_preview.dart","lib/features/tracking/domain/repositories/tracking_repository.dart","lib/features/tracking/data/repositories/demo_tracking_repository.dart","lib/features/tracking/presentation/providers/tracking_providers.dart","lib/features/tracking/presentation/pages/tracking_page.dart","lib/app/navigation_provider.dart","lib/app/app_shell.dart","lib/core/config/firebase_config.dart","lib/app/app.dart","lib/main.dart","test/support/fakes.dart","test/domain_test.dart","test/providers_test.dart","test/widgets_test.dart","pubspec.lock"]:
-              print("VALIDATED_FILE:" + json.dumps({"path": path, "content": Path(path).read_text()}))
-          PY
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed lib test
       - name: Analyze
         run: flutter analyze
       - name: Tests
         run: timeout 180s flutter test --reporter expanded --timeout 60s
       - name: Release web build
         run: flutter build web --release --base-href /kerala-bus-connect/
+      - name: Save review build
+        uses: actions/upload-artifact@v4
+        with:
+          name: riverpod-web
+          path: build/web
+          retention-days: 14

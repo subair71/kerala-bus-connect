@@ -179,20 +179,30 @@ void main() {
     },
   );
 
-  test('owner commands reject signed-out sessions without throwing or writing', () async {
-    final auth = FakeAuthRepository();
-    final repository = FakeTransitRepository();
-    final container = ProviderContainer(overrides: [
-      authRepositoryProvider.overrideWithValue(auth),
-      transitRepositoryProvider.overrideWithValue(repository),
-    ]);
-    addTearDown(() async { container.dispose(); await auth.changes.close(); });
-    final sub = container.listen(ownerActionsProvider, (_, value) {});
-    addTearDown(sub.close);
-    await container.read(authUserProvider.future);
-    final saved = await container.read(ownerActionsProvider.notifier).saveBusiness('Example');
-    expect(saved, isFalse);
-    expect(repository.writes, 0);
-    expect(container.read(ownerActionsProvider).hasError, isTrue);
-  });
+  test(
+    'owner commands reject signed-out sessions without throwing or writing',
+    () async {
+      final auth = FakeAuthRepository();
+      final repository = FakeTransitRepository();
+      final container = ProviderContainer(
+        overrides: [
+          authRepositoryProvider.overrideWithValue(auth),
+          transitRepositoryProvider.overrideWithValue(repository),
+        ],
+      );
+      addTearDown(() async {
+        container.dispose();
+        await auth.changes.close();
+      });
+      final sub = container.listen(ownerActionsProvider, (_, value) {});
+      addTearDown(sub.close);
+      await container.read(authUserProvider.future);
+      final saved = await container
+          .read(ownerActionsProvider.notifier)
+          .saveBusiness('Example');
+      expect(saved, isFalse);
+      expect(repository.writes, 0);
+      expect(container.read(ownerActionsProvider).hasError, isTrue);
+    },
+  );
 }

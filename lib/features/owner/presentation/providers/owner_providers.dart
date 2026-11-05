@@ -48,7 +48,10 @@ class OwnerActions extends AsyncNotifier<void> {
     if (state.isLoading) return false;
     final owner = ref.read(ownerIdProvider);
     if (owner == null) {
-      state = AsyncError(const AppFailure('Please sign in.'), StackTrace.current);
+      state = AsyncError(
+        const AppFailure('Please sign in.'),
+        StackTrace.current,
+      );
       return false;
     }
     state = const AsyncLoading();
@@ -68,14 +71,27 @@ class OwnerActions extends AsyncNotifier<void> {
     });
   }
 
-  Future<bool> saveRoute({required BusinessEntity business, required String name,
-    required String from, required String to, required String stops,
-    required bool returnRoute, String? id}) {
+  Future<bool> saveRoute({
+    required BusinessEntity business,
+    required String name,
+    required String from,
+    required String to,
+    required String stops,
+    required bool returnRoute,
+    String? id,
+  }) {
     final useCase = ref.read(manageTransitProvider);
     return _run((owner) async {
-      await useCase.saveRoute(ownerId: owner, business: business,
-        name: name, from: from, to: to, intermediateStops: stops,
-        returnRoute: returnRoute, routeId: id);
+      await useCase.saveRoute(
+        ownerId: owner,
+        business: business,
+        name: name,
+        from: from,
+        to: to,
+        intermediateStops: stops,
+        returnRoute: returnRoute,
+        routeId: id,
+      );
     });
   }
 
@@ -100,18 +116,32 @@ class OwnerActions extends AsyncNotifier<void> {
     return _run((owner) => useCase.deleteService(id));
   }
 
-  Future<bool> saveService({required BusinessEntity business, required RouteEntity route,
-    required String busName, required ServiceDraft draft, required String note, String? id}) {
+  Future<bool> saveService({
+    required BusinessEntity business,
+    required RouteEntity route,
+    required String busName,
+    required ServiceDraft draft,
+    required String note,
+    String? id,
+  }) {
     final useCase = ref.read(manageTransitProvider);
     return _run((owner) async {
       final existing = await ref.read(ownerServicesProvider.future);
       if (!ref.mounted || ref.read(ownerIdProvider) != owner) {
         throw const AppFailure('Your account changed. Please try again.');
       }
-      await useCase.saveService(ownerId: owner, business: business,
-        route: route, busName: busName, departure: draft.departure,
-        timings: draft.timings, offDays: draft.offDays, note: note,
-        existing: existing, serviceId: id);
+      await useCase.saveService(
+        ownerId: owner,
+        business: business,
+        route: route,
+        busName: busName,
+        departure: draft.departure,
+        timings: draft.timings,
+        offDays: draft.offDays,
+        note: note,
+        existing: existing,
+        serviceId: id,
+      );
     });
   }
 }

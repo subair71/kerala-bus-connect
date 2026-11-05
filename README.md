@@ -57,3 +57,5 @@ CI checks architecture boundaries, forbidden state APIs, formatting, static anal
 Firebase configuration is in `lib/core/config/firebase_config.dart`. Authentication and Firestore adapters use the existing project and collections (`businesses`, `routes`, `services`). Public Firebase client configuration is not a substitute for Firestore access rules.
 
 No demo timetables are silently substituted when Firebase is empty or fails. Empty, loading and retry states are shown. Tracking/crew production integrations and physical-device performance profiling remain separate work.
+
+Successful validation runs publish a `riverpod-web` download in GitHub Actions artifacts for 14 days. This is a review build, not a deployment.
