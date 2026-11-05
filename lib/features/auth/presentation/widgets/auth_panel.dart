@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../providers/auth_providers.dart';
+import '../../../../core/constants/colors.dart';
 
 class AuthPanel extends HookConsumerWidget {
   const AuthPanel({super.key});
@@ -21,6 +22,18 @@ class AuthPanel extends HookConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundColor: AppColors.secondaryContainer,
+                    child: Icon(
+                      Icons.business_outlined,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 Text(
                   register ? 'Create owner account' : 'Owner sign in',
                   style: Theme.of(context).textTheme.headlineSmall,
@@ -28,6 +41,7 @@ class AuthPanel extends HookConsumerWidget {
                 const SizedBox(height: 8),
                 const Text(
                   'Manage your business, routes and published bus timetables.',
+                  style: TextStyle(color: AppColors.onSurfaceVariant),
                 ),
                 const SizedBox(height: 20),
                 TextField(
@@ -35,9 +49,10 @@ class AuthPanel extends HookConsumerWidget {
                   controller: email,
                   keyboardType: TextInputType.emailAddress,
                   autofillHints: const [AutofillHints.email],
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(
                     labelText: 'Email',
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.mail_outline),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -48,7 +63,7 @@ class AuthPanel extends HookConsumerWidget {
                   autofillHints: const [AutofillHints.password],
                   decoration: const InputDecoration(
                     labelText: 'Password',
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.lock_outline),
                   ),
                 ),
                 if (action.hasError)

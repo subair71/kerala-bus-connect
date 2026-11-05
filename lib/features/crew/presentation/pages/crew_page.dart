@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/widgets/page_heading.dart';
+import '../../../../core/constants/colors.dart';
 import '../providers/crew_providers.dart';
 
 class CrewPage extends HookConsumerWidget {
@@ -47,8 +48,10 @@ class CrewPage extends HookConsumerWidget {
                       prefixIcon: Icon(Icons.search),
                     ),
                   ),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
+                    runSpacing: 4,
                     children: [
                       for (final value in [
                         'All',
@@ -74,14 +77,72 @@ class CrewPage extends HookConsumerWidget {
               );
             final person = crew[index - 1];
             return Card(
-              child: ListTile(
-                leading: const Icon(Icons.badge),
-                title: Text(person.name),
-                subtitle: Text(
-                  '${person.role} • ${person.vehicle}\n${person.duty}',
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const CircleAvatar(
+                      radius: 22,
+                      backgroundColor: AppColors.secondaryContainer,
+                      child: Icon(
+                        Icons.badge_outlined,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            person.name,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${person.role} • ${person.vehicle}',
+                            style: const TextStyle(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceLow,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  person.shift,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                person.duty,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                isThreeLine: true,
-                trailing: Text(person.shift),
               ),
             );
           },

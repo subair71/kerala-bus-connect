@@ -62,7 +62,7 @@ class ServiceCard extends ConsumerWidget {
           Text(
             minutes == null ? 'Time unavailable' : timeLabel(minutes),
             style: TextStyle(
-              fontSize: minutes == null ? 12 : 18,
+              fontSize: minutes == null ? 12 : 21,
               fontWeight: FontWeight.w700,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
@@ -73,20 +73,37 @@ class ServiceCard extends ConsumerWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             textAlign: right ? TextAlign.right : TextAlign.left,
-            style: const TextStyle(fontSize: 12),
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
         ],
       ),
     );
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.directions_bus_outlined,
+                    size: 23,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -103,7 +120,7 @@ class ServiceCard extends ConsumerWidget {
                       Text(
                         '${service.businessName} · ${service.routeName}',
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 13,
                           color: AppColors.onSurfaceVariant,
                         ),
                       ),
@@ -113,12 +130,12 @@ class ServiceCard extends ConsumerWidget {
                 if (demo) ...[const SizedBox(width: 8), const DemoBadge()],
               ],
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppColors.surfaceLow,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
@@ -130,7 +147,7 @@ class ServiceCard extends ConsumerWidget {
                         Text(
                           duration == null ? '—' : '$duration min',
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             color: AppColors.primary,
                           ),
                         ),
@@ -157,7 +174,7 @@ class ServiceCard extends ConsumerWidget {
                         ),
                         Text(
                           '${service.stops.length} stops',
-                          style: const TextStyle(fontSize: 10),
+                          style: const TextStyle(fontSize: 12),
                         ),
                       ],
                     ),
@@ -180,21 +197,21 @@ class ServiceCard extends ConsumerWidget {
                   ),
                   decoration: BoxDecoration(
                     color: running
-                        ? AppColors.surfaceLow
+                        ? AppColors.secondaryContainer
                         : AppColors.errorContainer,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     status,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       color: running ? AppColors.primary : AppColors.error,
                     ),
                   ),
                 ),
                 TextButton.icon(
                   iconAlignment: IconAlignment.end,
-                  icon: const Icon(Icons.expand_more, size: 18),
+                  icon: const Icon(Icons.arrow_forward, size: 18),
                   label: const Text('View stop timings'),
                   onPressed: () => showModalBottomSheet<void>(
                     context: context,
@@ -247,7 +264,7 @@ class ServiceCard extends ConsumerWidget {
               Text(
                 service.offTimingsNote!,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   color: AppColors.onSurfaceVariant,
                 ),
               ),

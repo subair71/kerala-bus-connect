@@ -17,19 +17,27 @@ class DataNotice extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surfaceLow,
-        borderRadius: BorderRadius.circular(8),
+        color: AppColors.sampleSurface,
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, size: 18, color: AppColors.primary),
+          const Icon(
+            Icons.info_outline,
+            size: 18,
+            color: AppColors.onSampleSurface,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               unavailable
                   ? 'Live data unavailable • Sample data'
                   : 'Sample data • Demo only',
-              style: const TextStyle(fontSize: 12),
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.5,
+                color: AppColors.onSampleSurface,
+              ),
             ),
           ),
           if (unavailable && retry != null)
@@ -46,12 +54,16 @@ class DemoBadge extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
-      color: AppColors.surfaceHigh,
-      borderRadius: BorderRadius.circular(4),
+      color: AppColors.sampleSurface,
+      borderRadius: BorderRadius.circular(6),
     ),
     child: const Text(
       'Demo',
-      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: AppColors.onSampleSurface,
+      ),
     ),
   );
 }

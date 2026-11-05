@@ -17,7 +17,7 @@ class TrainRouteView extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) => ListView.builder(
-    padding: const EdgeInsets.all(16),
+    padding: const EdgeInsets.all(20),
     itemCount: service.stops.length + 1,
     itemBuilder: (context, index) {
       if (index == 0)
@@ -52,63 +52,85 @@ class TrainRouteView extends StatelessWidget {
       final selected =
           stop.toLowerCase() == queryFrom.toLowerCase() ||
           stop.toLowerCase() == queryTo.toLowerCase();
-      return IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            SizedBox(
-              width: 28,
-              child: Column(
-                children: [
-                  Container(
+      return Stack(
+        children: [
+          if (index != service.stops.length)
+            const Positioned(
+              left: 13,
+              top: 16,
+              bottom: 0,
+              child: SizedBox(
+                width: 2,
+                child: ColoredBox(color: AppColors.border),
+              ),
+            ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 28,
+                child: Center(
+                  child: Container(
                     width: 12,
                     height: 12,
                     margin: const EdgeInsets.only(top: 5),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: selected ? AppColors.primary : Colors.white,
-                      border: Border.all(color: AppColors.primary, width: 2),
-                    ),
-                  ),
-                  Expanded(
-                    child: VerticalDivider(
-                      width: 2,
-                      thickness: 2,
-                      color: index == service.stops.length
-                          ? Colors.transparent
-                          : AppColors.border,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      minutes == null ? 'Time unavailable' : timeLabel(minutes),
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(stop),
-                    if (selected)
-                      const Text(
-                        'Selected stop',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.primary,
-                        ),
+                      border: Border.all(
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.outlineVariant,
+                        width: 2,
                       ),
-                  ],
+                    ),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        minutes == null
+                            ? 'Time unavailable'
+                            : timeLabel(minutes),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        stop,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
+                      if (selected)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 4),
+                          child: Text(
+                            'Selected stop',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       );
     },
   );

@@ -19,18 +19,20 @@ class PassengerPage extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final wide =
-              constraints.maxWidth >= 1050 && constraints.maxHeight >= 650;
-          const top = Column(children: [SponsoredCarousel(), SearchPanel()]);
+              constraints.maxWidth >= 1050 &&
+              constraints.maxHeight >= 760 &&
+              MediaQuery.textScalerOf(context).scale(14) <= 18;
+          const top = Column(children: [SearchPanel(), SponsoredCarousel()]);
           final results = CustomScrollView(
             key: const PageStorageKey('passenger'),
             slivers: [
               if (!wide)
                 const SliverPadding(
-                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: EdgeInsets.fromLTRB(16, 20, 16, 0),
                   sliver: SliverToBoxAdapter(child: top),
                 ),
               const SliverPadding(
-                padding: EdgeInsets.fromLTRB(16, 12, 16, 16),
+                padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
                 sliver: SliverToBoxAdapter(child: _CatalogNotice()),
               ),
               const SliverPadding(
@@ -48,7 +50,7 @@ class PassengerPage extends StatelessWidget {
             children: [
               const Padding(
                 padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: top,
+                child: SearchPanel(),
               ),
               Expanded(
                 child: Row(
@@ -58,7 +60,12 @@ class PassengerPage extends StatelessWidget {
                     const Expanded(
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(8, 12, 16, 24),
-                        child: _TimelinePreview(),
+                        child: Column(
+                          children: [
+                            SponsoredCarousel(),
+                            Expanded(child: _TimelinePreview()),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -118,7 +125,7 @@ class DeparturesSliver extends ConsumerWidget {
                   const Text(
                     'Sorted by earliest departure',
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
@@ -169,7 +176,7 @@ class _ScheduleNote extends StatelessWidget {
     padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: AppColors.surfaceLow,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(12),
     ),
     child: const Row(
       crossAxisAlignment: CrossAxisAlignment.start,

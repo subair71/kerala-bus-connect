@@ -127,7 +127,6 @@ class _OwnerWorkspace extends ConsumerWidget {
                                   isExpanded: true,
                                   decoration: const InputDecoration(
                                     labelText: 'Business',
-                                    border: OutlineInputBorder(),
                                   ),
                                   items: [
                                     for (final business in list)
@@ -237,7 +236,7 @@ class _OwnerRoutes extends ConsumerWidget {
                 return Card(
                   key: ValueKey(route.id),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -366,7 +365,7 @@ class _OwnerServices extends ConsumerWidget {
             return Card(
               key: ValueKey(service.id),
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
