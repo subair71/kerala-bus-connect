@@ -2,7 +2,7 @@ name: Validate Flutter
 on:
   pull_request:
   push:
-    branches: [main, feature/riverpod-clean-architecture, feature/stitch-redesign, fix/mobile-web-startup]
+    branches: [main, feature/riverpod-clean-architecture, feature/stitch-redesign]
 permissions:
   contents: read
 concurrency:
