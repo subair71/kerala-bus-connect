@@ -21,7 +21,9 @@ class SearchPanel extends HookConsumerWidget {
     }
 
     ref.watch(
-      departureResultsProvider.select((result) => result.asData?.value.firstOrNull),
+      departureResultsProvider.select(
+        (result) => result.asData?.value.firstOrNull,
+      ),
     );
     final query = ref.watch(searchQueryProvider);
     final from = useTextEditingController(text: query.from);
@@ -35,11 +37,14 @@ class SearchPanel extends HookConsumerWidget {
           selection: TextSelection.collapsed(offset: text.length),
         );
       }
+
       sync(from, next.from);
       sync(to, next.to);
     });
-    final rowHeight = (28 + MediaQuery.textScalerOf(context).scale(40))
-        .clamp(72.0, double.infinity);
+    final rowHeight = (28 + MediaQuery.textScalerOf(context).scale(40)).clamp(
+      72.0,
+      double.infinity,
+    );
     Widget stopField(bool origin, {required bool wide}) => SizedBox(
       height: rowHeight,
       child: Padding(
@@ -62,7 +67,11 @@ class SearchPanel extends HookConsumerWidget {
                     origin ? 'Leaving From' : 'Going To',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12, height: 1.3, color: HomeTheme.muted),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.3,
+                      color: HomeTheme.muted,
+                    ),
                   ),
                   Semantics(
                     label: origin ? 'From Origin' : 'To Destination',
@@ -70,12 +79,26 @@ class SearchPanel extends HookConsumerWidget {
                       key: ValueKey(origin ? 'search-from' : 'search-to'),
                       controller: origin ? from : to,
                       onChanged: origin ? controller.from : controller.to,
-                      textInputAction: origin ? TextInputAction.next : TextInputAction.search,
-                      onSubmitted: (_) => origin ? FocusScope.of(context).nextFocus() : submit(),
-                      style: const TextStyle(fontSize: 20, height: 1.25, fontWeight: FontWeight.w500, color: HomeTheme.text),
+                      textInputAction: origin
+                          ? TextInputAction.next
+                          : TextInputAction.search,
+                      onSubmitted: (_) => origin
+                          ? FocusScope.of(context).nextFocus()
+                          : submit(),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        height: 1.25,
+                        fontWeight: FontWeight.w500,
+                        color: HomeTheme.text,
+                      ),
                       decoration: InputDecoration(
-                        hintText: origin ? 'Choose origin' : 'Choose destination',
-                        hintStyle: const TextStyle(fontSize: 16, color: HomeTheme.muted),
+                        hintText: origin
+                            ? 'Choose origin'
+                            : 'Choose destination',
+                        hintStyle: const TextStyle(
+                          fontSize: 16,
+                          color: HomeTheme.muted,
+                        ),
                         isDense: true,
                         filled: false,
                         border: InputBorder.none,
@@ -106,7 +129,9 @@ class SearchPanel extends HookConsumerWidget {
         backgroundColor: Colors.white,
         foregroundColor: HomeTheme.text,
         minimumSize: const Size(48, 48),
-        shape: const CircleBorder(side: BorderSide(color: HomeTheme.border, width: 1.5)),
+        shape: const CircleBorder(
+          side: BorderSide(color: HomeTheme.border, width: 1.5),
+        ),
       ),
       icon: Icon(wide ? Icons.swap_horiz : Icons.swap_vert, size: 27),
     );
@@ -234,7 +259,8 @@ class SearchPanel extends HookConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 700 &&
+        final wide =
+            constraints.maxWidth >= 700 &&
             MediaQuery.textScalerOf(context).scale(14) <= 18;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -252,23 +278,39 @@ class SearchPanel extends HookConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (wide)
-                    Row(children: [
-                      Expanded(child: stopField(true, wide: true)),
-                      swap(true),
-                      Expanded(child: stopField(false, wide: true)),
-                    ])
+                    Row(
+                      children: [
+                        Expanded(child: stopField(true, wide: true)),
+                        swap(true),
+                        Expanded(child: stopField(false, wide: true)),
+                      ],
+                    )
                   else
                     Stack(
                       children: [
-                        Column(children: [
-                          stopField(true, wide: false),
-                          const Divider(height: 1, thickness: 1, color: HomeTheme.border),
-                          stopField(false, wide: false),
-                        ]),
-                        Positioned(top: rowHeight - 24, right: 16, child: swap(false)),
+                        Column(
+                          children: [
+                            stopField(true, wide: false),
+                            const Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: HomeTheme.border,
+                            ),
+                            stopField(false, wide: false),
+                          ],
+                        ),
+                        Positioned(
+                          top: rowHeight - 24,
+                          right: 16,
+                          child: swap(false),
+                        ),
                       ],
                     ),
-                  const Divider(height: 1, thickness: 1, color: HomeTheme.border),
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: HomeTheme.border,
+                  ),
                   const JourneyDateStrip(),
                   FilledButton(
                     key: const ValueKey('show-bus-results'),
@@ -278,22 +320,33 @@ class SearchPanel extends HookConsumerWidget {
                       foregroundColor: Colors.white,
                       shape: const RoundedRectangleBorder(),
                       minimumSize: const Size(48, 56),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
                     ),
-                    child: const Text('Search buses',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+                    child: const Text(
+                      'Search buses',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
             ExpansionTile(
-              key: const ValueKey('search-filters'),
+              key: const PageStorageKey('passenger-search-filters'),
               tilePadding: const EdgeInsets.symmetric(horizontal: 4),
               childrenPadding: const EdgeInsets.only(bottom: 8),
               shape: const Border(),
               collapsedShape: const Border(),
               leading: const Icon(Icons.tune, size: 20),
-              title: const Text('Filters & frequent stops', style: TextStyle(fontSize: 13)),
+              title: const Text(
+                'Filters & frequent stops',
+                style: TextStyle(fontSize: 13),
+              ),
               children: [
                 const SizedBox(height: 12),
                 Wrap(
@@ -361,6 +414,7 @@ class SearchPanel extends HookConsumerWidget {
                 SizedBox(
                   height: MediaQuery.textScalerOf(context).scale(13) + 27,
                   child: ListView.separated(
+                  key: const PageStorageKey('corridor-stops'),
                     scrollDirection: Axis.horizontal,
                     itemCount: stops.length,
                     separatorBuilder: (_, _) => const SizedBox(width: 8),
@@ -409,10 +463,8 @@ class SearchPanel extends HookConsumerWidget {
                     },
                   ),
                 ),
-
               ],
             ),
-
           ],
         );
       },

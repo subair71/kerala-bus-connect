@@ -20,7 +20,9 @@ final journeyTodayProvider = Provider.autoDispose<DateTime>((ref) {
 });
 final journeyDatesProvider = Provider.autoDispose<List<DateTime>>((ref) {
   final today = ref.watch(journeyTodayProvider);
-  return List.unmodifiable(List.generate(7, (i) => DateTime(today.year, today.month, today.day + i)));
+  return List.unmodifiable(
+    List.generate(7, (i) => DateTime(today.year, today.month, today.day + i)),
+  );
 });
 
 class SearchController extends Notifier<SearchQuery> {
@@ -30,12 +32,16 @@ class SearchController extends Notifier<SearchQuery> {
   );
   void journeyDate(DateTime date) {
     final today = ref.read(journeyTodayProvider);
-    final isToday = date.year == today.year && date.month == today.month && date.day == today.day;
+    final isToday =
+        date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day;
     state = state.copyWith(
       filterDay: weekDays[date.weekday - 1],
       onlyRunningToday: isToday && state.onlyRunningToday,
     );
   }
+
   void from(String value) => state = state.copyWith(from: value);
   void to(String value) => state = state.copyWith(to: value);
   void swap() => state = state.copyWith(from: state.to, to: state.from);

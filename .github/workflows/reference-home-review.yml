@@ -17,11 +17,11 @@ jobs:
       - run: flutter pub get
       - name: Format source
         run: |
-          dart format lib/features/passenger/presentation/widgets/search_panel.dart lib/features/passenger/presentation/pages/passenger_page.dart lib/features/passenger/presentation/providers/search_providers.dart lib/core/theme/home_theme.dart lib/app/app_shell.dart lib/features/sponsors/presentation/widgets/sponsored_carousel.dart test/redesign_layout_test.dart test/widgets_test.dart lib/features/passenger/presentation/widgets/journey_date_strip.dart test/home_reference_test.dart test/journey_date_test.dart
+          dart format test/mobile_results_sheet_test.dart lib/features/passenger/presentation/widgets/search_panel.dart lib/features/passenger/presentation/pages/passenger_page.dart lib/features/passenger/presentation/providers/search_providers.dart lib/core/theme/home_theme.dart lib/app/app_shell.dart lib/features/sponsors/presentation/widgets/sponsored_carousel.dart test/redesign_layout_test.dart test/widgets_test.dart lib/features/passenger/presentation/widgets/journey_date_strip.dart test/home_reference_test.dart test/journey_date_test.dart
           python3 - <<'PY'
           import json
           from pathlib import Path
-          for path in ["lib/features/passenger/presentation/widgets/search_panel.dart","lib/features/passenger/presentation/pages/passenger_page.dart","lib/features/passenger/presentation/providers/search_providers.dart","lib/core/theme/home_theme.dart","lib/app/app_shell.dart","lib/features/sponsors/presentation/widgets/sponsored_carousel.dart","test/redesign_layout_test.dart","test/widgets_test.dart","lib/features/passenger/presentation/widgets/journey_date_strip.dart","test/home_reference_test.dart","test/journey_date_test.dart"]:
+          for path in ["test/mobile_results_sheet_test.dart","lib/features/passenger/presentation/widgets/search_panel.dart","lib/features/passenger/presentation/pages/passenger_page.dart","lib/features/passenger/presentation/providers/search_providers.dart","lib/core/theme/home_theme.dart","lib/app/app_shell.dart","lib/features/sponsors/presentation/widgets/sponsored_carousel.dart","test/redesign_layout_test.dart","test/widgets_test.dart","lib/features/passenger/presentation/widgets/journey_date_strip.dart","test/home_reference_test.dart","test/journey_date_test.dart"]:
               print('FORMATTED_SOURCE ' + json.dumps({'path': path, 'content': Path(path).read_text()}))
           PY
       - run: python3 tool/check_architecture.py

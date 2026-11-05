@@ -33,6 +33,7 @@ void main() {
         );
         await tester.pumpAndSettle();
         expect(find.byType(ServiceCard), findsNothing);
+        await tester.ensureVisible(find.byKey(const ValueKey('show-bus-results')));
         await tester.tap(find.byKey(const ValueKey('show-bus-results')));
         await tester.pumpAndSettle();
         expect(find.byType(MobileBusResultsSheet), findsOneWidget);
@@ -48,11 +49,13 @@ void main() {
         await tester.tap(find.byTooltip('Close bus results'));
         await tester.pumpAndSettle();
         expect(find.byType(MobileBusResultsSheet), findsNothing);
+        await tester.ensureVisible(find.byKey(const ValueKey('show-bus-results')));
         await tester.tap(find.byKey(const ValueKey('show-bus-results')));
         await tester.pumpAndSettle();
         await tester.binding.handlePopRoute();
         await tester.pumpAndSettle();
         expect(find.byType(MobileBusResultsSheet), findsNothing);
+        await tester.ensureVisible(find.byKey(const ValueKey('show-bus-results')));
         await tester.tap(find.byKey(const ValueKey('show-bus-results')));
         await tester.pumpAndSettle();
         await tester.drag(
@@ -125,7 +128,8 @@ void main() {
         ..publishedOverride = stream.stream;
       await tester.pumpWidget(harness(const AppShell(), repository, auth));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const ValueKey('show-bus-results')));
+      await tester.ensureVisible(find.byKey(const ValueKey('show-bus-results')));
+        await tester.tap(find.byKey(const ValueKey('show-bus-results')));
       await tester.pump(const Duration(milliseconds: 400));
       expect(find.byType(CircularProgressIndicator), findsWidgets);
       stream.addError(StateError('offline'));

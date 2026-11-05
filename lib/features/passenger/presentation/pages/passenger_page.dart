@@ -26,9 +26,11 @@ class PassengerPage extends StatelessWidget {
             children: [
               SearchPanel(onSearch: mobile ? openResults : null),
               const SizedBox(height: 12),
-              const Text('Bus schedules across Kerala',
+              const Text(
+                'Bus schedules across Kerala',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
               const SizedBox(height: 12),
               const SponsoredCarousel(),
             ],

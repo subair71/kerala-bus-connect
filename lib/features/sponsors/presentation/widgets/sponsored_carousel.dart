@@ -193,6 +193,7 @@ class _Slides extends HookConsumerWidget {
                   // Reserve room for sponsor labels wrapping on narrow screens.
                   height: (wide ? 188 : 252) * scale.clamp(1, 2.5),
                   child: PageView.builder(
+                    key: PageStorageKey('sponsor-slides-$location'),
                     controller: controller,
                     itemCount: ads.length,
                     onPageChanged: ref

@@ -128,10 +128,15 @@ class AppShell extends ConsumerWidget {
                                       child: TextButton.icon(
                                         style: TextButton.styleFrom(
                                           foregroundColor: tab.index == i
-                                              ? (home ? HomeTheme.accentInk : AppColors.primary)
+                                              ? (home
+                                                    ? HomeTheme.accentInk
+                                                    : AppColors.primary)
                                               : AppColors.onSurfaceVariant,
                                           backgroundColor: tab.index == i
-                                              ? (home ? HomeTheme.mint : AppColors.secondaryContainer)
+                                              ? (home
+                                                    ? HomeTheme.mint
+                                                    : AppColors
+                                                          .secondaryContainer)
                                               : null,
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 16,

@@ -54,7 +54,7 @@ void main() {
     expect(find.textContaining('not live GPS tracking'), findsWidgets);
     await tester.tap(find.byTooltip('Close advisory'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const ValueKey('search-filters')));
+    await tester.tap(find.byKey(const PageStorageKey('passenger-search-filters')));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('View corridor stops'));
     await tester.tap(find.text('View corridor stops'));
