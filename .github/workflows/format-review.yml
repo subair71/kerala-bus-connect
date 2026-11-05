@@ -1,0 +1,27 @@
+name: Format preview fallback
+on:
+  push:
+    branches: [feature/reference-all-screens]
+permissions:
+  contents: read
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Format
+        run: |
+          dart format lib/core/providers/sample_fallback.dart lib/features/tracking/presentation/providers/tracking_providers.dart lib/features/crew/presentation/providers/crew_providers.dart test/fallback_test.dart
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for p in ["lib/core/providers/sample_fallback.dart","lib/features/tracking/presentation/providers/tracking_providers.dart","lib/features/crew/presentation/providers/crew_providers.dart","test/fallback_test.dart"]:
+              print("FORMATTED_SOURCE " + json.dumps({"path": p, "content": Path(p).read_text()}))
+          PY
+      - run: flutter test test/fallback_test.dart --reporter expanded --timeout 60s

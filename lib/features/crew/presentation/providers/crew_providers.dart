@@ -11,18 +11,21 @@ import '../../domain/entities/crew_assignment.dart';
 final crewRepositoryProvider = Provider<CrewRepository>(
   (ref) => FirebaseCrewRepository(ref.watch(firestoreProvider)),
 );
-final liveCrewProvider = StreamProvider.autoDispose<List<CrewAssignment>>((
-  ref,
-) {
-  final owner = ref.watch(ownerIdProvider);
-  if (owner == null) return Stream.value([]);
-  return ref.watch(crewRepositoryProvider).watch(owner);
-});
+final liveCrewProvider = StreamProvider.autoDispose<List<CrewAssignment>>(
+  (ref) {
+    final owner = ref.watch(ownerIdProvider);
+    if (owner == null) return Stream.value([]);
+    return ref.watch(crewRepositoryProvider).watch(owner);
+  },
+  // Firestore owns reconnection; expose errors to the labelled preview fallback.
+  retry: (_, _) => null,
+);
 final crewDataProvider =
     Provider.autoDispose<AsyncValue<DataSet<CrewAssignment>>>(
       (ref) => sampleFallback(
         ref.watch(liveCrewProvider),
         const DemoCrewRepository().assignments(),
+        previewWhileLoading: true,
       ),
     );
 typedef CrewFilter = ({String query, String shift});

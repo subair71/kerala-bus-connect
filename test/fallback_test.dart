@@ -11,9 +11,67 @@ import 'package:kerala_bus_connect/features/timetables/data/fixtures/transit_sam
 import 'package:kerala_bus_connect/features/timetables/data/models/service_model.dart';
 import 'package:kerala_bus_connect/features/timetables/domain/entities/service_entity.dart';
 import 'package:kerala_bus_connect/features/timetables/presentation/providers/timetable_providers.dart';
+import 'package:kerala_bus_connect/features/tracking/domain/entities/tracking_preview.dart';
+import 'package:kerala_bus_connect/features/tracking/presentation/providers/tracking_providers.dart';
+import 'package:kerala_bus_connect/features/crew/domain/entities/crew_assignment.dart';
+import 'package:kerala_bus_connect/features/crew/presentation/providers/crew_providers.dart';
 import 'support/fakes.dart';
 
 void main() {
+  test('tracking previews stay reviewable while pending and recover to live', () async {
+    final stream = StreamController<List<TrackingPreview>>();
+    final container = ProviderContainer(
+      overrides: [liveTrackingProvider.overrideWith((ref) => stream.stream)],
+    );
+    final sub = container.listen(trackingDataProvider, (_, _) {});
+    addTearDown(() async {
+      sub.close();
+      container.dispose();
+      await stream.close();
+    });
+    var data = container.read(trackingDataProvider).requireValue;
+    expect(data.isDemo, isTrue);
+    expect(data.records, isNotEmpty);
+    expect(data.unavailable, isFalse);
+    stream.addError(StateError('offline'));
+    await Future<void>.delayed(Duration.zero);
+    data = container.read(trackingDataProvider).requireValue;
+    expect(data.unavailable, isTrue);
+    stream.add([TrackingPreview('Live bus', ['Aluva', 'Kaloor'], 0, id: 'live')]);
+    await Future<void>.delayed(Duration.zero);
+    data = container.read(trackingDataProvider).requireValue;
+    expect(data.isDemo, isFalse);
+    expect(data.unavailable, isFalse);
+    expect(data.records.single.id, 'live');
+    expect(data.records.single.currentStop, 0);
+  });
+
+  test('crew previews recover from pending and empty to live assignments', () async {
+    final stream = StreamController<List<CrewAssignment>>();
+    final container = ProviderContainer(
+      overrides: [liveCrewProvider.overrideWith((ref) => stream.stream)],
+    );
+    final sub = container.listen(crewDataProvider, (_, _) {});
+    addTearDown(() async {
+      sub.close();
+      container.dispose();
+      await stream.close();
+    });
+    expect(container.read(crewDataProvider).requireValue.isDemo, isTrue);
+    stream.add([]);
+    await Future<void>.delayed(Duration.zero);
+    expect(container.read(crewDataProvider).requireValue.isDemo, isTrue);
+    stream.addError(StateError('offline'));
+    await Future<void>.delayed(Duration.zero);
+    expect(container.read(crewDataProvider).requireValue.unavailable, isTrue);
+    stream.add([CrewAssignment('Live driver', 'Driver', 'Bus', 'Morning', 'On duty', id: 'live-crew')]);
+    await Future<void>.delayed(Duration.zero);
+    final data = container.read(crewDataProvider).requireValue;
+    expect(data.isDemo, isFalse);
+    expect(data.unavailable, isFalse);
+    expect(data.records.single.id, 'live-crew');
+  });
+
   test('loading, empty and failed sources remain distinguishable', () {
     expect(sampleFallback<int>(const AsyncLoading(), [1]).isLoading, isTrue);
     final empty = sampleFallback<int>(const AsyncData([]), [1]).requireValue;
