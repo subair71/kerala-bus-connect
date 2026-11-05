@@ -37,6 +37,7 @@ void main() {
           ),
           FakeTransitRepository(),
           auth,
+          sampleSponsors: true,
         ),
       );
       await tester.pumpAndSettle();
@@ -63,6 +64,7 @@ void main() {
           ),
           FakeTransitRepository(),
           auth,
+          sampleSponsors: true,
         ),
       );
       await tester.pumpAndSettle();

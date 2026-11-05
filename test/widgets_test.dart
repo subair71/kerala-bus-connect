@@ -1,3 +1,5 @@
+import 'package:kerala_bus_connect/core/data/data_set.dart';
+import 'package:kerala_bus_connect/features/sponsors/data/fixtures/sponsor_samples.dart';
 import 'package:kerala_bus_connect/features/sponsors/domain/entities/sponsored_ad.dart';
 import 'package:kerala_bus_connect/core/theme/app_theme.dart';
 import 'package:kerala_bus_connect/features/sponsors/presentation/providers/sponsor_providers.dart';
@@ -22,8 +24,14 @@ Widget harness(
   FakeTransitRepository repository,
   FakeAuthRepository auth, {
   Stream<List<SponsoredAd>>? sponsorStream,
+  bool sampleSponsors = false,
 }) => ProviderScope(
   overrides: [
+    sponsorRotationIntervalProvider.overrideWithValue(Duration.zero),
+    if (sampleSponsors)
+      sponsorsProvider.overrideWith((ref) => AsyncData(DataSet(
+        sponsorSamples(ref.watch(sponsorLocationProvider)), isDemo: true,
+      ))),
     liveSponsorsProvider.overrideWith(
       (ref, location) => sponsorStream ?? Stream.value([]),
     ),

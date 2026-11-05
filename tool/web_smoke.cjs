@@ -35,7 +35,8 @@ async function verifyStartup(page) {
   await home.waitFor({timeout:90000});
   assert.equal(await page.evaluate(() => window.firebase_core.getApps().length), 1,
     'The default Firebase app must be initialized exactly once');
-  await page.getByText('Local sponsors near Aluva', {exact:true}).waitFor({timeout:90000});
+  // Optional advertisements must never hold up the usable search form.
+  await page.locator('[aria-label="Clear boarding stop"]').waitFor({timeout:10000});
 }
 
 (async () => {
