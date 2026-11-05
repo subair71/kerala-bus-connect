@@ -35,12 +35,20 @@ class TrackingPage extends ConsumerWidget {
             DropdownButtonFormField<int>(
               key: ValueKey(selected),
               initialValue: selected,
-              decoration: const InputDecoration(labelText: 'Vehicle',
-                prefixIcon: Icon(Icons.directions_bus_outlined)),
+              decoration: const InputDecoration(
+                labelText: 'Vehicle',
+                prefixIcon: Icon(Icons.directions_bus_outlined),
+              ),
               isExpanded: true,
               items: [
                 for (var i = 0; i < vehicles.length; i++)
-                  DropdownMenuItem(value: i, child: Text(vehicles[i].vehicle, overflow: TextOverflow.ellipsis)),
+                  DropdownMenuItem(
+                    value: i,
+                    child: Text(
+                      vehicles[i].vehicle,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
               ],
               onChanged: (value) {
                 if (value != null)
@@ -52,30 +60,34 @@ class TrackingPage extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: Column(
-                children: [
-                  for (var i = 0; i < preview.stops.length; i++)
-                    ListTile(
-                      tileColor: i == preview.currentStop ? AppColors.secondaryContainer : null,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      leading: Icon(
-                        i == preview.currentStop
-                            ? Icons.directions_bus
-                            : Icons.location_on_outlined,
-                        color: i <= preview.currentStop
-                            ? Theme.of(context).colorScheme.primary
-                            : AppColors.outline,
+                  children: [
+                    for (var i = 0; i < preview.stops.length; i++)
+                      ListTile(
+                        tileColor: i == preview.currentStop
+                            ? AppColors.secondaryContainer
+                            : null,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        leading: Icon(
+                          i == preview.currentStop
+                              ? Icons.directions_bus
+                              : Icons.location_on_outlined,
+                          color: i <= preview.currentStop
+                              ? Theme.of(context).colorScheme.primary
+                              : AppColors.outline,
+                        ),
+                        title: Text(preview.stops[i]),
+                        subtitle: i == preview.currentStop
+                            ? Text(
+                                data.asData!.value.isDemo
+                                    ? 'Example position'
+                                    : 'Reported position',
+                              )
+                            : null,
                       ),
-                      title: Text(preview.stops[i]),
-                      subtitle: i == preview.currentStop
-                          ? Text(
-                              data.asData!.value.isDemo
-                                  ? 'Example position'
-                                  : 'Reported position',
-                            )
-                          : null,
-                    ),
-                ],
-              ),
+                  ],
+                ),
               ),
             ),
           ],

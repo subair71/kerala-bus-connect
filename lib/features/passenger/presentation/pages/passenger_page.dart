@@ -19,7 +19,8 @@ class PassengerPage extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final wide =
-              constraints.maxWidth >= 1050 && constraints.maxHeight >= 760 &&
+              constraints.maxWidth >= 1050 &&
+              constraints.maxHeight >= 760 &&
               MediaQuery.textScalerOf(context).scale(14) <= 18;
           const top = Column(children: [SearchPanel(), SponsoredCarousel()]);
           final results = CustomScrollView(

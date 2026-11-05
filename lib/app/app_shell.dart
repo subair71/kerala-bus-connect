@@ -62,8 +62,11 @@ class AppShell extends ConsumerWidget {
                                   color: AppColors.primary,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: const Icon(Icons.directions_bus_outlined,
-                                  color: Colors.white, size: 24),
+                                child: const Icon(
+                                  Icons.directions_bus_outlined,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -72,17 +75,27 @@ class AppShell extends ConsumerWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text('FindMyBus',
+                                    const Text(
+                                      'FindMyBus',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(fontSize: 19,
+                                      style: TextStyle(
+                                        fontSize: 19,
                                         fontWeight: FontWeight.w800,
-                                        letterSpacing: -.6)),
-                                    Text(wide ? 'Kerala transit' : _labels[tab.index],
+                                        letterSpacing: -.6,
+                                      ),
+                                    ),
+                                    Text(
+                                      wide
+                                          ? 'Kerala transit'
+                                          : _labels[tab.index],
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 12,
-                                        color: AppColors.onSurfaceVariant)),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: AppColors.onSurfaceVariant,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -90,14 +103,20 @@ class AppShell extends ConsumerWidget {
                                 const Spacer(),
                                 for (var i = 0; i < _labels.length; i++)
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 3,
+                                    ),
                                     child: TextButton.icon(
                                       style: TextButton.styleFrom(
                                         foregroundColor: tab.index == i
-                                          ? AppColors.primary : AppColors.onSurfaceVariant,
+                                            ? AppColors.primary
+                                            : AppColors.onSurfaceVariant,
                                         backgroundColor: tab.index == i
-                                          ? AppColors.secondaryContainer : null,
-                                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                                            ? AppColors.secondaryContainer
+                                            : null,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                        ),
                                       ),
                                       onPressed: () => select(i),
                                       icon: Icon(_icons[i], size: 19),
@@ -110,10 +129,15 @@ class AppShell extends ConsumerWidget {
                                 tooltip: 'Owner account',
                                 style: IconButton.styleFrom(
                                   foregroundColor: AppColors.onSurface,
-                                  side: const BorderSide(color: AppColors.border),
+                                  side: const BorderSide(
+                                    color: AppColors.border,
+                                  ),
                                 ),
                                 onPressed: () => select(AppTab.owner.index),
-                                icon: const Icon(Icons.person_outline, size: 22),
+                                icon: const Icon(
+                                  Icons.person_outline,
+                                  size: 22,
+                                ),
                               ),
                             ],
                           ),
@@ -126,23 +150,31 @@ class AppShell extends ConsumerWidget {
             ),
           ),
           body: SafeArea(top: false, bottom: false, child: page),
-          bottomNavigationBar: wide ? null : DecoratedBox(
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: AppColors.border)),
-            ),
-            child: NavigationBar(
-              selectedIndex: tab.index,
-              onDestinationSelected: select,
-              destinations: [
-                for (var i = 0; i < _labels.length; i++)
-                  NavigationDestination(
-                    icon: Icon(_icons[i], color: AppColors.onSurfaceVariant),
-                    selectedIcon: Icon(_icons[i], color: AppColors.primary),
-                    label: _labels[i],
+          bottomNavigationBar: wide
+              ? null
+              : DecoratedBox(
+                  decoration: const BoxDecoration(
+                    border: Border(top: BorderSide(color: AppColors.border)),
                   ),
-              ],
-            ),
-          ),
+                  child: NavigationBar(
+                    selectedIndex: tab.index,
+                    onDestinationSelected: select,
+                    destinations: [
+                      for (var i = 0; i < _labels.length; i++)
+                        NavigationDestination(
+                          icon: Icon(
+                            _icons[i],
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                          selectedIcon: Icon(
+                            _icons[i],
+                            color: AppColors.primary,
+                          ),
+                          label: _labels[i],
+                        ),
+                    ],
+                  ),
+                ),
         );
       },
     );

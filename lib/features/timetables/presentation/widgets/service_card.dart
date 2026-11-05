@@ -73,7 +73,10 @@ class ServiceCard extends ConsumerWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             textAlign: right ? TextAlign.right : TextAlign.left,
-            style: const TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant),
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.onSurfaceVariant,
+            ),
           ),
         ],
       ),
@@ -88,12 +91,18 @@ class ServiceCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 40, height: 40,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: AppColors.secondaryContainer,
-                    borderRadius: BorderRadius.circular(12)),
-                  child: const Icon(Icons.directions_bus_outlined,
-                    size: 23, color: AppColors.primary)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.directions_bus_outlined,
+                    size: 23,
+                    color: AppColors.primary,
+                  ),
+                ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

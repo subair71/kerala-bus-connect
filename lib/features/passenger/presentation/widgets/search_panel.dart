@@ -108,14 +108,20 @@ class SearchPanel extends HookConsumerWidget {
         padding: const EdgeInsets.all(20),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 700 && MediaQuery.textScalerOf(context).scale(14) <= 18;
+            final wide =
+                constraints.maxWidth >= 700 &&
+                MediaQuery.textScalerOf(context).scale(14) <= 18;
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
                   children: [
-                    Expanded(child: Text('Find a bus',
-                      style: Theme.of(context).textTheme.titleLarge)),
+                    Expanded(
+                      child: Text(
+                        'Find a bus',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ),
                     if (!wide) swap(false),
                   ],
                 ),
@@ -124,8 +130,10 @@ class SearchPanel extends HookConsumerWidget {
                   Row(
                     children: [
                       Expanded(child: stopField(true)),
-                      Padding(padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: swap(true)),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: swap(true),
+                      ),
                       Expanded(child: stopField(false)),
                       const SizedBox(width: 16),
                       FilledButton.icon(
@@ -180,7 +188,6 @@ class SearchPanel extends HookConsumerWidget {
                     },
                   ),
                 ),
-
               ],
             );
           },

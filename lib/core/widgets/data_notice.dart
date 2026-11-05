@@ -22,14 +22,22 @@ class DataNotice extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, size: 18, color: AppColors.onSampleSurface),
+          const Icon(
+            Icons.info_outline,
+            size: 18,
+            color: AppColors.onSampleSurface,
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               unavailable
                   ? 'Live data unavailable • Sample data'
                   : 'Sample data • Demo only',
-              style: const TextStyle(fontSize: 12, height: 1.5, color: AppColors.onSampleSurface),
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.5,
+                color: AppColors.onSampleSurface,
+              ),
             ),
           ),
           if (unavailable && retry != null)
@@ -51,7 +59,11 @@ class DemoBadge extends StatelessWidget {
     ),
     child: const Text(
       'Demo',
-      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.onSampleSurface),
+      style: TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w600,
+        color: AppColors.onSampleSurface,
+      ),
     ),
   );
 }

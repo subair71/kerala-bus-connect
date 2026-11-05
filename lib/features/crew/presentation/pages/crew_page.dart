@@ -83,32 +83,59 @@ class CrewPage extends HookConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const CircleAvatar(
-                      radius: 22, backgroundColor: AppColors.secondaryContainer,
-                      child: Icon(Icons.badge_outlined, color: AppColors.primary)),
+                      radius: 22,
+                      backgroundColor: AppColors.secondaryContainer,
+                      child: Icon(
+                        Icons.badge_outlined,
+                        color: AppColors.primary,
+                      ),
+                    ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(person.name,
-                            style: Theme.of(context).textTheme.titleMedium),
+                          Text(
+                            person.name,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
                           const SizedBox(height: 4),
-                          Text('${person.role} • ${person.vehicle}',
-                            style: const TextStyle(color: AppColors.onSurfaceVariant)),
+                          Text(
+                            '${person.role} • ${person.vehicle}',
+                            style: const TextStyle(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
                           const SizedBox(height: 12),
                           Wrap(
-                            spacing: 8, runSpacing: 8,
+                            spacing: 8,
+                            runSpacing: 8,
                             crossAxisAlignment: WrapCrossAlignment.center,
                             children: [
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 5,
+                                ),
                                 decoration: BoxDecoration(
                                   color: AppColors.surfaceLow,
-                                  borderRadius: BorderRadius.circular(8)),
-                                child: Text(person.shift,
-                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600))),
-                              Text(person.duty,
-                                style: const TextStyle(fontSize: 13, color: AppColors.onSurfaceVariant)),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  person.shift,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                person.duty,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                              ),
                             ],
                           ),
                         ],

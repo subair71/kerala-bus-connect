@@ -56,9 +56,14 @@ class TrainRouteView extends StatelessWidget {
         children: [
           if (index != service.stops.length)
             const Positioned(
-              left: 13, top: 16, bottom: 0,
-              child: SizedBox(width: 2,
-                child: ColoredBox(color: AppColors.border))),
+              left: 13,
+              top: 16,
+              bottom: 0,
+              child: SizedBox(
+                width: 2,
+                child: ColoredBox(color: AppColors.border),
+              ),
+            ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -66,13 +71,18 @@ class TrainRouteView extends StatelessWidget {
                 width: 28,
                 child: Center(
                   child: Container(
-                    width: 12, height: 12,
+                    width: 12,
+                    height: 12,
                     margin: const EdgeInsets.only(top: 5),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: selected ? AppColors.primary : Colors.white,
-                      border: Border.all(color: selected
-                        ? AppColors.primary : AppColors.outlineVariant, width: 2),
+                      border: Border.all(
+                        color: selected
+                            ? AppColors.primary
+                            : AppColors.outlineVariant,
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -84,19 +94,35 @@ class TrainRouteView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(minutes == null ? 'Time unavailable' : timeLabel(minutes),
+                      Text(
+                        minutes == null
+                            ? 'Time unavailable'
+                            : timeLabel(minutes),
                         style: const TextStyle(
-                          fontSize: 15, fontWeight: FontWeight.w700,
-                          fontFeatures: [FontFeature.tabularFigures()])),
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
                       const SizedBox(height: 4),
-                      Text(stop, style: const TextStyle(fontSize: 14,
-                        color: AppColors.onSurfaceVariant)),
+                      Text(
+                        stop,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
                       if (selected)
                         const Padding(
                           padding: EdgeInsets.only(top: 4),
-                          child: Text('Selected stop',
-                            style: TextStyle(fontSize: 12,
-                              fontWeight: FontWeight.w600, color: AppColors.primary)),
+                          child: Text(
+                            'Selected stop',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
+                            ),
+                          ),
                         ),
                     ],
                   ),

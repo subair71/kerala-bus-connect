@@ -22,10 +22,17 @@ class AuthPanel extends HookConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Align(alignment: Alignment.centerLeft,
-                  child: CircleAvatar(radius: 24,
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: CircleAvatar(
+                    radius: 24,
                     backgroundColor: AppColors.secondaryContainer,
-                    child: Icon(Icons.business_outlined, color: AppColors.primary))),
+                    child: Icon(
+                      Icons.business_outlined,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 20),
                 Text(
                   register ? 'Create owner account' : 'Owner sign in',
