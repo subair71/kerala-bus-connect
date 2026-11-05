@@ -24,13 +24,13 @@ State management uses BLoC/Cubit, with repository interfaces and GetIt injection
 
 ```sh
 flutter pub get
-flutter analyze --no-fatal-infos --no-fatal-warnings
+flutter analyze
 flutter test
 flutter build web --release --base-href /kerala-bus-connect/
 ```
 
 The validation workflow runs these checks on pull requests and performance
-branches. Existing analyzer style warnings are non-blocking; errors fail the job.
+branches. Analyzer issues, test failures and build failures fail the job.
 
 ## State management decision
 

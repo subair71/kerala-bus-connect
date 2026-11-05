@@ -62,9 +62,8 @@ class _IndexedService {
 
   bool matchesStops(String from, String to) {
     if (from.isEmpty && to.isEmpty) return true;
-    final fromIndex = from.isEmpty
-        ? -1
-        : stops.indexWhere((stop) => stop.contains(from));
+    final fromIndex =
+        from.isEmpty ? -1 : stops.indexWhere((stop) => stop.contains(from));
     final toIndex =
         to.isEmpty ? -1 : stops.indexWhere((stop) => stop.contains(to));
     if (from.isNotEmpty && fromIndex == -1) return false;

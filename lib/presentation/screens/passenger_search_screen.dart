@@ -67,13 +67,15 @@ class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
             ),
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: BlocBuilder<PublishedServicesCubit, PublishedServicesState>(
+              sliver:
+                  BlocBuilder<PublishedServicesCubit, PublishedServicesState>(
                 builder: (context, catalog) {
                   if (catalog.hasError) {
                     return SliverToBoxAdapter(
                       child: Column(
                         children: [
-                          const Text('Unable to load timetables. Please retry.'),
+                          const Text(
+                              'Unable to load timetables. Please retry.'),
                           TextButton(
                             onPressed: () =>
                                 context.read<PublishedServicesCubit>().reload(),
@@ -137,8 +139,11 @@ class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 12,
+            runSpacing: 8,
             children: [
               const Text(
                 'KERALA TRANSIT TIMETABLE',
@@ -320,7 +325,8 @@ class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
                                       color: AppColors.onSurface,
                                     ),
                                     decoration: const InputDecoration(
-                                      hintText: 'Destination stop (e.g. Kaloor)',
+                                      hintText:
+                                          'Destination stop (e.g. Kaloor)',
                                       isDense: true,
                                       border: InputBorder.none,
                                       contentPadding: EdgeInsets.zero,
@@ -446,7 +452,8 @@ class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
                             for (final d in weekDays)
                               DropdownMenuItem(
                                 value: d,
-                                child: Text(d == todayName() ? '$d (Today)' : d),
+                                child:
+                                    Text(d == todayName() ? '$d (Today)' : d),
                               ),
                           ],
                           onChanged: (val) {
@@ -471,7 +478,7 @@ class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
                       const SizedBox(width: 4),
                       Switch.adaptive(
                         value: state.onlyRunningToday,
-                        activeColor: AppColors.primary,
+                        activeThumbColor: AppColors.primary,
                         onChanged: (val) => context
                             .read<SearchCubit>()
                             .toggleOnlyRunningToday(val),
@@ -495,99 +502,96 @@ class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
           if (index == 0) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                const Text(
-                  'Upcoming Departures',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${services.length} buses',
-                    style: const TextStyle(
-                      fontSize: 11,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  const Text(
+                    'Upcoming Departures',
+                    style: TextStyle(
+                      fontSize: 17,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.onSurfaceVariant,
+                      color: AppColors.onSurface,
                     ),
                   ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: const BoxDecoration(
-                    color: AppColors.secondary,
-                    shape: BoxShape.circle,
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${services.length} buses',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 6),
-                const Text(
-                  'Live status',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.secondary,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: const BoxDecoration(
+                          color: AppColors.secondary,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Live status',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.secondary,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
+                ],
+              ),
             );
           }
           if (services.isEmpty) {
             return Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: const Column(
-              children: [
-                Icon(
-                  Icons.directions_bus_outlined,
-                  size: 44,
-                  color: AppColors.outlineVariant,
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'No buses found for this sequence',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.onSurface,
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: AppColors.card,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: const Column(
+                children: [
+                  Icon(
+                    Icons.directions_bus_outlined,
+                    size: 44,
+                    color: AppColors.outlineVariant,
                   ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  'Try searching connecting stops like Aluva, Kaloor, or Fort Kochi.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.onSurfaceVariant,
+                  SizedBox(height: 12),
+                  Text(
+                    'No buses found for this sequence',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.onSurface,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
+                  SizedBox(height: 4),
+                  Text(
+                    'Try searching connecting stops like Aluva, Kaloor, or Fort Kochi.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            );
           }
           final service = services[index - 1];
           return KeyedSubtree(
@@ -795,9 +799,12 @@ class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
           const Divider(height: 1, color: AppColors.border),
           const SizedBox(height: 8),
 
-          // Action Buttons: View Route Ladder (Train Route style) & Track
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          // Route actions wrap on small screens.
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
               Text(
                 '${svc.stops.length} Stops sequence',
@@ -864,7 +871,8 @@ class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
             ),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Route saved to offline quick list')),
+                const SnackBar(
+                    content: Text('Route saved to offline quick list')),
               );
             },
           ),
@@ -896,7 +904,8 @@ class _PassengerSearchScreenState extends State<PassengerSearchScreen> {
             ),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Timetable link copied to clipboard')),
+                const SnackBar(
+                    content: Text('Timetable link copied to clipboard')),
               );
             },
           ),

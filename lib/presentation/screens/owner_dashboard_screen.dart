@@ -55,7 +55,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<AuthBloc, AuthState>(
-      listenWhen: (previous, current) => previous.user?.uid != current.user?.uid,
+      listenWhen: (previous, current) =>
+          previous.user?.uid != current.user?.uid,
       listener: (context, state) {
         emailController.clear();
         passwordController.clear();
@@ -83,7 +84,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
   }
 
   Widget _buildAuthRequiredView(BuildContext context) {
-
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Center(
@@ -192,14 +192,14 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                             if (email.isEmpty || pass.isEmpty) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                    content:
-                                        Text('Enter email and password')),
+                                    content: Text('Enter email and password')),
                               );
                               return;
                             }
                             if (reg) {
-                              context.read<AuthBloc>().add(
-                                  AuthRegisterRequested(email, pass));
+                              context
+                                  .read<AuthBloc>()
+                                  .add(AuthRegisterRequested(email, pass));
                             } else {
                               context
                                   .read<AuthBloc>()
@@ -476,11 +476,13 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             children: [
               Text(
                 'Digital: ₹11,250 (UPI / Smartcard)',
-                style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                style:
+                    TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
               ),
               Text(
                 'Cash: ₹7,200',
-                style: TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                style:
+                    TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
               ),
             ],
           ),
@@ -565,8 +567,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     );
   }
 
-  Widget _quickChip(BuildContext context, IconData icon, String label,
-      VoidCallback onTap) {
+  Widget _quickChip(
+      BuildContext context, IconData icon, String label, VoidCallback onTap) {
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ActionChip(
@@ -746,12 +748,11 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
     );
   }
 
-  Widget _buildManagementSection(BuildContext context, String ownerId,
-      TransitRepository transitRepo) {
-
+  Widget _buildManagementSection(
+      BuildContext context, String ownerId, TransitRepository transitRepo) {
     return QueryStreamBuilder<List<BusinessEntity>>(
       identity: (transitRepo, 'businesses', ownerId),
-          createStream: () => transitRepo.getOwnerBusinesses(ownerId),
+      createStream: () => transitRepo.getOwnerBusinesses(ownerId),
       builder: (context, bSnap) {
         final businesses = bSnap.data ?? [];
 
@@ -1033,9 +1034,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                   if (ownerState.isEditingRoute)
                     TextButton(
                       onPressed: () {
-                        context
-                            .read<OwnerBloc>()
-                            .add(OwnerCancelEditRoute());
+                        context.read<OwnerBloc>().add(OwnerCancelEditRoute());
                         routeNameCtrl.clear();
                         fromCtrl.clear();
                         toCtrl.clear();
@@ -1057,7 +1056,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                       if (name.isEmpty || start.isEmpty || end.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content: Text('Provide route name, origin, and destination')),
+                              content: Text(
+                                  'Provide route name, origin, and destination')),
                         );
                         return;
                       }
@@ -1100,8 +1100,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
             if (routes.isEmpty) {
               return const Text(
                 'No routes added yet. Add your first route above.',
-                style: TextStyle(
-                    fontSize: 12, color: AppColors.onSurfaceVariant),
+                style:
+                    TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
               );
             }
 
@@ -1127,7 +1127,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                         r.name,
                         style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
-                      subtitle: Text('${r.stops.length} stops: ${r.startStop} ➔ ${r.endStop}'),
+                      subtitle: Text(
+                          '${r.stops.length} stops: ${r.startStop} ➔ ${r.endStop}'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -1153,13 +1154,11 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                               fromCtrl.text = r.startStop;
                               toCtrl.text = r.endStop;
                               final inter = r.stops
-                                  .where((s) =>
-                                      s != r.startStop && s != r.endStop)
+                                  .where(
+                                      (s) => s != r.startStop && s != r.endStop)
                                   .join(', ');
                               stopsCtrl.text = inter;
-                              context
-                                  .read<OwnerBloc>()
-                                  .add(OwnerStartEditRoute(
+                              context.read<OwnerBloc>().add(OwnerStartEditRoute(
                                     routeId: r.id,
                                     name: r.name,
                                     startStop: r.startStop,
@@ -1219,7 +1218,6 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
           ),
         ),
         const SizedBox(height: 8),
-
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -1297,8 +1295,8 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
                         ActionChip(
                           visualDensity: VisualDensity.compact,
                           label: Text(
-                            timeLabel(entry.value.hour * 60 +
-                                entry.value.minute),
+                            timeLabel(
+                                entry.value.hour * 60 + entry.value.minute),
                             style: const TextStyle(fontSize: 11),
                           ),
                           onPressed: () async {
@@ -1354,7 +1352,7 @@ class _OwnerDashboardScreenState extends State<OwnerDashboardScreen> {
               // Publish Service Button
               QueryStreamBuilder<List<ServiceEntity>>(
                 identity: (transitRepo, 'services', ownerId),
-          createStream: () => transitRepo.getOwnerServices(ownerId),
+                createStream: () => transitRepo.getOwnerServices(ownerId),
                 builder: (context, sSnap) {
                   final existing = sSnap.data ?? [];
 

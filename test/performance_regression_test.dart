@@ -12,7 +12,8 @@ import 'package:kerala_bus_connect/presentation/screens/routes_directory_screen.
 import 'package:kerala_bus_connect/presentation/widgets/debounced_builder.dart';
 import 'package:kerala_bus_connect/presentation/widgets/query_stream_builder.dart';
 
-ServiceEntity service(String id, {int departure = 480, List<String> off = const []}) =>
+ServiceEntity service(String id,
+        {int departure = 480, List<String> off = const []}) =>
     ServiceEntity(
       id: id,
       ownerId: 'owner',
@@ -47,7 +48,8 @@ class FakeTransitRepository implements TransitRepository {
 Future<void> nextEvent() => Future<void>.delayed(Duration.zero);
 
 void main() {
-  test('indexed search preserves direction, partial matches, days and order', () {
+  test('indexed search preserves direction, partial matches, days and order',
+      () {
     final index = ServiceSearchIndex([
       service('later', departure: 600),
       service('early', off: ['Monday']),
@@ -55,8 +57,11 @@ void main() {
     List<ServiceEntity> search(String from, String to,
             {String day = 'All Days', bool todayOnly = false}) =>
         index.search(
-          from: from, to: to, filterDay: day,
-          onlyRunningToday: todayOnly, today: 'Monday',
+          from: from,
+          to: to,
+          filterDay: day,
+          onlyRunningToday: todayOnly,
+          today: 'Monday',
         );
 
     expect(search(' ALU ', 'kalo').map((s) => s.id), ['early', 'later']);
@@ -78,7 +83,8 @@ void main() {
         'second');
   });
 
-  test('catalog shares a subscription, exposes errors, retries and cancels', () async {
+  test('catalog shares a subscription, exposes errors, retries and cancels',
+      () async {
     final repo = FakeTransitRepository();
     final cubit = PublishedServicesCubit(repo);
     final first = cubit.stream.listen((_) {});
@@ -107,14 +113,15 @@ void main() {
     await repo.controller.close();
   });
 
-  testWidgets('rapid input is coalesced and timers are disposed', (tester) async {
+  testWidgets('rapid input is coalesced and timers are disposed',
+      (tester) async {
     Widget build(String value) => Directionality(
-      textDirection: TextDirection.ltr,
-      child: DebouncedBuilder<String>(
-        value: value,
-        builder: (_, accepted) => Text(accepted),
-      ),
-    );
+          textDirection: TextDirection.ltr,
+          child: DebouncedBuilder<String>(
+            value: value,
+            builder: (_, accepted) => Text(accepted),
+          ),
+        );
     await tester.pumpWidget(build('a'));
     await tester.pumpWidget(build('al'));
     await tester.pump(const Duration(milliseconds: 100));
@@ -129,22 +136,23 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('owner query rebuilds do not restart streams or retain another query',
+  testWidgets(
+      'owner query rebuilds do not restart streams or retain another query',
       (tester) async {
     final first = StreamController<String>();
     final second = StreamController<String>();
     int creates = 0;
     Widget build(String identity) => Directionality(
-      textDirection: TextDirection.ltr,
-      child: QueryStreamBuilder<String>(
-        identity: identity,
-        createStream: () {
-          creates++;
-          return identity == 'first' ? first.stream : second.stream;
-        },
-        builder: (_, snapshot) => Text(snapshot.data ?? 'loading'),
-      ),
-    );
+          textDirection: TextDirection.ltr,
+          child: QueryStreamBuilder<String>(
+            identity: identity,
+            createStream: () {
+              creates++;
+              return identity == 'first' ? first.stream : second.stream;
+            },
+            builder: (_, snapshot) => Text(snapshot.data ?? 'loading'),
+          ),
+        );
     await tester.pumpWidget(build('first'));
     first.add('first owner');
     await tester.pump();
@@ -155,7 +163,7 @@ void main() {
     expect(creates, 2);
     expect(find.text('first owner'), findsNothing);
     second.add('second owner');
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('second owner'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     expect(first.hasListener, isFalse);
@@ -174,20 +182,22 @@ void main() {
     final catalog = PublishedServicesCubit(repo);
     final search = SearchCubit();
     Widget app(Widget screen) => MultiBlocProvider(
-      providers: [
-        BlocProvider.value(value: catalog),
-        BlocProvider.value(value: search),
-      ],
-      child: MaterialApp(home: Scaffold(body: screen)),
-    );
+          providers: [
+            BlocProvider.value(value: catalog),
+            BlocProvider.value(value: search),
+          ],
+          child: MaterialApp(home: Scaffold(body: screen)),
+        );
     await tester.pumpWidget(app(const PassengerSearchScreen()));
-    repo.controller.add(List.generate(200, (i) => service('$i', departure: 480 + i)));
+    repo.controller
+        .add(List.generate(200, (i) => service('$i', departure: 480 + i)));
     await tester.pumpAndSettle();
     final field = find.byKey(const ValueKey('search-from'));
     final controller = tester.widget<TextFormField>(field).controller;
     await tester.enterText(field, 'Alu');
     await tester.pump();
-    expect(identical(controller, tester.widget<TextFormField>(field).controller),
+    expect(
+        identical(controller, tester.widget<TextFormField>(field).controller),
         isTrue);
     expect(controller!.text, 'Alu');
     await tester.pump(const Duration(milliseconds: 250));
