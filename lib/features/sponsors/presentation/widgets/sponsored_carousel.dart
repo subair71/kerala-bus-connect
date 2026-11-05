@@ -70,6 +70,7 @@ class _Slides extends HookConsumerWidget {
     }
 
     void stopRotation() {
+      debugPrint('SPONSOR_STOP page=$page');
       rotationTimer.value?.cancel();
       rotationTimer.value = null;
     }
@@ -81,7 +82,9 @@ class _Slides extends HookConsumerWidget {
           interval <= Duration.zero ||
           (lifecycle != null && lifecycle != AppLifecycleState.resumed))
         return;
+      debugPrint('SPONSOR_START page=$page interval=$interval');
       rotationTimer.value = Timer.periodic(interval, (_) {
+        debugPrint('SPONSOR_TICK page=$page attached=${controller.hasClients} scrolling=${controller.hasClients ? controller.position.isScrollingNotifier.value : null} hover=${hovering.value} touch=${touching.value}');
         if (!controller.hasClients ||
             controller.position.isScrollingNotifier.value ||
             hovering.value ||
