@@ -84,7 +84,20 @@ async function verifyStartup(page) {
           ['Crew', 'Crew duty roster'],
         ]) {
           await page.locator('[aria-label^="' + tab + '"]').or(page.getByText(tab, {exact:true})).first().click();
-          await page.getByText(heading, {exact:true}).waitFor();
+          try {
+            await page.getByText(heading, {exact:true}).waitFor();
+          } catch (error) {
+            console.log('WEB_SMOKE_NAVIGATION_FAILURE ' + name + ' ' + tab + ': ' +
+              JSON.stringify(await page.locator('flt-semantics').evaluateAll(elements =>
+                elements.map(element => ({
+                  role: element.getAttribute('role'),
+                  label: element.getAttribute('aria-label'),
+                  text: element.textContent,
+                })).filter(item => item.label || item.text).slice(0, 60))));
+            const screenshot = await page.screenshot({path:'browser-screenshots/' + name + '-failure.png'});
+            console.log('WEB_SMOKE_FAILURE_IMAGE ' + screenshot.toString('base64'));
+            throw error;
+          }
           assert.equal(await page.getByText('Local sponsors near Aluva', {exact:true}).count(), 0);
           await page.screenshot({path:'browser-screenshots/' + name + '-' + tab.toLowerCase() + '.png'});
         }
