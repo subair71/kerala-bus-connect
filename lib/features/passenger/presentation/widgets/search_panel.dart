@@ -25,92 +25,76 @@ class SearchPanel extends HookConsumerWidget {
       sync(from, next.from);
       sync(to, next.to);
     });
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              key: const ValueKey('search-from'),
-              controller: from,
-              onChanged: controller.from,
-              decoration: InputDecoration(
-                labelText: 'From',
-                prefixIcon: const Icon(Icons.my_location),
-                suffixIcon: IconButton(
-                  tooltip: 'Clear boarding stop',
-                  onPressed: () => controller.from(''),
-                  icon: const Icon(Icons.close),
-                ),
-              ),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: IconButton(
-                key: const ValueKey('swap-stops'),
-                tooltip: 'Swap stops',
-                onPressed: controller.swap,
-                icon: const Icon(Icons.swap_vert),
-              ),
-            ),
-            TextField(
-              key: const ValueKey('search-to'),
-              controller: to,
-              onChanged: controller.to,
-              decoration: InputDecoration(
-                labelText: 'To',
-                prefixIcon: const Icon(Icons.place),
-                suffixIcon: IconButton(
-                  tooltip: 'Clear destination',
-                  onPressed: () => controller.to(''),
-                  icon: const Icon(Icons.close),
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final stop in popularKeralaStops.take(6))
-                  ActionChip(
-                    label: Text(stop),
-                    onPressed: () => controller.to(stop),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 16,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                DropdownButton<String>(
-                  value: query.filterDay,
-                  items: [
-                    for (final day in ['All Days', ...weekDays])
-                      DropdownMenuItem(value: day, child: Text(day)),
-                  ],
-                  onChanged: (day) {
-                    if (day != null) controller.day(day);
-                  },
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Running today'),
-                    Switch(
-                      value: query.onlyRunningToday,
-                      onChanged: controller.runningToday,
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
+    Widget stopField(bool origin) => TextField(
+      key: ValueKey(origin ? 'search-from' : 'search-to'),
+      controller: origin ? from : to,
+      onChanged: origin ? controller.from : controller.to,
+      textInputAction: origin ? TextInputAction.next : TextInputAction.search,
+      onSubmitted: (_) => FocusScope.of(context).unfocus(),
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      decoration: InputDecoration(labelText: origin ? 'From' : 'To',
+        prefixIcon: Icon(origin ? Icons.trip_origin : Icons.place_outlined, size: 20),
+        suffixIcon: IconButton(tooltip: origin ? 'Clear boarding stop' : 'Clear destination',
+          onPressed: () => origin ? controller.from('') : controller.to(''),
+          icon: const Icon(Icons.close, size: 18))),
     );
+    Widget swap(bool wide) => IconButton(
+      key: const ValueKey('swap-stops'), tooltip: 'Swap stops',
+      onPressed: controller.swap, color: Theme.of(context).colorScheme.primary,
+      icon: Icon(wide ? Icons.swap_horiz : Icons.swap_vert));
+    Widget dayPicker() => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10),
+      decoration: BoxDecoration(color: Theme.of(context).inputDecorationTheme.fillColor,
+        borderRadius: BorderRadius.circular(8)),
+      child: DropdownButtonHideUnderline(child: DropdownButton<String>(
+        value: query.filterDay,
+        icon: const Icon(Icons.expand_more, size: 18),
+        items: [for (final day in ['All Days', ...weekDays])
+          DropdownMenuItem(value: day, child: Text(day, style: const TextStyle(fontSize: 12)))],
+        onChanged: (day) { if (day != null) controller.day(day); },
+      )),
+    );
+    Widget running() => Row(mainAxisSize: MainAxisSize.min, children: [
+      const Text('Running today', style: TextStyle(fontSize: 12)),
+      const SizedBox(width: 4),
+      Switch(value: query.onlyRunningToday, onChanged: controller.runningToday),
+    ]);
+    final thrissur = query.from.toLowerCase().contains('thrissur');
+    final stops = thrissur
+      ? ['Thrissur Round', 'Palakkad Stand', 'Guruvayur', 'Chalakudy', 'Aluva']
+      : ['Aluva', 'Kaloor', 'Infopark Kakkanad', 'Edappally Toll', 'Kalamassery', 'Thrissur Round'];
+    return Card(child: Padding(padding: const EdgeInsets.all(16),
+      child: LayoutBuilder(builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 1000;
+        return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          if (wide) Row(children: [
+            Expanded(child: stopField(true)), swap(true), Expanded(child: stopField(false)),
+            const SizedBox(width: 12), dayPicker(), const SizedBox(width: 12), running(),
+            const SizedBox(width: 8), FilledButton.icon(
+              onPressed: () => FocusScope.of(context).unfocus(),
+              icon: const Icon(Icons.search, size: 18), label: const Text('Search')),
+          ]) else ...[
+            stopField(true), Align(alignment: Alignment.centerRight, child: swap(false)), stopField(false),
+          ],
+          const SizedBox(height: 12),
+          const Text('Frequent corridor stops', style: TextStyle(fontSize: 12)),
+          SizedBox(height: 48, child: ListView.separated(scrollDirection: Axis.horizontal,
+            itemCount: stops.length, separatorBuilder: (_, _) => const SizedBox(width: 6),
+            itemBuilder: (context, index) {
+              final stop = stops[index];
+              return ActionChip(label: Text(stop),
+                backgroundColor: stop == query.from ? Theme.of(context).colorScheme.primaryContainer : null,
+                onPressed: () {
+                  if (stop == 'Aluva' || stop == 'Thrissur Round') {
+                    controller.from(stop);
+                    controller.to(stop == 'Aluva' ? 'Kaloor' : 'Palakkad Stand');
+                  } else { controller.to(stop); }
+                });
+            })),
+          if (!wide) Wrap(alignment: WrapAlignment.spaceBetween, spacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center, children: [dayPicker(), running()]),
+        ]);
+      }),
+    ));
   }
 }

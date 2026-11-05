@@ -31,6 +31,17 @@ class ServiceEntity extends Equatable {
     this.published = true,
   });
 
+  /// Returns only supplied times; an unknown stop never inherits a departure.
+  int? scheduledTime(String stop) {
+    for (final entry in stopTimings.entries) {
+      if (entry.key.trim().toLowerCase() == stop.trim().toLowerCase()) return entry.value;
+    }
+    if (stops.isNotEmpty && stops.first.toLowerCase() == stop.toLowerCase() && departureMinutes >= 0) {
+      return departureMinutes;
+    }
+    return null;
+  }
+
   int getBoardingTime(String boardingQuery) {
     if (boardingQuery.isNotEmpty) {
       for (final entry in stopTimings.entries) {

@@ -1,75 +1,49 @@
 import 'package:flutter/material.dart';
-import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../../../../core/providers/clock_provider.dart';
+import '../../../../core/constants/colors.dart';
+import '../../../../core/utils/sample_ids.dart';
 import '../../../../core/utils/time_utils.dart';
+import '../../../../core/widgets/data_notice.dart';
 import '../../domain/entities/service_entity.dart';
 
-class TrainRouteView extends ConsumerWidget {
+class TrainRouteView extends StatelessWidget {
   final ServiceEntity service;
   final String queryFrom, queryTo, effectiveDay;
-  const TrainRouteView({
-    super.key,
-    required this.service,
-    required this.queryFrom,
-    required this.queryTo,
-    required this.effectiveDay,
-  });
-
+  const TrainRouteView({super.key, required this.service, required this.queryFrom,
+    required this.queryTo, required this.effectiveDay});
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final now = ref.watch(clockProvider).asData?.value ?? keralaNow();
-    final minute = now.hour * 60 + now.minute;
-    final off = service.offDays.contains(effectiveDay);
-    final today = effectiveDay == todayName();
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: service.stops.length + 1,
-      itemBuilder: (context, index) {
-        if (index == 0)
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                service.busName,
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              Text(service.routeName),
-              const SizedBox(height: 8),
-              Text(
-                off
-                    ? 'Not operating on $effectiveDay'
-                    : 'Published timetable • $effectiveDay',
-              ),
-              if (service.offTimingsNote?.isNotEmpty ?? false)
-                Text(service.offTimingsNote!),
-              const SizedBox(height: 20),
-            ],
-          );
-        final stop = service.stops[index - 1];
-        final time =
-            service.stopTimings[stop] ??
-            service.departureMinutes + (index - 1) * 15;
-        final selected =
-            stop.toLowerCase() == queryFrom.trim().toLowerCase() ||
-            stop.toLowerCase() == queryTo.trim().toLowerCase();
-        final passed = today && !off && time <= minute;
-        return Card(
-          color: selected
-              ? Theme.of(context).colorScheme.primaryContainer
-              : null,
-          child: ListTile(
-            leading: CircleAvatar(
-              child: passed ? const Icon(Icons.check) : Text('$index'),
-            ),
-            title: Text(stop),
-            subtitle: Text(selected ? 'Selected stop' : 'Scheduled stop'),
-            trailing: Text(
-              timeLabel(time),
-              style: const TextStyle(fontWeight: FontWeight.w700),
-            ),
-          ),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => ListView.builder(
+    padding: const EdgeInsets.all(16), itemCount: service.stops.length + 1,
+    itemBuilder: (context, index) {
+      if (index == 0) return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text('Stop sequence', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 4), Text(service.busName),
+        Text(service.routeName, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 12),
+        if (isSampleId(service.id)) const DataNotice(demo: true),
+        Text(service.offDays.contains(effectiveDay) ? 'Not operating on $effectiveDay'
+          : 'Scheduled timetable • $effectiveDay', style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 20),
+      ]);
+      final stop = service.stops[index - 1];
+      final minutes = service.scheduledTime(stop);
+      final selected = stop.toLowerCase() == queryFrom.toLowerCase() || stop.toLowerCase() == queryTo.toLowerCase();
+      return IntrinsicHeight(child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        SizedBox(width: 28, child: Column(children: [
+          Container(width: 12, height: 12, margin: const EdgeInsets.only(top: 5),
+            decoration: BoxDecoration(shape: BoxShape.circle,
+              color: selected ? AppColors.primary : Colors.white,
+              border: Border.all(color: AppColors.primary, width: 2))),
+          Expanded(child: VerticalDivider(width: 2, thickness: 2,
+            color: index == service.stops.length ? Colors.transparent : AppColors.border)),
+        ])),
+        const SizedBox(width: 8),
+        Expanded(child: Padding(padding: const EdgeInsets.only(bottom: 28), child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(minutes == null ? 'Time unavailable' : timeLabel(minutes),
+              style: const TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 2), Text(stop),
+            if (selected) const Text('Selected stop', style: TextStyle(fontSize: 11, color: AppColors.primary)),
+          ]))),
+      ]));
+    });
 }

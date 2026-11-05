@@ -188,7 +188,7 @@ class ServiceDraftController extends Notifier<ServiceDraft> {
       timings: {
         for (var i = 0; i < args.route.stops.length; i++)
           args.route.stops[i]:
-              service?.stopTimings[args.route.stops[i]] ?? departure + i * 15,
+              service == null ? departure + i * 15 : (service.stopTimings[args.route.stops[i]] ?? -1),
       },
       offDays: service?.offDays.toSet() ?? {},
     );

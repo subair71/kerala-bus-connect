@@ -2,20 +2,60 @@ import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 
 class AppTheme {
-  static ThemeData get lightTheme => ThemeData(
-    useMaterial3: true,
-    fontFamily: 'Plus Jakarta Sans',
-    fontFamilyFallback: const ['Inter', 'sans-serif'],
-    scaffoldBackgroundColor: AppColors.background,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: AppColors.primary,
-      primary: AppColors.primary,
-      surface: AppColors.surface,
-    ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: AppColors.surface,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-    ),
-  );
+  static ThemeData get lightTheme {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: AppColors.primary, brightness: Brightness.light,
+      primary: AppColors.primary, onPrimary: Colors.white,
+      primaryContainer: AppColors.secondaryContainer,
+      surface: Colors.white, onSurface: AppColors.onSurface,
+      outline: AppColors.outline, outlineVariant: AppColors.border,
+    );
+    final border = OutlineInputBorder(borderRadius: BorderRadius.circular(8),
+      borderSide: BorderSide.none);
+    return ThemeData(
+      useMaterial3: true, fontFamily: 'Plus Jakarta Sans', colorScheme: scheme,
+      scaffoldBackgroundColor: AppColors.background,
+      textTheme: const TextTheme(
+        headlineSmall: TextStyle(fontSize: 24, height: 1.33, fontWeight: FontWeight.w700, letterSpacing: -.5),
+        titleLarge: TextStyle(fontSize: 22, height: 1.28, fontWeight: FontWeight.w600, letterSpacing: -.4),
+        titleMedium: TextStyle(fontSize: 18, height: 1.33, fontWeight: FontWeight.w600, letterSpacing: -.25),
+        bodyLarge: TextStyle(fontSize: 16, height: 1.5),
+        bodyMedium: TextStyle(fontSize: 14, height: 1.43),
+        bodySmall: TextStyle(fontSize: 12, height: 1.4, color: AppColors.onSurfaceVariant),
+        labelLarge: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      ),
+      appBarTheme: const AppBarTheme(backgroundColor: Colors.white,
+        elevation: 0, scrolledUnderElevation: 0, surfaceTintColor: Colors.transparent),
+      cardTheme: CardThemeData(color: Colors.white, elevation: 0,
+        surfaceTintColor: Colors.transparent, margin: const EdgeInsets.only(bottom: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),
+          side: const BorderSide(color: AppColors.border, width: .6))),
+      inputDecorationTheme: InputDecorationTheme(filled: true,
+        fillColor: AppColors.surfaceLow, border: border, enabledBorder: border,
+        focusedBorder: border.copyWith(borderSide: const BorderSide(color: AppColors.primary)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        labelStyle: const TextStyle(color: AppColors.onSurfaceVariant)),
+      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)))),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        side: const BorderSide(color: AppColors.border))),
+      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(
+        minimumSize: const Size(48, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)))),
+      chipTheme: ChipThemeData(backgroundColor: AppColors.surfaceLow,
+        selectedColor: AppColors.secondaryContainer, side: BorderSide.none,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        labelStyle: const TextStyle(fontSize: 12, color: AppColors.onSurface)),
+      navigationBarTheme: const NavigationBarThemeData(
+        backgroundColor: Colors.white, surfaceTintColor: Colors.transparent,
+        indicatorColor: AppColors.surfaceLow, height: 72,
+        labelTextStyle: WidgetStatePropertyAll(TextStyle(fontSize: 11, fontWeight: FontWeight.w500))),
+      bottomSheetTheme: const BottomSheetThemeData(backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent, constraints: BoxConstraints(maxWidth: 720)),
+      dividerTheme: const DividerThemeData(color: AppColors.border),
+    );
+  }
 }

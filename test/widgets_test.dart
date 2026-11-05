@@ -1,3 +1,6 @@
+import 'package:kerala_bus_connect/features/sponsors/presentation/providers/sponsor_providers.dart';
+import 'package:kerala_bus_connect/features/tracking/presentation/providers/tracking_providers.dart';
+import 'package:kerala_bus_connect/features/crew/presentation/providers/crew_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -18,6 +21,9 @@ Widget harness(
   FakeAuthRepository auth,
 ) => ProviderScope(
   overrides: [
+    liveSponsorsProvider.overrideWith((ref, location) => Stream.value([])),
+    liveTrackingProvider.overrideWith((ref) => Stream.value([])),
+    liveCrewProvider.overrideWith((ref) => Stream.value([])),
     transitRepositoryProvider.overrideWithValue(repository),
     authRepositoryProvider.overrideWithValue(auth),
     catalogCacheDurationProvider.overrideWithValue(Duration.zero),

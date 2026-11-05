@@ -1,3 +1,5 @@
+import '../../../../core/widgets/data_notice.dart';
+import '../widgets/sample_owner_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/widgets/async_status.dart';
@@ -26,9 +28,10 @@ class OwnerPage extends ConsumerWidget {
           retry: () => ref.invalidate(authUserProvider),
         ),
         data: (user) => user == null
-            ? const SingleChildScrollView(
+            ? SingleChildScrollView(
                 padding: EdgeInsets.all(16),
-                child: AuthPanel(),
+                child: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 720),
+                  child: const Column(children: [AuthPanel(), SampleOwnerPreview()]))),
               )
             : _OwnerWorkspace(key: ValueKey(user.id)),
       );
@@ -94,6 +97,7 @@ class _OwnerWorkspace extends ConsumerWidget {
                         ),
                       ),
                     const SizedBox(height: 16),
+                    if (businesses.hasError) const DataNotice(demo: true, unavailable: true),
                     businesses.when(
                       loading: () => const AsyncStatus(loading: true),
                       error: (_, stack) => AsyncStatus(
@@ -165,6 +169,8 @@ class _OwnerWorkspace extends ConsumerWidget {
                               ],
                             ),
                     ),
+                    if (businesses.hasError || (businesses.hasValue && (businesses.asData?.value.isEmpty ?? false)))
+                      const SampleOwnerPreview(),
                   ],
                 ),
               ),
@@ -335,7 +341,7 @@ class _OwnerServices extends ConsumerWidget {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     Text(
-                      '${service.routeName} • ${timeLabel(service.departureMinutes)}',
+                      '${service.routeName} • ${service.departureMinutes < 0 ? 'Time unavailable' : timeLabel(service.departureMinutes)}',
                     ),
                     Text(
                       service.offDays.isEmpty

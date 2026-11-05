@@ -1,5 +1,4 @@
 import '../entities/crew_assignment.dart';
-
 abstract interface class CrewRepository {
-  List<CrewAssignment> assignments();
+  Stream<List<CrewAssignment>> watch(String ownerId);
 }
