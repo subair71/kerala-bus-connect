@@ -270,51 +270,6 @@ class SearchPanel extends HookConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: const Color(0xffe4f4f1),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: const Icon(
-                        Icons.directions_bus_outlined,
-                        size: 23,
-                        color: HomeTheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Find a bus',
-                            style: TextStyle(
-                              fontSize: 22,
-                              height: 1.25,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: -.6,
-                              color: HomeTheme.text,
-                            ),
-                          ),
-                          Text(
-                            'Kerala Transit Corridors',
-                            style: TextStyle(
-                              fontSize: 12,
-                              height: 1.4,
-                              color: HomeTheme.muted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (!wide) swap(false),
-                  ],
-                ),
-                const SizedBox(height: 22),
                 if (wide)
                   Row(
                     children: [
@@ -332,20 +287,31 @@ class SearchPanel extends HookConsumerWidget {
                       ),
                     ],
                   )
-                else ...[
-                  stopField(true),
-                  const SizedBox(
-                    height: 10,
-                    child: Align(
-                      alignment: Alignment(-.88, 0),
-                      child: SizedBox(
-                        width: 1,
-                        child: ColoredBox(color: HomeTheme.mint),
+                else
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            stopField(true),
+                            const SizedBox(
+                              height: 10,
+                              child: Align(
+                                alignment: Alignment(-.88, 0),
+                                child: SizedBox(
+                                  width: 1,
+                                  child: ColoredBox(color: HomeTheme.mint),
+                                ),
+                              ),
+                            ),
+                            stopField(false),
+                          ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      swap(false),
+                    ],
                   ),
-                  stopField(false),
-                ],
                 const SizedBox(height: 10),
                 Wrap(
                   alignment: WrapAlignment.spaceBetween,
