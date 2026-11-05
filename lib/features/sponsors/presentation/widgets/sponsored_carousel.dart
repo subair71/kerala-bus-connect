@@ -19,7 +19,7 @@ class SponsoredCarousel extends ConsumerWidget {
               const SizedBox(height: 160, child: AsyncStatus(loading: true)),
           error: (_, _) => const SizedBox.shrink(),
           data: (data) => _Slides(
-            key: ValueKey(location),
+            key: ValueKey('$location:${data.isDemo}:${data.records.map((ad) => ad.id).join(',')}'),
             location: location,
             ads: data.records,
             demo: data.isDemo,
@@ -42,10 +42,10 @@ class _Slides extends HookConsumerWidget {
   });
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = usePageController();
     final page = ref
         .watch(sponsorPageProvider(location))
         .clamp(0, ads.length - 1);
+    final controller = usePageController(initialPage: page);
     void move(int delta) {
       final target = (page + delta) % ads.length;
       controller.animateToPage(

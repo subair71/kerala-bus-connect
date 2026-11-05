@@ -1,3 +1,4 @@
+import 'package:kerala_bus_connect/features/sponsors/domain/entities/sponsored_ad.dart';
 import 'package:kerala_bus_connect/core/theme/app_theme.dart';
 import 'package:kerala_bus_connect/features/sponsors/presentation/providers/sponsor_providers.dart';
 import 'package:kerala_bus_connect/features/tracking/presentation/providers/tracking_providers.dart';
@@ -19,10 +20,11 @@ import 'support/fakes.dart';
 Widget harness(
   Widget child,
   FakeTransitRepository repository,
-  FakeAuthRepository auth,
-) => ProviderScope(
+  FakeAuthRepository auth, {
+  Stream<List<SponsoredAd>>? sponsorStream,
+}) => ProviderScope(
   overrides: [
-    liveSponsorsProvider.overrideWith((ref, location) => Stream.value([])),
+    liveSponsorsProvider.overrideWith((ref, location) => sponsorStream ?? Stream.value([])),
     liveTrackingProvider.overrideWith((ref) => Stream.value([])),
     liveCrewProvider.overrideWith((ref) => Stream.value([])),
     transitRepositoryProvider.overrideWithValue(repository),

@@ -31,7 +31,9 @@ const server = http.createServer((req, res) => {
       await page.getByText('FindMyBus', {exact:true}).waitFor({timeout:60000});
       await page.getByText('Local sponsors near Aluva', {exact:true}).waitFor({timeout:60000});
       await page.screenshot({path:'browser-screenshots/' + name + '-home.png'});
-      await page.getByText('Routes', {exact:true}).click();
+      const shot = await page.screenshot({type:'jpeg', quality:65});
+      console.log('SCREENSHOT:' + JSON.stringify({path:'browser-' + name + '.jpg', data:shot.toString('base64')}));
+      await page.getByText('Routes', {exact:false}).click();
       await page.getByText('Routes directory', {exact:true}).waitFor();
       assert.equal(await page.getByText('Local sponsors near Aluva', {exact:true}).count(), 0);
       await page.screenshot({path:'browser-screenshots/' + name + '-routes.png'});

@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:kerala_bus_connect/features/sponsors/domain/entities/sponsored_ad.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -105,4 +107,22 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('carousel recovers from the second sample to a single live advertisement', (tester) async {
+    final stream = StreamController<List<SponsoredAd>>();
+    final auth = FakeAuthRepository();
+    addTearDown(stream.close); addTearDown(auth.changes.close);
+    await tester.pumpWidget(harness(const AppShell(), FakeTransitRepository(), auth, sponsorStream: stream.stream));
+    stream.add([]);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Next sponsor'));
+    await tester.pumpAndSettle();
+    expect(find.text('Everyday essentials, close by'), findsOneWidget);
+    stream.add([const SponsoredAd(id: 'live-ad', location: 'Aluva', advertiser: 'Live advertiser',
+      title: 'Live local offer', description: 'Published sponsor content', website: 'https://example.com')]);
+    await tester.pumpAndSettle();
+    expect(find.text('Live local offer'), findsOneWidget);
+    expect(find.text('Sample advertisement'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
 }

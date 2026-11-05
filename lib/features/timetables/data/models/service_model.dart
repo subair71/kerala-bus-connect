@@ -51,7 +51,9 @@ class ServiceModel extends ServiceEntity {
       offDays: stringList(data['offDays']),
       operatingDaysKnown:
           data['offDays'] is List &&
-          (data['offDays'] as List).every((day) => day is String && weekDays.contains(day)),
+          (data['offDays'] as List).every(
+            (day) => day is String && weekDays.contains(day),
+          ),
       offTimingsNote: data['offTimingsNote'] is String
           ? data['offTimingsNote'] as String
           : null,
