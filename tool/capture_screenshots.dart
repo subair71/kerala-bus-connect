@@ -17,6 +17,7 @@ void main() {
     await icons.load();
   });
   for (final entry in {
+    'reference-home-no-ads': const Size(412, 1600),
     'desktop-home': const Size(1440, 1000),
     'desktop-home-no-ads': const Size(1440, 1000),
     'mobile-home-no-ads': const Size(390, 844),
