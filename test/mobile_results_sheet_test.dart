@@ -36,6 +36,7 @@ void main() {
         await tester.ensureVisible(
           find.byKey(const ValueKey('show-bus-results')),
         );
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('show-bus-results')));
         await tester.pumpAndSettle();
         expect(find.byType(MobileBusResultsSheet), findsOneWidget);
@@ -54,6 +55,7 @@ void main() {
         await tester.ensureVisible(
           find.byKey(const ValueKey('show-bus-results')),
         );
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('show-bus-results')));
         await tester.pumpAndSettle();
         await tester.binding.handlePopRoute();
@@ -62,6 +64,7 @@ void main() {
         await tester.ensureVisible(
           find.byKey(const ValueKey('show-bus-results')),
         );
+        await tester.pumpAndSettle();
         await tester.tap(find.byKey(const ValueKey('show-bus-results')));
         await tester.pumpAndSettle();
         await tester.drag(
