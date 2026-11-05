@@ -28,6 +28,10 @@ Widget harness(
 }) => ProviderScope(
   overrides: [
     sponsorRotationIntervalProvider.overrideWithValue(Duration.zero),
+    if (!sampleSponsors && sponsorStream == null)
+      sponsorsProvider.overrideWith(
+        (ref) => AsyncData(DataSet<SponsoredAd>([])),
+      ),
     if (sampleSponsors)
       sponsorsProvider.overrideWith(
         (ref) => AsyncData(
