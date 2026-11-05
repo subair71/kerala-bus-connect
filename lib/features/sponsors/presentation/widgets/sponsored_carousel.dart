@@ -70,7 +70,6 @@ class _Slides extends HookConsumerWidget {
     }
 
     void stopRotation() {
-      debugPrint('SPONSOR_STOP page=$page');
       rotationTimer.value?.cancel();
       rotationTimer.value = null;
     }
@@ -82,16 +81,7 @@ class _Slides extends HookConsumerWidget {
           interval <= Duration.zero ||
           (lifecycle != null && lifecycle != AppLifecycleState.resumed))
         return;
-      debugPrint('SPONSOR_START page=$page interval=$interval');
       rotationTimer.value = Timer.periodic(interval, (_) {
-        debugPrint('SPONSOR_TICK page=$page');
-        debugPrint('SPONSOR_ATTACHED ${controller.hasClients}');
-        debugPrint('SPONSOR_HOVER ${hovering.value}');
-        debugPrint('SPONSOR_TOUCH ${touching.value}');
-        if (controller.hasClients) {
-          final scrolling = controller.position.isScrollingNotifier.value;
-          debugPrint('SPONSOR_SCROLL $scrolling');
-        }
         if (!controller.hasClients ||
             controller.position.isScrollingNotifier.value ||
             hovering.value ||
@@ -111,8 +101,11 @@ class _Slides extends HookConsumerWidget {
     });
     useEffect(() {
       startRotation();
-      return stopRotation;
+      return null;
     }, [controller, page, ads.length, canRotate, interval]);
+    // Keyed hook cleanup runs after replacement effects. Only unmount cleanup
+    // should cancel the current timer; an old page must not cancel its successor.
+    useEffect(() => stopRotation, const []);
 
     return MouseRegion(
       onEnter: (_) => hovering.value = true,
