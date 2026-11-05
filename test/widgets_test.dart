@@ -50,9 +50,10 @@ Widget harness(
     transitRepositoryProvider.overrideWithValue(repository),
     authRepositoryProvider.overrideWithValue(auth),
     catalogCacheDurationProvider.overrideWithValue(Duration.zero),
-    clockProvider.overrideWith((ref) => Stream.value(DateTime(2026, 11, 5, 8))),
+    clockProvider.overrideWithValue(AsyncData(DateTime(2026, 11, 6, 8))),
   ],
   child: MaterialApp(
+    debugShowCheckedModeBanner: false,
     theme: AppTheme.lightTheme,
     builder: textScaler == null
         ? null

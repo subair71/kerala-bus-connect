@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../../core/theme/home_theme.dart';
 import '../../../../core/widgets/data_notice.dart';
 import '../../../../core/widgets/app_components.dart';
 import '../../domain/entities/sponsored_ad.dart';
@@ -136,7 +137,7 @@ class _Slides extends HookConsumerWidget {
                 const Icon(
                   Icons.location_on_outlined,
                   size: 17,
-                  color: AppColors.primary,
+                  color: HomeTheme.primary,
                 ),
                 const SizedBox(width: 6),
                 Expanded(
@@ -145,8 +146,8 @@ class _Slides extends HookConsumerWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -162,7 +163,7 @@ class _Slides extends HookConsumerWidget {
                             margin: const EdgeInsets.only(left: 4),
                             decoration: BoxDecoration(
                               color: i == page
-                                  ? AppColors.primary
+                                  ? HomeTheme.primary
                                   : AppColors.border,
                               borderRadius: BorderRadius.circular(4),
                             ),
@@ -190,7 +191,7 @@ class _Slides extends HookConsumerWidget {
                 final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
                 return SizedBox(
                   // Reserve room for sponsor labels wrapping on narrow screens.
-                  height: (wide ? 188 : 260) * scale.clamp(1, 2.5),
+                  height: (wide ? 188 : 252) * scale.clamp(1, 2.5),
                   child: PageView.builder(
                     controller: controller,
                     itemCount: ads.length,
@@ -241,7 +242,7 @@ class _AdCard extends ConsumerWidget {
           ad.imageUrl == 'asset:hotel'
               ? Icons.hotel_outlined
               : Icons.local_cafe_outlined,
-          color: AppColors.primary,
+          color: HomeTheme.primary,
           size: 32,
         ),
       ),
@@ -268,6 +269,10 @@ class _AdCard extends ConsumerWidget {
       ),
     );
     final action = FilledButton.tonalIcon(
+      style: FilledButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xff31256b),
+      ),
       onPressed: demo || ad.website == null
           ? () => info(context)
           : () async {
@@ -286,6 +291,8 @@ class _AdCard extends ConsumerWidget {
       label: Text(demo ? 'Sample advertisement' : 'Visit website'),
     );
     return Card(
+      color: const Color(0xff31256b),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -307,7 +314,7 @@ class _AdCard extends ConsumerWidget {
                   '${ad.advertiser} · ${ad.location}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12),
+                  style: const TextStyle(fontSize: 12, color: Colors.white70),
                 ),
               ],
             ),
@@ -327,8 +334,9 @@ class _AdCard extends ConsumerWidget {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 20,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
                             letterSpacing: -.3,
                           ),
                         ),
@@ -339,7 +347,7 @@ class _AdCard extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontSize: 12,
-                            color: AppColors.onSurfaceVariant,
+                            color: Colors.white70,
                           ),
                         ),
                       ],
