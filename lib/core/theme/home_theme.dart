@@ -2,16 +2,18 @@ import 'package:flutter/material.dart';
 
 /// Tokens from the supplied home-screen reference; scoped to the passenger tab.
 abstract final class HomeTheme {
-  static const primary = Color(0xff00594b);
-  static const mint = Color(0xff9cf1e5);
-  static const background = Color(0xfff8f9ff);
-  static const field = Color(0xfff0f4f8);
+  static const border = Color(0xffe3e3e7);
+  static const accentInk = Color(0xffa64400);
+  static const primary = Color(0xffe96300);
+  static const mint = Color(0xffffebdc);
+  static const background = Color(0xffffffff);
+  static const field = Color(0xfff5f5f6);
   static const timing = Color(0xfff5f8fa);
-  static const text = Color(0xff071018);
-  static const muted = Color(0xff63716d);
+  static const text = Color(0xff202124);
+  static const muted = Color(0xff676b78);
   static const positive = Color(0xff16c997);
   static const positiveSurface = Color(0xffeafbf4);
-  static const advisory = Color(0xffeff2ff);
+  static const advisory = Color(0xfffff6ed);
 
   static ThemeData from(ThemeData base) => base.copyWith(
     scaffoldBackgroundColor: background,
@@ -49,7 +51,7 @@ abstract final class HomeTheme {
           fontFamily: 'Plus Jakarta Sans',
           fontSize: 11,
           fontWeight: FontWeight.w500,
-          color: states.contains(WidgetState.selected) ? primary : text,
+          color: states.contains(WidgetState.selected) ? accentInk : muted,
         ),
       ),
     ),

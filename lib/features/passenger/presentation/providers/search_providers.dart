@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/providers/clock_provider.dart';
+import '../../../../core/constants/transit_constants.dart';
 import '../../../../core/utils/time_utils.dart';
 import '../../../timetables/domain/entities/service_entity.dart';
 import '../../../timetables/presentation/providers/timetable_providers.dart';
@@ -11,9 +12,36 @@ final searchQueryProvider = NotifierProvider<SearchController, SearchQuery>(
   SearchController.new,
 );
 
+// Dates are a presentation of the existing weekly operating-day filter.
+final journeyTodayProvider = Provider.autoDispose<DateTime>((ref) {
+  final now = ref.watch(clockProvider.select((value) => value.asData?.value));
+  final date = now ?? keralaNow();
+  return DateTime(date.year, date.month, date.day);
+});
+final journeyDatesProvider = Provider.autoDispose<List<DateTime>>((ref) {
+  final today = ref.watch(journeyTodayProvider);
+  return List.unmodifiable(
+    List.generate(7, (i) => DateTime(today.year, today.month, today.day + i)),
+  );
+});
+
 class SearchController extends Notifier<SearchQuery> {
   @override
-  SearchQuery build() => SearchQuery(filterDay: todayName());
+  SearchQuery build() => SearchQuery(
+    filterDay: weekDays[ref.read(journeyTodayProvider).weekday - 1],
+  );
+  void journeyDate(DateTime date) {
+    final today = ref.read(journeyTodayProvider);
+    final isToday =
+        date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day;
+    state = state.copyWith(
+      filterDay: weekDays[date.weekday - 1],
+      onlyRunningToday: isToday && state.onlyRunningToday,
+    );
+  }
+
   void from(String value) => state = state.copyWith(from: value);
   void to(String value) => state = state.copyWith(to: value);
   void swap() => state = state.copyWith(from: state.to, to: state.from);

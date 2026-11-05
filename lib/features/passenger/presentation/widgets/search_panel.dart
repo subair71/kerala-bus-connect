@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/constants/transit_constants.dart';
+import '../../../../core/providers/clock_provider.dart';
 import '../../../../core/theme/home_theme.dart';
 import '../../../timetables/presentation/widgets/stop_timings_sheet.dart';
 import '../../domain/entities/search_query.dart';
 import '../providers/search_providers.dart';
+import 'journey_date_strip.dart';
 
 class SearchPanel extends HookConsumerWidget {
   final VoidCallback? onSearch;
@@ -14,10 +16,10 @@ class SearchPanel extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     void submit() {
       FocusScope.of(context).unfocus();
+      ref.read(debouncedSearchProvider.notifier).flush();
       onSearch?.call();
     }
 
-    // Keep corridor previews ready while the mobile results sheet is closed.
     ref.watch(
       departureResultsProvider.select(
         (result) => result.asData?.value.firstOrNull,
@@ -39,107 +41,99 @@ class SearchPanel extends HookConsumerWidget {
       sync(from, next.from);
       sync(to, next.to);
     });
-    Widget stopField(bool origin) => Container(
-      constraints: const BoxConstraints(minHeight: 62),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-      decoration: BoxDecoration(
-        color: HomeTheme.field,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 24,
-            child: origin
-                ? Container(
-                    width: 24,
-                    height: 24,
-                    decoration: BoxDecoration(
-                      color: HomeTheme.primary.withValues(alpha: .10),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.circle,
-                      size: 15,
-                      color: HomeTheme.primary,
-                    ),
-                  )
-                : const Icon(
-                    Icons.location_on_outlined,
-                    size: 20,
-                    color: HomeTheme.primary,
-                  ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  origin ? 'From Origin' : 'To Destination',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    height: 1.3,
-                    color: HomeTheme.muted,
-                  ),
-                ),
-                Semantics(
-                  label: origin ? 'From Origin' : 'To Destination',
-                  child: TextField(
-                    key: ValueKey(origin ? 'search-from' : 'search-to'),
-                    controller: origin ? from : to,
-                    onChanged: origin ? controller.from : controller.to,
-                    textInputAction: origin
-                        ? TextInputAction.next
-                        : TextInputAction.search,
-                    onSubmitted: (_) =>
-                        origin ? FocusScope.of(context).nextFocus() : submit(),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      height: 1.3,
-                      fontWeight: FontWeight.w600,
-                      color: HomeTheme.text,
-                    ),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      filled: false,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ),
-                ),
-              ],
+    final rowHeight = (28 + MediaQuery.textScalerOf(context).scale(40)).clamp(
+      72.0,
+      double.infinity,
+    );
+    Widget stopField(bool origin, {required bool wide}) => SizedBox(
+      height: rowHeight,
+      child: Padding(
+        // Keep a separate touch lane for the swap control on the divider.
+        padding: EdgeInsets.fromLTRB(16, 8, wide ? 12 : 68, 8),
+        child: Row(
+          children: [
+            Icon(
+              origin ? Icons.navigation_outlined : Icons.location_on_outlined,
+              size: 24,
+              color: HomeTheme.muted,
             ),
-          ),
-          IconButton(
-            tooltip: origin ? 'Clear boarding stop' : 'Clear destination',
-            onPressed: () => origin ? controller.from('') : controller.to(''),
-            color: HomeTheme.muted,
-            icon: const Icon(Icons.cancel_outlined, size: 18),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    origin ? 'Leaving From' : 'Going To',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.3,
+                      color: HomeTheme.muted,
+                    ),
+                  ),
+                  Semantics(
+                    label: origin ? 'From Origin' : 'To Destination',
+                    child: TextField(
+                      key: ValueKey(origin ? 'search-from' : 'search-to'),
+                      controller: origin ? from : to,
+                      onChanged: origin ? controller.from : controller.to,
+                      textInputAction: origin
+                          ? TextInputAction.next
+                          : TextInputAction.search,
+                      onSubmitted: (_) => origin
+                          ? FocusScope.of(context).nextFocus()
+                          : submit(),
+                      style: const TextStyle(
+                        fontSize: 20,
+                        height: 1.25,
+                        fontWeight: FontWeight.w500,
+                        color: HomeTheme.text,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: origin
+                            ? 'Choose origin'
+                            : 'Choose destination',
+                        hintStyle: const TextStyle(
+                          fontSize: 16,
+                          color: HomeTheme.muted,
+                        ),
+                        isDense: true,
+                        filled: false,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: origin ? 'Clear boarding stop' : 'Clear destination',
+              onPressed: () => origin ? controller.from('') : controller.to(''),
+              color: HomeTheme.muted,
+              icon: const Icon(Icons.cancel_outlined, size: 17),
+            ),
+          ],
+        ),
       ),
     );
     Widget swap(bool wide) => IconButton(
       key: const ValueKey('swap-stops'),
       tooltip: 'Swap stops',
       onPressed: controller.swap,
-      padding: EdgeInsets.zero,
-      icon: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: HomeTheme.mint,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Icon(
-          wide ? Icons.swap_horiz : Icons.swap_vert,
-          size: 23,
-          color: HomeTheme.primary,
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: HomeTheme.text,
+        minimumSize: const Size(48, 48),
+        shape: const CircleBorder(
+          side: BorderSide(color: HomeTheme.border, width: 1.5),
         ),
       ),
+      icon: Icon(wide ? Icons.swap_horiz : Icons.swap_vert, size: 27),
     );
     final days = ['All Days', ...weekDays];
     Widget dayPicker(double maxWidth) => SizedBox(
@@ -235,7 +229,10 @@ class SearchPanel extends HookConsumerWidget {
               child: Switch(
                 value: query.onlyRunningToday,
                 activeTrackColor: HomeTheme.primary,
-                onChanged: controller.runningToday,
+                onChanged: (value) {
+                  if (value) controller.day(ref.read(todayProvider));
+                  controller.runningToday(value);
+                },
               ),
             ),
           ),
@@ -259,60 +256,99 @@ class SearchPanel extends HookConsumerWidget {
             'Kalamassery',
             'Thrissur Round',
           ];
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final wide =
-                constraints.maxWidth >= 700 &&
-                MediaQuery.textScalerOf(context).scale(14) <= 18;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (wide)
-                  Row(
-                    children: [
-                      Expanded(child: stopField(true)),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: swap(true),
-                      ),
-                      Expanded(child: stopField(false)),
-                      const SizedBox(width: 12),
-                      FilledButton.icon(
-                        onPressed: submit,
-                        icon: const Icon(Icons.search, size: 18),
-                        label: const Text('Search'),
-                      ),
-                    ],
-                  )
-                else
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide =
+            constraints.maxWidth >= 700 &&
+            MediaQuery.textScalerOf(context).scale(14) <= 18;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Card(
+              margin: EdgeInsets.zero,
+              elevation: 0,
+              color: Colors.white,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(18),
+                side: const BorderSide(color: HomeTheme.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (wide)
+                    Row(
+                      children: [
+                        Expanded(child: stopField(true, wide: true)),
+                        swap(true),
+                        Expanded(child: stopField(false, wide: true)),
+                      ],
+                    )
+                  else
+                    Stack(
+                      children: [
+                        Column(
                           children: [
-                            stopField(true),
-                            const SizedBox(
-                              height: 10,
-                              child: Align(
-                                alignment: Alignment(-.88, 0),
-                                child: SizedBox(
-                                  width: 1,
-                                  child: ColoredBox(color: HomeTheme.mint),
-                                ),
-                              ),
+                            stopField(true, wide: false),
+                            const Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: HomeTheme.border,
                             ),
-                            stopField(false),
+                            stopField(false, wide: false),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      swap(false),
-                    ],
+                        Positioned(
+                          top: rowHeight - 24,
+                          right: 16,
+                          child: swap(false),
+                        ),
+                      ],
+                    ),
+                  const Divider(
+                    height: 1,
+                    thickness: 1,
+                    color: HomeTheme.border,
                   ),
-                const SizedBox(height: 10),
+                  const JourneyDateStrip(),
+                  FilledButton(
+                    key: const ValueKey('show-bus-results'),
+                    onPressed: submit,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: HomeTheme.primary,
+                      foregroundColor: Colors.white,
+                      shape: const RoundedRectangleBorder(),
+                      minimumSize: const Size(48, 56),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
+                    ),
+                    child: const Text(
+                      'Search buses',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            ExpansionTile(
+              key: const PageStorageKey('passenger-search-filters'),
+              tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+              childrenPadding: const EdgeInsets.only(bottom: 8),
+              shape: const Border(),
+              collapsedShape: const Border(),
+              leading: const Icon(Icons.tune, size: 20),
+              title: const Text(
+                'Filters & frequent stops',
+                style: TextStyle(fontSize: 13),
+              ),
+              children: [
+                const SizedBox(height: 12),
                 Wrap(
                   alignment: WrapAlignment.spaceBetween,
                   spacing: 8,
@@ -378,6 +414,7 @@ class SearchPanel extends HookConsumerWidget {
                 SizedBox(
                   height: MediaQuery.textScalerOf(context).scale(13) + 27,
                   child: ListView.separated(
+                    key: const PageStorageKey('corridor-stops'),
                     scrollDirection: Axis.horizontal,
                     itemCount: stops.length,
                     separatorBuilder: (_, _) => const SizedBox(width: 8),
@@ -427,10 +464,10 @@ class SearchPanel extends HookConsumerWidget {
                   ),
                 ),
               ],
-            );
-          },
-        ),
-      ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

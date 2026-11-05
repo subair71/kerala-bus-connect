@@ -24,39 +24,29 @@ class PassengerPage extends StatelessWidget {
           void openResults() => showMobileBusResults(context);
           final top = Column(
             children: [
-              const SponsoredCarousel(),
               SearchPanel(onSearch: mobile ? openResults : null),
+              const SizedBox(height: 12),
+              const Text(
+                'Bus schedules across Kerala',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 12),
+              const SponsoredCarousel(),
             ],
           );
           if (mobile) {
-            return Column(
-              children: [
-                Expanded(
-                  child: CustomScrollView(
-                    key: const PageStorageKey('passenger-home'),
-                    slivers: [
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        sliver: SliverToBoxAdapter(child: top),
-                      ),
-                      const SliverPadding(
-                        padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
-                        sliver: SliverToBoxAdapter(child: TransitAdvisory()),
-                      ),
-                    ],
-                  ),
+            return CustomScrollView(
+              key: const PageStorageKey('passenger-home'),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  sliver: SliverToBoxAdapter(child: top),
                 ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      key: const ValueKey('show-bus-results'),
-                      onPressed: openResults,
-                      icon: const Icon(Icons.search),
-                      label: const Text('Search buses'),
-                    ),
-                  ),
+                const SliverPadding(
+                  padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  sliver: SliverToBoxAdapter(child: TransitAdvisory()),
                 ),
               ],
             );
@@ -66,7 +56,7 @@ class PassengerPage extends StatelessWidget {
             slivers: [
               if (!wide)
                 SliverPadding(
-                  padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
                   sliver: SliverToBoxAdapter(child: top),
                 ),
               const SliverPadding(
@@ -88,7 +78,29 @@ class PassengerPage extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: top,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Expanded(flex: 2, child: SearchPanel()),
+                    const SizedBox(width: 20),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'Bus schedules across Kerala',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: 12),
+                          SponsoredCarousel(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
               Expanded(
                 child: Row(
