@@ -1,0 +1,36 @@
+name: Inspect responsive design
+on:
+  push:
+    branches: [feature/international-design]
+permissions:
+  contents: read
+concurrency:
+  group: design-review
+  cancel-in-progress: true
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter test tool/capture_screenshots.dart --update-goldens --reporter expanded
+      - name: Inspect screen images
+        run: |
+          python3 - <<'PY'
+          import base64, json
+          from pathlib import Path
+          for name in ['desktop-home', 'mobile-home', 'mobile-routes', 'mobile-owner', 'mobile-tracking', 'mobile-crew']:
+              path = Path('tool/screenshots') / (name + '.png')
+              print('REVIEW_IMAGE ' + json.dumps({'name': name, 'data': base64.b64encode(path.read_bytes()).decode()}))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: design-review-screenshots
+          path: tool/screenshots
+          retention-days: 14
