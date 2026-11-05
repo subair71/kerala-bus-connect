@@ -43,6 +43,16 @@ jobs:
                       picture.save(output, format='JPEG', quality=65)
                       print('REFERENCE_IMAGE:' + json.dumps({'path': member.filename, 'data': base64.b64encode(output.getvalue()).decode()}))
           PY
+      - name: Prepare bundled font
+        run: |
+          python3 - <<'PY'
+          import urllib.request, base64, json
+          base = 'https://raw.githubusercontent.com/google/fonts/main/ofl/plusjakartasans/'
+          for name in ['PlusJakartaSans[wght].ttf', 'OFL.txt']:
+              url = base + urllib.parse.quote(name)
+              data = urllib.request.urlopen(url).read()
+              print('REFERENCE_ASSET:' + json.dumps({'path': name, 'data': base64.b64encode(data).decode()}))
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: stitch-reference
