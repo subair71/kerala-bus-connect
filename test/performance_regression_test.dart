@@ -141,6 +141,8 @@ void main() {
       (tester) async {
     final first = StreamController<String>();
     final second = StreamController<String>();
+    addTearDown(first.close);
+    addTearDown(second.close);
     int creates = 0;
     Widget build(String identity) => Directionality(
           textDirection: TextDirection.ltr,
@@ -168,9 +170,7 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     expect(first.hasListener, isFalse);
     expect(second.hasListener, isFalse);
-    await first.close();
-    await second.close();
-  });
+  }, timeout: const Timeout(Duration(seconds: 30)));
 
   testWidgets('passenger input retains its field and large lists build lazily',
       (tester) async {
@@ -181,6 +181,11 @@ void main() {
     final repo = FakeTransitRepository();
     final catalog = PublishedServicesCubit(repo);
     final search = SearchCubit();
+    addTearDown(() async {
+      await catalog.close();
+      await search.close();
+      await repo.controller.close();
+    });
     Widget app(Widget screen) => MultiBlocProvider(
           providers: [
             BlocProvider.value(value: catalog),
@@ -219,9 +224,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
-    await catalog.close();
-    await search.close();
-    await repo.controller.close();
     expect(tester.takeException(), isNull);
-  });
+  }, timeout: const Timeout(Duration(seconds: 30)));
 }
