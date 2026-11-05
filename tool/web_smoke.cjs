@@ -36,7 +36,9 @@ async function verifyStartup(page) {
   assert.equal(await page.evaluate(() => window.firebase_core.getApps().length), 1,
     'The default Firebase app must be initialized exactly once');
   // Optional advertisements must never hold up the usable search form.
-  await page.locator('[aria-label="Clear boarding stop"]').waitFor({timeout:10000});
+  await page.getByRole('button', {name:'Clear boarding stop', exact:true})
+    .or(page.getByText('Clear boarding stop', {exact:true})).first()
+    .waitFor({timeout:10000});
 }
 
 (async () => {
