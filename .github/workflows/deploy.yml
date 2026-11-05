@@ -33,3 +33,23 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify deployed desktop and mobile startup
+        env:
+          SMOKE_BASE_URL: https://subair71.github.io/kerala-bus-connect/
+        run: |
+          npm install --prefix "$RUNNER_TEMP/startup-browser" --no-audit --no-fund playwright
+          "$RUNNER_TEMP/startup-browser/node_modules/.bin/playwright" install --with-deps chromium webkit
+          NODE_PATH="$RUNNER_TEMP/startup-browser/node_modules" node tool/web_smoke.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: deployed-browser-screenshots
+          path: browser-screenshots
+          retention-days: 14

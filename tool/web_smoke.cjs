@@ -1,9 +1,10 @@
-const { chromium } = require('playwright');
+const { chromium, webkit, devices } = require('playwright');
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const root = path.resolve('build/web');
+const baseUrl = process.env.SMOKE_BASE_URL || 'http://127.0.0.1:8765/kerala-bus-connect/';
 const types = {'.html':'text/html','.js':'text/javascript','.json':'application/json','.wasm':'application/wasm','.ttf':'font/ttf','.png':'image/png','.jpg':'image/jpeg'};
 const server = http.createServer((req, res) => {
   const relative = decodeURIComponent(req.url.split('?')[0]).replace(/^\/kerala-bus-connect\/?/, '');
@@ -15,29 +16,68 @@ const server = http.createServer((req, res) => {
     res.end(data);
   });
 });
+
+async function verifyStartup(page) {
+  const placeholder = page.locator('flt-semantics-placeholder');
+  await placeholder.waitFor({state:'attached', timeout:90000});
+  await placeholder.evaluate(element => {
+    // Mobile Flutter enables semantics only for a centered accessibility click.
+    const rect = element.getBoundingClientRect();
+    element.dispatchEvent(new MouseEvent('click', {
+      bubbles: true, clientX: rect.left + rect.width / 2,
+      clientY: rect.top + rect.height / 2,
+    }));
+  });
+  const failed = page.getByText('Unable to start FindMyBus. Please check your connection.', {exact:true});
+  const home = page.getByText('FindMyBus', {exact:true});
+  await home.or(failed).first().waitFor({timeout:90000});
+  assert.equal(await failed.count(), 0, 'Firebase startup failed before the home screen');
+  await home.waitFor({timeout:90000});
+  assert.equal(await page.evaluate(() => window.firebase_core.getApps().length), 1,
+    'The default Firebase app must be initialized exactly once');
+  await page.getByText('Local sponsors near Aluva', {exact:true}).waitFor({timeout:90000});
+}
+
 (async () => {
   await new Promise(resolve => server.listen(8765, '127.0.0.1', resolve));
-  const browser = await chromium.launch({headless: true});
-  fs.mkdirSync('browser-screenshots', {recursive: true});
+  fs.mkdirSync('browser-screenshots', {recursive:true});
   try {
-    for (const [name, viewport] of [['desktop', {width:1440,height:1000}], ['mobile', {width:390,height:844}]]) {
-      const page = await browser.newPage({viewport, deviceScaleFactor:1});
-      const errors = [];
-      page.on('pageerror', error => errors.push(error.message));
-      await page.goto('http://127.0.0.1:8765/kerala-bus-connect/', {waitUntil:'domcontentloaded'});
-      const semantics = page.locator('flt-semantics-placeholder');
-      await semantics.waitFor({state:'attached', timeout:60000});
-      await semantics.evaluate(element => element.click());
-      await page.getByText('FindMyBus', {exact:true}).waitFor({timeout:60000});
-      await page.getByText('Local sponsors near Aluva', {exact:true}).waitFor({timeout:60000});
-      await page.screenshot({path:'browser-screenshots/' + name + '-home.png'});
-      await page.locator('[aria-label^="Routes"]').or(page.getByText('Routes', {exact:false})).first().click();
-      await page.getByText('Routes directory', {exact:true}).waitFor();
-      assert.equal(await page.getByText('Local sponsors near Aluva', {exact:true}).count(), 0);
-      await page.screenshot({path:'browser-screenshots/' + name + '-routes.png'});
-      assert.deepEqual(errors, []);
-      console.log('WEB_SMOKE_PASS ' + name + ': Flutter loaded, Firebase/sample display rendered, Routes opened without ads, no uncaught JS errors.');
-      await page.close();
+    for (const [name, engine, options] of [
+      ['desktop', chromium, {viewport:{width:1440,height:1000}, deviceScaleFactor:1}],
+      ['android-chrome', chromium, {...devices['Pixel 7'], deviceScaleFactor:1}],
+      ['iphone-safari', webkit, {...devices['iPhone 13'], deviceScaleFactor:1}],
+    ]) {
+      const browser = await engine.launch({headless:true});
+      try {
+        const page = await browser.newPage(options);
+        const errors = [];
+        let phase = 'cold-start';
+        page.on('pageerror', error => {
+          // WebKit reports an aborted Firestore listen as a page error when the
+          // old document unloads. Keep steady-state and all other errors fatal.
+          if (phase === 'reload' && engine === webkit &&
+              /\/firestore\.googleapis\.com\/google\.firestore\.v1\.Firestore\/Listen\/channel\?.*due to access control checks\./.test(error.message)) {
+            console.log('WEB_SMOKE_RELOAD_ABORT ' + name + ': previous Firestore listener closed during navigation.');
+            return;
+          }
+          errors.push({phase, message:error.message});
+        });
+        await page.goto(baseUrl, {waitUntil:'domcontentloaded'});
+        await verifyStartup(page);
+        await page.screenshot({path:'browser-screenshots/' + name + '-home.png'});
+        await page.locator('[aria-label^="Routes"]').or(page.getByText('Routes', {exact:false})).first().click();
+        await page.getByText('Routes directory', {exact:true}).waitFor();
+        assert.equal(await page.getByText('Local sponsors near Aluva', {exact:true}).count(), 0);
+        await page.screenshot({path:'browser-screenshots/' + name + '-routes.png'});
+        assert.deepEqual(errors, [], name + ': cold startup and navigation must not raise page errors');
+        console.log('WEB_SMOKE_COLD_START_PASS ' + name);
+        phase = 'reload';
+        await page.reload({waitUntil:'domcontentloaded'});
+        phase = 'after-reload';
+        await verifyStartup(page);
+        assert.deepEqual(errors, []);
+        console.log('WEB_SMOKE_PASS ' + name + ': cold start, Firebase initialization, Routes navigation and reload passed.');
+      } finally { await browser.close(); }
     }
-  } finally { await browser.close(); server.close(); }
+  } finally { server.close(); }
 })().catch(error => { console.error(error); server.close(); process.exitCode = 1; });
