@@ -1,0 +1,23 @@
+name: Inspect browser capture
+on:
+  push:
+    branches: [review/tracking-browser-state]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: stitch-browser-screenshots
+          run-id: 42131437814
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: review-browser
+      - run: |
+          python3 - <<'PY'
+          import base64
+          from pathlib import Path
+          print("FAILURE_IMAGE " + base64.b64encode(Path("review-browser/desktop-failure.png").read_bytes()).decode())
+          PY
