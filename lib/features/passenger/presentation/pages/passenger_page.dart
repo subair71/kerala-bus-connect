@@ -87,8 +87,13 @@ class PassengerPage extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text('Bus schedules across Kerala',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                          Text(
+                            'Bus schedules across Kerala',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                           SizedBox(height: 12),
                           SponsoredCarousel(),
                         ],

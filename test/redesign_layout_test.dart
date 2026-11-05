@@ -14,7 +14,9 @@ import 'widgets_test.dart' show harness;
 
 void main() {
   for (final size in [const Size(390, 844), const Size(1440, 1000)]) {
-    testWidgets('sponsors appear once beside or below search at $size', (tester) async {
+    testWidgets('sponsors appear once beside or below search at $size', (
+      tester,
+    ) async {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -34,7 +36,9 @@ void main() {
       if (size.width < 1000) {
         expect(
           tester.getBottomLeft(find.byType(SearchPanel)).dy,
-          lessThanOrEqualTo(tester.getTopLeft(find.byType(SponsoredCarousel)).dy),
+          lessThanOrEqualTo(
+            tester.getTopLeft(find.byType(SponsoredCarousel)).dy,
+          ),
         );
       } else {
         expect(
