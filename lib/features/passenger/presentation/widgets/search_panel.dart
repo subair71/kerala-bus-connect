@@ -341,12 +341,12 @@ class SearchPanel extends HookConsumerWidget {
                   spacing: 8,
                   children: [
                     const Text(
-                        'Frequent corridor stops',
-                        style: TextStyle(
-                          fontSize: 11,
-                          height: 1.4,
-                          color: HomeTheme.muted,
-                        ),
+                      'Frequent corridor stops',
+                      style: TextStyle(
+                        fontSize: 11,
+                        height: 1.4,
+                        color: HomeTheme.muted,
+                      ),
                     ),
                     TextButton(
                       style: TextButton.styleFrom(
