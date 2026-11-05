@@ -290,7 +290,10 @@ class _AdCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 const AppStatusBadge(
                   label: 'SPONSORED',
@@ -298,16 +301,13 @@ class _AdCard extends ConsumerWidget {
                   background: AppColors.surfaceLow,
                   fontSize: 10,
                 ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: Text(
-                    '${ad.advertiser} · ${ad.location}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
                 if (demo) const DemoBadge(),
+                Text(
+                  '${ad.advertiser} · ${ad.location}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12),
+                ),
               ],
             ),
             const SizedBox(height: 8),

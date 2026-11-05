@@ -54,10 +54,12 @@ Widget harness(
   ],
   child: MaterialApp(
     theme: AppTheme.lightTheme,
-    builder: textScaler == null ? null : (context, child) => MediaQuery(
-      data: MediaQuery.of(context).copyWith(textScaler: textScaler),
-      child: child!,
-    ),
+    builder: textScaler == null
+        ? null
+        : (context, child) => MediaQuery(
+            data: MediaQuery.of(context).copyWith(textScaler: textScaler),
+            child: child!,
+          ),
     home: child,
   ),
 );
@@ -121,7 +123,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('show-bus-results')));
     await tester.pumpAndSettle();
     expect(find.byType(ServiceCard).evaluate().length, lessThan(12));
-    await tester.drag(find.byKey(const ValueKey('mobile-bus-results-list')), const Offset(0, -550));
+    await tester.drag(
+      find.byKey(const ValueKey('mobile-bus-results-list')),
+      const Offset(0, -550),
+    );
     await tester.pumpAndSettle();
     expect(find.byType(ServiceCard), findsWidgets);
     expect(find.byType(ServiceCard).evaluate().length, lessThan(12));

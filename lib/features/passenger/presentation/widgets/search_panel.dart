@@ -16,6 +16,11 @@ class SearchPanel extends HookConsumerWidget {
       FocusScope.of(context).unfocus();
       onSearch?.call();
     }
+
+    // Keep corridor previews ready while the mobile results sheet is closed.
+    ref.watch(
+      departureResultsProvider.select((result) => result.asData?.value.firstOrNull),
+    );
     final query = ref.watch(searchQueryProvider);
     final from = useTextEditingController(text: query.from);
     final to = useTextEditingController(text: query.to);
@@ -85,9 +90,8 @@ class SearchPanel extends HookConsumerWidget {
                     textInputAction: origin
                         ? TextInputAction.next
                         : TextInputAction.search,
-                    onSubmitted: (_) => origin
-                        ? FocusScope.of(context).nextFocus()
-                        : submit(),
+                    onSubmitted: (_) =>
+                        origin ? FocusScope.of(context).nextFocus() : submit(),
                     style: const TextStyle(
                       fontSize: 16,
                       height: 1.3,
@@ -136,7 +140,8 @@ class SearchPanel extends HookConsumerWidget {
       ),
     );
     final days = ['All Days', ...weekDays];
-    Widget dayPicker() => SizedBox(
+    Widget dayPicker(double maxWidth) => SizedBox(
+      width: (MediaQuery.textScalerOf(context).scale(72) + 64).clamp(0.0, maxWidth),
       height: 48,
       child: Stack(
         children: [
@@ -157,6 +162,7 @@ class SearchPanel extends HookConsumerWidget {
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: query.filterDay,
+                isExpanded: true,
                 icon: const Icon(Icons.expand_more, size: 16),
                 selectedItemBuilder: (context) => [
                   for (final day in days)
@@ -169,11 +175,15 @@ class SearchPanel extends HookConsumerWidget {
                           color: HomeTheme.primary,
                         ),
                         const SizedBox(width: 6),
-                        Text(
-                          day,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: HomeTheme.text,
+                        Expanded(
+                          child: Text(
+                            day,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: HomeTheme.text,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -337,7 +347,7 @@ class SearchPanel extends HookConsumerWidget {
                   spacing: 8,
                   runSpacing: 4,
                   crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [dayPicker(), running()],
+                  children: [dayPicker(constraints.maxWidth), running()],
                 ),
                 const SizedBox(height: 4),
                 Wrap(
@@ -366,6 +376,7 @@ class SearchPanel extends HookConsumerWidget {
                         ),
                       ),
                       onPressed: () {
+                        ref.read(debouncedSearchProvider.notifier).flush();
                         final first = ref
                             .read(departureResultsProvider)
                             .asData

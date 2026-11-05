@@ -41,9 +41,13 @@ void main() {
         RepaintBoundary(
           key: const ValueKey('capture'),
           child: harness(
-            const AppShell(), FakeTransitRepository(), auth,
+            const AppShell(),
+            FakeTransitRepository(),
+            auth,
             sampleSponsors: !entry.key.endsWith('no-ads'),
-            textScaler: TextScaler.linear(entry.key.contains('large-text') ? 2 : 1),
+            textScaler: TextScaler.linear(
+              entry.key.contains('large-text') ? 2 : 1,
+            ),
           ),
         ),
       );
@@ -70,13 +74,21 @@ void main() {
       await tester.pumpWidget(
         RepaintBoundary(
           key: const ValueKey('capture'),
-          child: harness(const AppShell(), FakeTransitRepository(), auth, sampleSponsors: true),
+          child: harness(
+            const AppShell(),
+            FakeTransitRepository(),
+            auth,
+            sampleSponsors: true,
+          ),
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.descendant(
-        of: find.byType(NavigationBar), matching: find.text(tab),
-      ));
+      await tester.tap(
+        find.descendant(
+          of: find.byType(NavigationBar),
+          matching: find.text(tab),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       await expectLater(

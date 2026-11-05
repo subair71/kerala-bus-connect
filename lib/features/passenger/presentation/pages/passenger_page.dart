@@ -22,10 +22,12 @@ class PassengerPage extends StatelessWidget {
               MediaQuery.textScalerOf(context).scale(14) <= 18;
           final mobile = constraints.maxWidth < 768;
           void openResults() => showMobileBusResults(context);
-          final top = Column(children: [
-            const SponsoredCarousel(),
-            SearchPanel(onSearch: mobile ? openResults : null),
-          ]);
+          final top = Column(
+            children: [
+              const SponsoredCarousel(),
+              SearchPanel(onSearch: mobile ? openResults : null),
+            ],
+          );
           if (mobile) {
             return Column(
               children: [
@@ -127,4 +129,3 @@ class _TimelinePreview extends ConsumerWidget {
     );
   }
 }
-

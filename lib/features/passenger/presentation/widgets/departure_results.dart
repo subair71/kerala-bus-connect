@@ -90,11 +90,13 @@ class DeparturesSliver extends ConsumerWidget {
                         children: [
                           Icon(Icons.sort, size: 15, color: HomeTheme.primary),
                           SizedBox(width: 6),
-                          Text(
-                            'Earliest first',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: HomeTheme.text,
+                          Flexible(
+                            child: Text(
+                              'Earliest first',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: HomeTheme.text,
+                              ),
                             ),
                           ),
                         ],

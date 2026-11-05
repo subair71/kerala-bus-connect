@@ -9,9 +9,10 @@ Future<void> showMobileBusResults(BuildContext context) async {
   // The modal barrier and this route guard prevent duplicate sheets.
   if (!(ModalRoute.of(context)?.isCurrent ?? true)) return;
   FocusScope.of(context).unfocus();
-  ProviderScope.containerOf(context, listen: false)
-      .read(debouncedSearchProvider.notifier)
-      .flush();
+  ProviderScope.containerOf(
+    context,
+    listen: false,
+  ).read(debouncedSearchProvider.notifier).flush();
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -63,7 +64,10 @@ class MobileBusResultsSheet extends ConsumerWidget {
                         '$from → $to',
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontSize: 12, color: HomeTheme.muted),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: HomeTheme.muted,
+                        ),
                       ),
                     ],
                   ),
@@ -91,7 +95,10 @@ class MobileBusResultsSheet extends ConsumerWidget {
                 ),
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
-                    16, 8, 16, 24 + MediaQuery.paddingOf(context).bottom,
+                    16,
+                    8,
+                    16,
+                    24 + MediaQuery.paddingOf(context).bottom,
                   ),
                   sliver: const SliverToBoxAdapter(child: TransitAdvisory()),
                 ),
