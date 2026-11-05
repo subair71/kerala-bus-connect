@@ -3,5 +3,10 @@ class TrackingPreview {
   final String id;
   final List<String> stops;
   final int currentStop;
-  const TrackingPreview(this.vehicle, this.stops, this.currentStop, {this.id = ''});
+  const TrackingPreview(
+    this.vehicle,
+    this.stops,
+    this.currentStop, {
+    this.id = '',
+  });
 }

@@ -12,6 +12,8 @@ void main() {
     final loader = FontLoader('Plus Jakarta Sans')
       ..addFont(rootBundle.load('assets/fonts/PlusJakartaSans[wght].ttf'));
     await loader.load();
+    final icons = FontLoader('MaterialIcons')..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+    await icons.load();
   });
   for (final entry in {
     'desktop-home': const Size(1440, 1000),

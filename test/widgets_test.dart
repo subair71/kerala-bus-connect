@@ -1,3 +1,4 @@
+import 'package:kerala_bus_connect/core/theme/app_theme.dart';
 import 'package:kerala_bus_connect/features/sponsors/presentation/providers/sponsor_providers.dart';
 import 'package:kerala_bus_connect/features/tracking/presentation/providers/tracking_providers.dart';
 import 'package:kerala_bus_connect/features/crew/presentation/providers/crew_providers.dart';
@@ -29,7 +30,7 @@ Widget harness(
     catalogCacheDurationProvider.overrideWithValue(Duration.zero),
     clockProvider.overrideWith((ref) => Stream.value(DateTime(2026, 11, 5, 8))),
   ],
-  child: MaterialApp(home: child),
+  child: MaterialApp(theme: AppTheme.lightTheme, home: child),
 );
 
 void main() {

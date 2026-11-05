@@ -43,7 +43,9 @@ class ServiceCard extends ConsumerWidget {
         ? null
         : departure - now.hour * 60 - now.minute;
     final demo = isSampleId(service.id);
-    final status = !service.operatingDaysKnown ? 'Operating days unavailable' : !running
+    final status = !service.operatingDaysKnown
+        ? 'Operating days unavailable'
+        : !running
         ? 'Not operating on $effectiveDay'
         : effectiveDay == todayName() &&
               remaining != null &&
@@ -208,13 +210,23 @@ class ServiceCard extends ConsumerWidget {
                               horizontal: 16,
                               vertical: 8,
                             ),
-                            child: Row(children: [
-                              Expanded(child: Text(demo ? 'Sample data • not for travel planning'
-                                : 'Scheduled timings • not live GPS tracking',
-                                style: const TextStyle(fontSize: 12))),
-                              IconButton(tooltip: 'Close stop timings',
-                                onPressed: () => Navigator.pop(sheetContext), icon: const Icon(Icons.close)),
-                            ]),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    demo
+                                        ? 'Sample data • not for travel planning'
+                                        : 'Scheduled timings • not live GPS tracking',
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Close stop timings',
+                                  onPressed: () => Navigator.pop(sheetContext),
+                                  icon: const Icon(Icons.close),
+                                ),
+                              ],
+                            ),
                           ),
                           Expanded(
                             child: TrainRouteView(

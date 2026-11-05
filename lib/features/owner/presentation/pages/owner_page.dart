@@ -31,8 +31,14 @@ class OwnerPage extends ConsumerWidget {
         data: (user) => user == null
             ? SingleChildScrollView(
                 padding: EdgeInsets.all(16),
-                child: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 720),
-                  child: const Column(children: [AuthPanel(), SampleOwnerPreview()]))),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 720),
+                    child: const Column(
+                      children: [AuthPanel(), SampleOwnerPreview()],
+                    ),
+                  ),
+                ),
               )
             : _OwnerWorkspace(key: ValueKey(user.id)),
       );
@@ -99,7 +105,8 @@ class _OwnerWorkspace extends ConsumerWidget {
                         ),
                       ),
                     const SizedBox(height: 16),
-                    if (businesses.hasError) const DataNotice(demo: true, unavailable: true),
+                    if (businesses.hasError)
+                      const DataNotice(demo: true, unavailable: true),
                     businesses.when(
                       loading: () => const AsyncStatus(loading: true),
                       error: (_, stack) => AsyncStatus(
@@ -218,8 +225,13 @@ class _OwnerRoutes extends ConsumerWidget {
             )
           : SliverList(
               delegate: SliverChildBuilderDelegate((context, index) {
-                if (index == 0) return DataNotice(demo: data.isDemo, unavailable: data.unavailable,
-                  retry: () => ref.invalidate(businessRoutesProvider(business.id)));
+                if (index == 0)
+                  return DataNotice(
+                    demo: data.isDemo,
+                    unavailable: data.unavailable,
+                    retry: () =>
+                        ref.invalidate(businessRoutesProvider(business.id)),
+                  );
                 final route = data.records[index - 1];
                 final readOnly = busy || isSampleId(route.id);
                 return Card(
@@ -324,13 +336,23 @@ class _OwnerServices extends ConsumerWidget {
         return SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             if (index == 0)
-              return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                DataNotice(demo: data.isDemo, unavailable: data.unavailable, retry: () => ref.invalidate(ownerServicesProvider)),
-                Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(
-                  '${data.isDemo ? 'Sample' : 'Published'} timetables (${list.length})',
-                  style: Theme.of(context).textTheme.titleLarge,
-                )),
-              ]);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DataNotice(
+                    demo: data.isDemo,
+                    unavailable: data.unavailable,
+                    retry: () => ref.invalidate(ownerServicesProvider),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      '${data.isDemo ? 'Sample' : 'Published'} timetables (${list.length})',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                  ),
+                ],
+              );
             final service = list[index - 1];
             final readOnly = busy || isSampleId(service.id);
             final route = routes
@@ -351,7 +373,9 @@ class _OwnerServices extends ConsumerWidget {
                       '${service.routeName} • ${service.departureMinutes < 0 ? 'Time unavailable' : timeLabel(service.departureMinutes)}',
                     ),
                     Text(
-                      !service.operatingDaysKnown ? 'Operating days unavailable' : service.offDays.isEmpty
+                      !service.operatingDaysKnown
+                          ? 'Operating days unavailable'
+                          : service.offDays.isEmpty
                           ? 'Runs every day'
                           : 'Off: ${service.offDays.join(', ')}',
                     ),

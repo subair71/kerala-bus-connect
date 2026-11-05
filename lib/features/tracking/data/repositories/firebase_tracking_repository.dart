@@ -7,11 +7,23 @@ class FirebaseTrackingRepository implements TrackingRepository {
   final FirebaseFirestore firestore;
   const FirebaseTrackingRepository(this.firestore);
   @override
-  Stream<List<TrackingPreview>> watch() => firestore.collection('tracking_previews')
-    .snapshots().map((snapshot) => snapshot.docs.map((doc) {
-      final data = doc.data();
-      final current = data['currentStop'];
-      return TrackingPreview(displayText(data['vehicle'], 'Vehicle unavailable'),
-        stringList(data['stops']), current is int && current >= 0 && current < stringList(data['stops']).length ? current : -1, id: doc.id);
-    }).toList());
+  Stream<List<TrackingPreview>> watch() => firestore
+      .collection('tracking_previews')
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs.map((doc) {
+          final data = doc.data();
+          final current = data['currentStop'];
+          return TrackingPreview(
+            displayText(data['vehicle'], 'Vehicle unavailable'),
+            stringList(data['stops']),
+            current is int &&
+                    current >= 0 &&
+                    current < stringList(data['stops']).length
+                ? current
+                : -1,
+            id: doc.id,
+          );
+        }).toList(),
+      );
 }

@@ -6,6 +6,7 @@ class CrewAssignment {
     this.role,
     this.vehicle,
     this.shift,
-    this.duty, {this.id = ''}
-  );
+    this.duty, {
+    this.id = '',
+  });
 }

@@ -1,3 +1,4 @@
+import '../../../../core/constants/transit_constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/data/display_fields.dart';
 import '../../domain/entities/service_entity.dart';
@@ -48,7 +49,9 @@ class ServiceModel extends ServiceEntity {
       departureMinutes: scheduleMinutes(data['departureMinutes']) ?? -1,
       stopTimings: Map.unmodifiable(timings),
       offDays: stringList(data['offDays']),
-      operatingDaysKnown: data['offDays'] is List && (data['offDays'] as List).every((day) => day is String),
+      operatingDaysKnown:
+          data['offDays'] is List &&
+          (data['offDays'] as List).every((day) => day is String && weekDays.contains(day)),
       offTimingsNote: data['offTimingsNote'] is String
           ? data['offTimingsNote'] as String
           : null,

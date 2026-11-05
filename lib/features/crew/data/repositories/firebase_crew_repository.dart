@@ -20,7 +20,7 @@ class FirebaseCrewRepository implements CrewRepository {
             displayText(data['vehicle'], 'Vehicle unavailable'),
             displayText(data['shift'], 'Shift unavailable'),
             displayText(data['duty'], 'Duty unavailable'),
-        id: doc.id,
+            id: doc.id,
           );
         }).toList(),
       );

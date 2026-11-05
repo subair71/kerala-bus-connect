@@ -104,7 +104,7 @@ void main() {
         'stops': ['Aluva', 'Kaloor'],
       });
       expect(missing.departureMinutes, -1);
-    expect(missing.operatingDaysKnown, isFalse);
+      expect(missing.operatingDaysKnown, isFalse);
       expect(missing.scheduledTime('Aluva'), isNull);
       expect(missing.scheduledTime('Kaloor'), isNull);
       expect(missing.busName, 'Bus name unavailable');
