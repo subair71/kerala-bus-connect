@@ -36,9 +36,9 @@ class ServiceSearchIndex {
     _lastSearch = key;
     _searchResults = List.unmodifiable([
       for (final entry in _services)
-        if ((!onlyRunningToday || !entry.service.offDays.contains(today)) &&
+        if ((!onlyRunningToday || (entry.service.operatingDaysKnown && !entry.service.offDays.contains(today))) &&
             (filterDay == 'All Days' ||
-                !entry.service.offDays.contains(filterDay)) &&
+                (entry.service.operatingDaysKnown && !entry.service.offDays.contains(filterDay))) &&
             entry.matchesStops(fromTerm, toTerm))
           entry.service,
     ]);

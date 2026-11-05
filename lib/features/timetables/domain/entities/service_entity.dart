@@ -14,6 +14,7 @@ class ServiceEntity extends Equatable {
   final List<String> offDays;
   final String? offTimingsNote;
   final bool published;
+  final bool operatingDaysKnown;
 
   const ServiceEntity({
     required this.id,
@@ -29,6 +30,7 @@ class ServiceEntity extends Equatable {
     required this.offDays,
     this.offTimingsNote,
     this.published = true,
+    this.operatingDaysKnown = true,
   });
 
   /// Returns only supplied times; an unknown stop never inherits a departure.
@@ -82,5 +84,6 @@ class ServiceEntity extends Equatable {
     offDays,
     offTimingsNote,
     published,
+    operatingDaysKnown,
   ];
 }

@@ -189,8 +189,9 @@ class ServiceDraftController extends Notifier<ServiceDraft> {
       departure: departure,
       timings: {
         for (var i = 0; i < args.route.stops.length; i++)
-          args.route.stops[i]:
-              service == null ? departure + i * 15 : (service.stopTimings[args.route.stops[i]] ?? -1),
+          args.route.stops[i]: service == null
+              ? departure + i * 15
+              : (service.stopTimings[args.route.stops[i]] ?? -1),
       },
       offDays: service?.offDays.toSet() ?? {},
     );
@@ -239,11 +240,26 @@ final businessServicesProvider = Provider.autoDispose
       }),
     );
 
-final ownerBusinessDisplayProvider = Provider.autoDispose<AsyncValue<DataSet<BusinessEntity>>>(
-  (ref) => sampleFallback(ref.watch(ownerBusinessesProvider), ref.watch(sampleBusinessesProvider)));
+final ownerBusinessDisplayProvider =
+    Provider.autoDispose<AsyncValue<DataSet<BusinessEntity>>>(
+      (ref) => sampleFallback(
+        ref.watch(ownerBusinessesProvider),
+        ref.watch(sampleBusinessesProvider),
+      ),
+    );
 
-final ownerRoutesDisplayProvider = Provider.autoDispose.family<AsyncValue<DataSet<RouteEntity>>, String>(
-  (ref, id) => sampleFallback(ref.watch(businessRoutesProvider(id)), ref.watch(sampleRoutesProvider)));
+final ownerRoutesDisplayProvider = Provider.autoDispose
+    .family<AsyncValue<DataSet<RouteEntity>>, String>(
+      (ref, id) => sampleFallback(
+        ref.watch(businessRoutesProvider(id)),
+        ref.watch(sampleRoutesProvider),
+      ),
+    );
 
-final ownerServicesDisplayProvider = Provider.autoDispose.family<AsyncValue<DataSet<ServiceEntity>>, String>(
-  (ref, id) => sampleFallback(ref.watch(businessServicesProvider(id)), ref.watch(sampleServicesProvider)));
+final ownerServicesDisplayProvider = Provider.autoDispose
+    .family<AsyncValue<DataSet<ServiceEntity>>, String>(
+      (ref, id) => sampleFallback(
+        ref.watch(businessServicesProvider(id)),
+        ref.watch(sampleServicesProvider),
+      ),
+    );

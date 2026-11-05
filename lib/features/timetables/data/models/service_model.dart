@@ -17,6 +17,7 @@ class ServiceModel extends ServiceEntity {
     required super.offDays,
     super.offTimingsNote,
     super.published,
+    super.operatingDaysKnown,
   });
 
   factory ServiceModel.fromSnapshot(
@@ -47,6 +48,7 @@ class ServiceModel extends ServiceEntity {
       departureMinutes: scheduleMinutes(data['departureMinutes']) ?? -1,
       stopTimings: Map.unmodifiable(timings),
       offDays: stringList(data['offDays']),
+      operatingDaysKnown: data['offDays'] is List && (data['offDays'] as List).every((day) => day is String),
       offTimingsNote: data['offTimingsNote'] is String
           ? data['offTimingsNote'] as String
           : null,

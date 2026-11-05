@@ -58,7 +58,7 @@ void main() {
         findsNothing,
       );
       expect(tester.takeException(), isNull);
-      await tester.pageBack();
+      await tester.tap(find.byTooltip('Close stop timings'));
       await tester.pumpAndSettle();
       final routes = size.width < 1000
           ? find.descendant(

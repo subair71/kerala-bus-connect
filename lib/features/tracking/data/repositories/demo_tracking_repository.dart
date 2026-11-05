@@ -7,7 +7,7 @@ class DemoTrackingRepository implements TrackingRepository {
   @override
   Stream<List<TrackingPreview>> watch() => Stream.value(previews());
   List<TrackingPreview> previews() => const [
-    TrackingPreview('St. Antony Express', TransitSamples.kochiStops, 1),
-    TrackingPreview('Royal Travels', TransitSamples.thrissurStops, 2),
+    TrackingPreview('St. Antony Express', TransitSamples.kochiStops, 1, id: 'demo:tracking-antony'),
+    TrackingPreview('Royal Travels', TransitSamples.thrissurStops, 2, id: 'demo:tracking-royal'),
   ];
 }

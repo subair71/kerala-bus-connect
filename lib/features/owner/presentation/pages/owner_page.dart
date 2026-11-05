@@ -351,7 +351,7 @@ class _OwnerServices extends ConsumerWidget {
                       '${service.routeName} • ${service.departureMinutes < 0 ? 'Time unavailable' : timeLabel(service.departureMinutes)}',
                     ),
                     Text(
-                      service.offDays.isEmpty
+                      !service.operatingDaysKnown ? 'Operating days unavailable' : service.offDays.isEmpty
                           ? 'Runs every day'
                           : 'Off: ${service.offDays.join(', ')}',
                     ),

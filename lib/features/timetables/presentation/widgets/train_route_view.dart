@@ -37,7 +37,9 @@ class TrainRouteView extends StatelessWidget {
             const SizedBox(height: 12),
             if (isSampleId(service.id)) const DataNotice(demo: true),
             Text(
-              service.offDays.contains(effectiveDay)
+              !service.operatingDaysKnown
+                    ? 'Operating days unavailable'
+                    : service.offDays.contains(effectiveDay)
                   ? 'Not operating on $effectiveDay'
                   : 'Scheduled timetable • $effectiveDay',
               style: Theme.of(context).textTheme.bodySmall,

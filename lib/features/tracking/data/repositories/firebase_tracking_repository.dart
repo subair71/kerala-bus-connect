@@ -12,6 +12,6 @@ class FirebaseTrackingRepository implements TrackingRepository {
       final data = doc.data();
       final current = data['currentStop'];
       return TrackingPreview(displayText(data['vehicle'], 'Vehicle unavailable'),
-        stringList(data['stops']), current is int && current >= 0 && current < stringList(data['stops']).length ? current : -1);
+        stringList(data['stops']), current is int && current >= 0 && current < stringList(data['stops']).length ? current : -1, id: doc.id);
     }).toList());
 }

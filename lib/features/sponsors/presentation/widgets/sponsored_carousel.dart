@@ -119,7 +119,7 @@ class _Slides extends HookConsumerWidget {
             final wide = constraints.maxWidth >= 700;
             final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
             return SizedBox(
-              height: (wide ? 148 : 210) * scale.clamp(1, 2.5),
+              height: (wide ? 168 : 210) * scale.clamp(1, 2.5),
               child: PageView.builder(
                 controller: controller,
                 itemCount: ads.length,
@@ -277,7 +277,6 @@ class _AdCard extends ConsumerWidget {
                             color: AppColors.onSurfaceVariant,
                           ),
                         ),
-                        if (!wide) action,
                       ],
                     ),
                   ),
@@ -285,6 +284,7 @@ class _AdCard extends ConsumerWidget {
                 ],
               ),
             ),
+            if (!wide) Align(alignment: Alignment.centerRight, child: action),
           ],
         ),
       ),
