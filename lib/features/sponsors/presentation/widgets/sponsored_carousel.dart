@@ -12,7 +12,9 @@ class SponsoredCarousel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final location = ref.watch(sponsorLocationProvider);
     final dismissed = ref.watch(
-      dismissedSponsorLocationsProvider.select((locations) => locations.contains(location)),
+      dismissedSponsorLocationsProvider.select(
+        (locations) => locations.contains(location),
+      ),
     );
     if (dismissed) return const SizedBox.shrink();
     return ref
@@ -137,7 +139,8 @@ class _Slides extends HookConsumerWidget {
               children: [
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+                    final scale =
+                        MediaQuery.textScalerOf(context).scale(14) / 14;
                     final stacked = constraints.maxWidth < 340 || scale > 1.3;
                     return SizedBox(
                       height: (stacked ? 230 : 180) * scale.clamp(1, 2.5),
@@ -145,7 +148,9 @@ class _Slides extends HookConsumerWidget {
                         key: PageStorageKey('sponsor-slides-$location'),
                         controller: controller,
                         itemCount: ads.length,
-                        onPageChanged: ref.read(sponsorPageProvider(location).notifier).select,
+                        onPageChanged: ref
+                            .read(sponsorPageProvider(location).notifier)
+                            .select,
                         itemBuilder: (context, i) =>
                             _AdCard(ad: ads[i], demo: demo, stacked: stacked),
                       ),
@@ -158,7 +163,9 @@ class _Slides extends HookConsumerWidget {
                   child: IconButton(
                     key: const ValueKey('dismiss-sponsors'),
                     tooltip: 'Hide sponsored advertisements',
-                    onPressed: () => ref.read(dismissedSponsorLocationsProvider.notifier).dismiss(location),
+                    onPressed: () => ref
+                        .read(dismissedSponsorLocationsProvider.notifier)
+                        .dismiss(location),
                     style: IconButton.styleFrom(
                       backgroundColor: const Color(0xffe8e8e8),
                       foregroundColor: const Color(0xff242424),
@@ -179,7 +186,10 @@ class _Slides extends HookConsumerWidget {
                     'Local sponsors near $location',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 11, color: AppColors.onSurfaceVariant),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.onSurfaceVariant,
+                    ),
                   ),
                 ),
                 if (ads.length > 1) ...[
@@ -193,7 +203,9 @@ class _Slides extends HookConsumerWidget {
                             height: 5,
                             margin: const EdgeInsets.only(left: 4),
                             decoration: BoxDecoration(
-                              color: i == page ? AppColors.onSurface : AppColors.border,
+                              color: i == page
+                                  ? AppColors.onSurface
+                                  : AppColors.border,
                               borderRadius: BorderRadius.circular(4),
                             ),
                           ),
@@ -286,13 +298,21 @@ class _AdCard extends ConsumerWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           boxShadow: const [
-            BoxShadow(color: Color(0x18000000), blurRadius: 14, offset: Offset(0, 5)),
+            BoxShadow(
+              color: Color(0x18000000),
+              blurRadius: 14,
+              offset: Offset(0, 5),
+            ),
           ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(14),
           child: ad.imageUrl == 'asset:hotel'
-              ? Image.asset('assets/images/sponsor-hotel.jpg', fit: BoxFit.cover, cacheWidth: 180)
+              ? Image.asset(
+                  'assets/images/sponsor-hotel.jpg',
+                  fit: BoxFit.cover,
+                  cacheWidth: 180,
+                )
               : ad.imageUrl?.startsWith('https://') == true
               ? Image.network(
                   ad.imageUrl!,
@@ -305,7 +325,9 @@ class _AdCard extends ConsumerWidget {
       ),
     );
     final action = Tooltip(
-      message: demo || ad.website == null ? 'About this advertisement' : 'Visit website',
+      message: demo || ad.website == null
+          ? 'About this advertisement'
+          : 'Visit website',
       child: FilledButton(
         style: FilledButton.styleFrom(
           backgroundColor: Colors.black,
@@ -313,7 +335,12 @@ class _AdCard extends ConsumerWidget {
           minimumSize: const Size(68, 48),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           shape: const StadiumBorder(),
-          textStyle: const TextStyle(fontFamily: 'Plus Jakarta Sans', fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 1),
+          textStyle: const TextStyle(
+            fontFamily: 'Plus Jakarta Sans',
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1,
+          ),
         ),
         onPressed: demo || ad.website == null
             ? () => info(context)
@@ -324,7 +351,9 @@ class _AdCard extends ConsumerWidget {
                 } catch (_) {}
                 if (!opened && context.mounted)
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Unable to open the advertiser website.')),
+                    const SnackBar(
+                      content: Text('Unable to open the advertiser website.'),
+                    ),
                   );
               },
         child: Text(demo || ad.website == null ? 'VIEW' : 'VISIT'),
@@ -358,21 +387,34 @@ class _AdCard extends ConsumerWidget {
                             ad.advertiser,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 11, height: 1.2, color: AppColors.onSurfaceVariant),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              height: 1.2,
+                              color: AppColors.onSurfaceVariant,
+                            ),
                           ),
                           const SizedBox(height: 3),
                           Text(
                             ad.title,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 15, height: 1.2, fontWeight: FontWeight.w600, color: Colors.black),
+                            style: const TextStyle(
+                              fontSize: 15,
+                              height: 1.2,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
                           ),
                           const SizedBox(height: 3),
                           Text(
                             ad.description,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(fontSize: 12, height: 1.3, color: AppColors.onSurfaceVariant),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              height: 1.3,
+                              color: AppColors.onSurfaceVariant,
+                            ),
                           ),
                         ],
                       ),
@@ -392,10 +434,20 @@ class _AdCard extends ConsumerWidget {
                 children: [
                   Text(
                     demo ? 'Sample advertisement' : 'Sponsored',
-                    style: const TextStyle(fontSize: 10, color: AppColors.onSurfaceVariant),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.onSurfaceVariant,
+                    ),
                   ),
                   if (demo)
-                    const Text('Demo', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.onSampleSurface)),
+                    const Text(
+                      'Demo',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onSampleSurface,
+                      ),
+                    ),
                 ],
               ),
             ],
