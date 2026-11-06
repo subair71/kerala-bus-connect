@@ -11,12 +11,6 @@ class SponsoredCarousel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = ref.watch(sponsorLocationProvider);
-    final dismissed = ref.watch(
-      dismissedSponsorLocationsProvider.select(
-        (locations) => locations.contains(location),
-      ),
-    );
-    if (dismissed) return const SizedBox.shrink();
     return ref
         .watch(sponsorsProvider)
         .when(
@@ -122,49 +116,24 @@ class _Slides extends HookConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Stack(
-              children: [
-                LayoutBuilder(
-                  builder: (context, constraints) {
-                    final scale =
-                        MediaQuery.textScalerOf(context).scale(14) / 14;
-                    final stacked = constraints.maxWidth < 340 || scale > 1.3;
-                    return SizedBox(
-                      height: (stacked ? 230 : 180) * scale.clamp(1, 2.5),
-                      child: PageView.builder(
-                        key: PageStorageKey('sponsor-slides-$location'),
-                        controller: controller,
-                        itemCount: ads.length,
-                        onPageChanged: ref
-                            .read(sponsorPageProvider(location).notifier)
-                            .select,
-                        itemBuilder: (context, i) =>
-                            _AdCard(ad: ads[i], demo: demo, stacked: stacked),
-                      ),
-                    );
-                  },
-                ),
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: IconButton(
-                    key: const ValueKey('dismiss-sponsors'),
-                    tooltip: 'Hide sponsored advertisements',
-                    onPressed: () => ref
-                        .read(dismissedSponsorLocationsProvider.notifier)
-                        .dismiss(location),
-                    style: IconButton.styleFrom(
-                      backgroundColor: const Color(0xffe8e8e8),
-                      foregroundColor: const Color(0xff242424),
-                      minimumSize: const Size(48, 48),
-                      fixedSize: const Size(48, 48),
-                      shape: const CircleBorder(),
-                      side: const BorderSide(color: Colors.white, width: 3),
-                    ),
-                    icon: const Icon(Icons.close, size: 22),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+                final stacked = constraints.maxWidth < 340 || scale > 1.3;
+                return SizedBox(
+                  height: (stacked ? 198 : 148) * scale.clamp(1, 2.5),
+                  child: PageView.builder(
+                    key: PageStorageKey('sponsor-slides-$location'),
+                    controller: controller,
+                    itemCount: ads.length,
+                    onPageChanged: ref
+                        .read(sponsorPageProvider(location).notifier)
+                        .select,
+                    itemBuilder: (context, i) =>
+                        _AdCard(ad: ads[i], demo: demo, stacked: stacked),
                   ),
-                ),
-              ],
+                );
+              },
             ),
             Row(
               children: [
@@ -348,7 +317,7 @@ class _AdCard extends ConsumerWidget {
     );
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(0, 16, 8, 8),
+      padding: const EdgeInsets.only(bottom: 8),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -356,7 +325,7 @@ class _AdCard extends ConsumerWidget {
           border: Border.all(color: AppColors.border),
         ),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+          padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -414,29 +383,6 @@ class _AdCard extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Align(alignment: Alignment.centerRight, child: action),
               ],
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                runSpacing: 4,
-                children: [
-                  Text(
-                    demo ? 'Sample advertisement' : 'Sponsored',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                  if (demo)
-                    const Text(
-                      'Demo',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.onSampleSurface,
-                      ),
-                    ),
-                ],
-              ),
             ],
           ),
         ),
