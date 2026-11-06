@@ -100,7 +100,7 @@ class _OwnerWorkspace extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         DropdownButtonFormField<String>(
-                          key: ValueKey(selected?.id),
+                          key: ValueKey('business-${selected?.id}'),
                           initialValue: selected?.id,
                           isExpanded: true,
                           decoration: const InputDecoration(

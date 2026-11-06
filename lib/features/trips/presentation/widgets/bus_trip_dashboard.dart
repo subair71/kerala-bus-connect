@@ -81,7 +81,7 @@ class BusTripDashboard extends ConsumerWidget {
               children: [
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  key: ValueKey(bus.id),
+                  key: ValueKey('select-${bus.id}'),
                   initialValue: bus.id,
                   isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Select bus'),
