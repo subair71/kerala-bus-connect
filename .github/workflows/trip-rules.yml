@@ -20,5 +20,4 @@ jobs:
           java-version: 21
       - run: npm install --no-audit --no-fund
         working-directory: tool/firestore-tests
-      - run: npx firebase emulators:exec --only firestore --project demo-owner-trips "npm test"
-        working-directory: tool/firestore-tests
+      - run: tool/firestore-tests/node_modules/.bin/firebase --config firebase.test.json emulators:exec --only firestore --project demo-owner-trips "npm --prefix tool/firestore-tests test"
