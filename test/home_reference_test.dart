@@ -32,7 +32,7 @@ void main() {
     );
   });
 
-  testWidgets('home advisory and corridor controls open existing information', (
+  testWidgets('home advisory and result cards open existing information', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(412, 900);
@@ -54,22 +54,18 @@ void main() {
     expect(find.textContaining('not live GPS tracking'), findsWidgets);
     await tester.tap(find.byTooltip('Close advisory'));
     await tester.pumpAndSettle();
-    await tester.tap(
-      find.byKey(const PageStorageKey('passenger-search-filters')),
-    );
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('View corridor stops'));
-    await tester.tap(find.text('View corridor stops'));
-    await tester.pumpAndSettle();
-    expect(find.byType(TrainRouteView), findsOneWidget);
-    await tester.tap(find.byTooltip('Close stop timings'));
-    await tester.pumpAndSettle();
     await tester.ensureVisible(find.byKey(const ValueKey('show-bus-results')));
     await tester.tap(find.byKey(const ValueKey('show-bus-results')));
     await tester.pumpAndSettle();
     expect(find.text('Fare unavailable'), findsOneWidget);
     expect(find.text('GPS Live Tracked'), findsNothing);
     expect(find.text('On Time'), findsNothing);
+    await tester.ensureVisible(find.byKey(const ValueKey('stop-timings-real')));
+    await tester.tap(find.byKey(const ValueKey('stop-timings-real')));
+    await tester.pumpAndSettle();
+    expect(find.byType(TrainRouteView), findsOneWidget);
+    await tester.tap(find.byTooltip('Close stop timings'));
+    await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
   });
 
