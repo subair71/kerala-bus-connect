@@ -15,8 +15,9 @@ class OwnerPage extends ConsumerWidget {
   const OwnerPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) =>
-      ref.watch(authUserProvider).when(
+  Widget build(BuildContext context, WidgetRef ref) => ref
+      .watch(authUserProvider)
+      .when(
         loading: () => const Center(child: AsyncStatus(loading: true)),
         error: (_, _) => AsyncStatus(
           message: 'Unable to check your account.',
@@ -26,8 +27,12 @@ class OwnerPage extends ConsumerWidget {
             ? const SingleChildScrollView(
                 padding: EdgeInsets.all(16),
                 child: Center(
-                  child: SizedBox(width: 720,
-                    child: Column(children: [AuthPanel(), SampleOwnerPreview()])),
+                  child: SizedBox(
+                    width: 720,
+                    child: Column(
+                      children: [AuthPanel(), SampleOwnerPreview()],
+                    ),
+                  ),
                 ),
               )
             : _OwnerWorkspace(key: ValueKey(user.id)),
@@ -54,24 +59,32 @@ class _OwnerWorkspace extends ConsumerWidget {
               title: 'Owner portal',
               subtitle: 'Manage your buses, trips and daily timings.',
             ),
-            Wrap(spacing: 12, runSpacing: 8, children: [
-              FilledButton.icon(
-                onPressed: action.isLoading ? null :
-                    () => openEditor(context, const BusinessEditor()),
-                icon: const Icon(Icons.add_business),
-                label: const Text('Add business'),
-              ),
-              OutlinedButton(
-                onPressed: authAction.isLoading ? null :
-                    () => ref.read(authActionProvider.notifier).signOut(),
-                child: const Text('Sign out'),
-              ),
-            ]),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: [
+                FilledButton.icon(
+                  onPressed: action.isLoading
+                      ? null
+                      : () => openEditor(context, const BusinessEditor()),
+                  icon: const Icon(Icons.add_business),
+                  label: const Text('Add business'),
+                ),
+                OutlinedButton(
+                  onPressed: authAction.isLoading
+                      ? null
+                      : () => ref.read(authActionProvider.notifier).signOut(),
+                  child: const Text('Sign out'),
+                ),
+              ],
+            ),
             if (action.isLoading || authAction.isLoading)
               const LinearProgressIndicator(),
             if (action.hasError || authAction.hasError)
-              Text((action.error ?? authAction.error).toString(),
-                style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              Text(
+                (action.error ?? authAction.error).toString(),
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
             const SizedBox(height: 16),
             businesses.when(
               loading: () => const AsyncStatus(loading: true),
@@ -80,33 +93,57 @@ class _OwnerWorkspace extends ConsumerWidget {
                 retry: () => ref.invalidate(ownerBusinessesProvider),
               ),
               data: (list) => list.isEmpty
-                  ? const AsyncStatus(message: 'Create your first business to add buses.')
-                  : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                      DropdownButtonFormField<String>(
-                        key: ValueKey(selected?.id),
-                        initialValue: selected?.id,
-                        isExpanded: true,
-                        decoration: const InputDecoration(labelText: 'Business'),
-                        items: [
-                          for (final business in list)
-                            DropdownMenuItem(value: business.id,
-                              child: Text(business.name, overflow: TextOverflow.ellipsis)),
+                  ? const AsyncStatus(
+                      message: 'Create your first business to add buses.',
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        DropdownButtonFormField<String>(
+                          key: ValueKey(selected?.id),
+                          initialValue: selected?.id,
+                          isExpanded: true,
+                          decoration: const InputDecoration(
+                            labelText: 'Business',
+                          ),
+                          items: [
+                            for (final business in list)
+                              DropdownMenuItem(
+                                value: business.id,
+                                child: Text(
+                                  business.name,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
+                          onChanged: (id) {
+                            if (id != null)
+                              ref
+                                  .read(selectedBusinessIdProvider.notifier)
+                                  .select(id);
+                          },
+                        ),
+                        if (selected != null) ...[
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: TextButton(
+                              onPressed: action.isLoading
+                                  ? null
+                                  : () => openEditor(
+                                      context,
+                                      BusinessEditor(business: selected),
+                                    ),
+                              child: const Text('Rename business'),
+                            ),
+                          ),
+                          const Divider(height: 32),
+                          BusTripDashboard(
+                            key: ValueKey(selected.id),
+                            business: selected,
+                          ),
                         ],
-                        onChanged: (id) {
-                          if (id != null) ref.read(selectedBusinessIdProvider.notifier).select(id);
-                        },
-                      ),
-                      if (selected != null) ...[
-                        Align(alignment: Alignment.centerLeft,
-                          child: TextButton(
-                            onPressed: action.isLoading ? null : () => openEditor(
-                              context, BusinessEditor(business: selected)),
-                            child: const Text('Rename business'),
-                          )),
-                        const Divider(height: 32),
-                        BusTripDashboard(key: ValueKey(selected.id), business: selected),
                       ],
-                    ]),
+                    ),
             ),
           ],
         ),
