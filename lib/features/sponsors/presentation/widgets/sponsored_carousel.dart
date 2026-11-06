@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/constants/colors.dart';
-import '../../../../core/theme/home_theme.dart';
-import '../../../../core/widgets/data_notice.dart';
-import '../../../../core/widgets/app_components.dart';
 import '../../domain/entities/sponsored_ad.dart';
 import '../providers/sponsor_providers.dart';
 
@@ -14,6 +11,12 @@ class SponsoredCarousel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final location = ref.watch(sponsorLocationProvider);
+    final dismissed = ref.watch(
+      dismissedSponsorLocationsProvider.select(
+        (locations) => locations.contains(location),
+      ),
+    );
+    if (dismissed) return const SizedBox.shrink();
     return ref
         .watch(sponsorsProvider)
         .when(
@@ -132,26 +135,64 @@ class _Slides extends HookConsumerWidget {
                   ),
                 ),
               ),
+            Stack(
+              children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final scale =
+                        MediaQuery.textScalerOf(context).scale(14) / 14;
+                    final stacked = constraints.maxWidth < 340 || scale > 1.3;
+                    return SizedBox(
+                      height: (stacked ? 230 : 180) * scale.clamp(1, 2.5),
+                      child: PageView.builder(
+                        key: PageStorageKey('sponsor-slides-$location'),
+                        controller: controller,
+                        itemCount: ads.length,
+                        onPageChanged: ref
+                            .read(sponsorPageProvider(location).notifier)
+                            .select,
+                        itemBuilder: (context, i) =>
+                            _AdCard(ad: ads[i], demo: demo, stacked: stacked),
+                      ),
+                    );
+                  },
+                ),
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  child: IconButton(
+                    key: const ValueKey('dismiss-sponsors'),
+                    tooltip: 'Hide sponsored advertisements',
+                    onPressed: () => ref
+                        .read(dismissedSponsorLocationsProvider.notifier)
+                        .dismiss(location),
+                    style: IconButton.styleFrom(
+                      backgroundColor: const Color(0xffe8e8e8),
+                      foregroundColor: const Color(0xff242424),
+                      minimumSize: const Size(48, 48),
+                      fixedSize: const Size(48, 48),
+                      shape: const CircleBorder(),
+                      side: const BorderSide(color: Colors.white, width: 3),
+                    ),
+                    icon: const Icon(Icons.close, size: 22),
+                  ),
+                ),
+              ],
+            ),
             Row(
               children: [
-                const Icon(
-                  Icons.location_on_outlined,
-                  size: 17,
-                  color: HomeTheme.primary,
-                ),
-                const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     'Local sponsors near $location',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 11,
+                      color: AppColors.onSurfaceVariant,
                     ),
                   ),
                 ),
-                if (ads.length > 1)
+                if (ads.length > 1) ...[
                   Semantics(
                     label: 'Advertisement ${page + 1} of ${ads.length}',
                     child: Row(
@@ -163,7 +204,7 @@ class _Slides extends HookConsumerWidget {
                             margin: const EdgeInsets.only(left: 4),
                             decoration: BoxDecoration(
                               color: i == page
-                                  ? HomeTheme.primary
+                                  ? AppColors.onSurface
                                   : AppColors.border,
                               borderRadius: BorderRadius.circular(4),
                             ),
@@ -171,39 +212,18 @@ class _Slides extends HookConsumerWidget {
                       ],
                     ),
                   ),
-                if (ads.length > 1)
                   IconButton(
                     tooltip: 'Previous sponsor',
                     onPressed: () => move(-1),
                     icon: const Icon(Icons.chevron_left),
                   ),
-                if (ads.length > 1)
                   IconButton(
                     tooltip: 'Next sponsor',
                     onPressed: () => move(1),
                     icon: const Icon(Icons.chevron_right),
                   ),
+                ],
               ],
-            ),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final wide = constraints.maxWidth >= 700;
-                final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
-                return SizedBox(
-                  // Reserve room for sponsor labels wrapping on narrow screens.
-                  height: (wide ? 188 : 252) * scale.clamp(1, 2.5),
-                  child: PageView.builder(
-                    key: PageStorageKey('sponsor-slides-$location'),
-                    controller: controller,
-                    itemCount: ads.length,
-                    onPageChanged: ref
-                        .read(sponsorPageProvider(location).notifier)
-                        .select,
-                    itemBuilder: (context, i) =>
-                        _AdCard(ad: ads[i], demo: demo, wide: wide),
-                  ),
-                );
-              },
             ),
             const SizedBox(height: 16),
           ],
@@ -215,16 +235,30 @@ class _Slides extends HookConsumerWidget {
 
 class _AdCard extends ConsumerWidget {
   final SponsoredAd ad;
-  final bool demo, wide;
-  const _AdCard({required this.ad, required this.demo, required this.wide});
+  final bool demo, stacked;
+  const _AdCard({required this.ad, required this.demo, required this.stacked});
+
   void info(BuildContext context) => showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('About this advertisement'),
-      content: Text(
-        demo
-            ? 'Sample data. This fictional advertisement previews local sponsors near ${ad.location}. No advertiser is contacted.'
-            : 'Sponsored placement by ${ad.advertiser}, selected for your boarding location.',
+      title: Text(ad.advertiser),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(ad.title, style: const TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 8),
+            Text(ad.description),
+            const SizedBox(height: 16),
+            Text(
+              demo
+                  ? 'Sample data. This fictional advertisement previews local sponsors near ${ad.location}. No advertiser is contacted.'
+                  : 'Sponsored placement by ${ad.advertiser}, selected for your boarding location.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+        ),
       ),
       actions: [
         TextButton(
@@ -234,132 +268,190 @@ class _AdCard extends ConsumerWidget {
       ],
     ),
   );
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final fallback = ColoredBox(
-      color: AppColors.surfaceLow,
-      child: Center(
-        child: Icon(
-          ad.imageUrl == 'asset:hotel'
-              ? Icons.hotel_outlined
-              : Icons.local_cafe_outlined,
-          color: HomeTheme.primary,
-          size: 32,
+    final fallback = Center(
+      child: Padding(
+        padding: const EdgeInsets.all(5),
+        child: Text(
+          ad.advertiser.toUpperCase(),
+          textAlign: TextAlign.center,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          textScaler: TextScaler.noScaling,
+          style: const TextStyle(
+            fontSize: 10,
+            height: 1.2,
+            fontWeight: FontWeight.w800,
+            color: Colors.black,
+            letterSpacing: -.2,
+          ),
         ),
       ),
     );
-    final picture = ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: SizedBox(
-        width: wide ? 96 : 74,
-        height: wide ? 96 : 80,
-        child: ad.imageUrl == 'asset:hotel'
-            ? Image.asset(
-                'assets/images/sponsor-hotel.jpg',
-                fit: BoxFit.cover,
-                cacheWidth: 240,
-              )
-            : ad.imageUrl?.startsWith('https://') == true
-            ? Image.network(
-                ad.imageUrl!,
-                fit: BoxFit.cover,
-                cacheWidth: 240,
-                errorBuilder: (_, _, _) => fallback,
-              )
-            : fallback,
-      ),
-    );
-    final action = FilledButton.tonalIcon(
-      style: FilledButton.styleFrom(
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xff31256b),
-      ),
-      onPressed: demo || ad.website == null
-          ? () => info(context)
-          : () async {
-              var opened = false;
-              try {
-                opened = await ref.read(openSponsorProvider)(ad);
-              } catch (_) {}
-              if (!opened && context.mounted)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Unable to open the advertiser website.'),
-                  ),
-                );
-            },
-      icon: Icon(demo ? Icons.info_outline : Icons.open_in_new, size: 15),
-      label: Text(demo ? 'Sample advertisement' : 'Visit website'),
-    );
-    return Card(
-      color: const Color(0xff31256b),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                const AppStatusBadge(
-                  label: 'SPONSORED',
-                  foreground: AppColors.onSurfaceVariant,
-                  background: AppColors.surfaceLow,
-                  fontSize: 10,
-                ),
-                if (demo) const DemoBadge(),
-                Text(
-                  '${ad.advertiser} · ${ad.location}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, color: Colors.white70),
-                ),
-              ],
+    final picture = ExcludeSemantics(
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x18000000),
+              blurRadius: 14,
+              offset: Offset(0, 5),
             ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: ad.imageUrl == 'asset:hotel'
+              ? Image.asset(
+                  'assets/images/sponsor-hotel.jpg',
+                  fit: BoxFit.cover,
+                  cacheWidth: 180,
+                )
+              : ad.imageUrl?.startsWith('https://') == true
+              ? Image.network(
+                  ad.imageUrl!,
+                  fit: BoxFit.contain,
+                  cacheWidth: 180,
+                  errorBuilder: (_, _, _) => fallback,
+                )
+              : fallback,
+        ),
+      ),
+    );
+    final action = Tooltip(
+      message: demo || ad.website == null
+          ? 'About this advertisement'
+          : 'Visit website',
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(68, 48),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          shape: const StadiumBorder(),
+          textStyle: const TextStyle(
+            fontFamily: 'Plus Jakarta Sans',
+            fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1,
+          ),
+        ),
+        onPressed: demo || ad.website == null
+            ? () => info(context)
+            : () async {
+                var opened = false;
+                try {
+                  opened = await ref.read(openSponsorProvider)(ad);
+                } catch (_) {}
+                if (!opened && context.mounted)
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Unable to open the advertiser website.'),
+                    ),
+                  );
+              },
+        child: Text(demo || ad.website == null ? 'VIEW' : 'VISIT'),
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0, 16, 8, 8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    picture,
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ad.advertiser,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              height: 1.2,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            ad.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              height: 1.2,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            ad.description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              height: 1.3,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (!stacked) ...[const SizedBox(width: 12), action],
+                  ],
+                ),
+              ),
+              if (stacked) ...[
+                const SizedBox(height: 8),
+                Align(alignment: Alignment.centerRight, child: action),
+              ],
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
                 children: [
-                  picture,
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          ad.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -.3,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          ad.description,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ],
+                  Text(
+                    demo ? 'Sample advertisement' : 'Sponsored',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.onSurfaceVariant,
                     ),
                   ),
-                  if (wide) action,
+                  if (demo)
+                    const Text(
+                      'Demo',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onSampleSurface,
+                      ),
+                    ),
                 ],
               ),
-            ),
-            if (!wide) Align(alignment: Alignment.centerRight, child: action),
-          ],
+            ],
+          ),
         ),
       ),
     );
