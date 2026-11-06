@@ -68,8 +68,7 @@ class _OwnerWorkspace extends ConsumerWidget {
                   children: [
                     const PageHeading(
                       title: 'Owner portal',
-                      subtitle:
-                          'Manage your buses, trips and daily timings.',
+                      subtitle: 'Manage your buses, trips and daily timings.',
                     ),
                     Wrap(
                       spacing: 12,
@@ -187,7 +186,9 @@ class _OwnerWorkspace extends ConsumerWidget {
             if (selected != null) ...[
               SliverPadding(
                 padding: const EdgeInsets.all(16),
-                sliver: SliverToBoxAdapter(child: BusTripDashboard(business: selected)),
+                sliver: SliverToBoxAdapter(
+                  child: BusTripDashboard(business: selected),
+                ),
               ),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),

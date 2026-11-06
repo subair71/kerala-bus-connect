@@ -17,7 +17,9 @@ class CatalogNotice extends ConsumerWidget {
     if (ref.watch(passengerDailyUpdatesUnavailableProvider)) {
       return const Padding(
         padding: EdgeInsets.all(12),
-        child: Text('Daily updates unavailable. Showing the regular timetable.'),
+        child: Text(
+          'Daily updates unavailable. Showing the regular timetable.',
+        ),
       );
     }
     if (!(data?.unavailable ?? false)) return const SizedBox.shrink();

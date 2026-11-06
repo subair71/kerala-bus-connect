@@ -42,8 +42,8 @@ class TrainRouteView extends StatelessWidget {
                   : service.offDays.contains(effectiveDay)
                   ? 'Not operating on $effectiveDay'
                   : service.hasDailyAdjustment
-                      ? 'Updated expected times • ${service.serviceDate}'
-                      : 'Scheduled timetable • $effectiveDay',
+                  ? 'Updated expected times • ${service.serviceDate}'
+                  : 'Scheduled timetable • $effectiveDay',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 20),
@@ -108,9 +108,17 @@ class TrainRouteView extends StatelessWidget {
                         ),
                       ),
                       if (minutes != null && minutes >= 1440)
-                        Text(minutes < 2880 ? 'Next day' : 'Day +${minutes ~/ 1440}'),
-                      if (minutes != null && scheduled != null && minutes != scheduled)
-                        Text('Scheduled ${timeLabel(scheduled)} · +${minutes - scheduled} min'),
+                        Text(
+                          minutes < 2880
+                              ? 'Next day'
+                              : 'Day +${minutes ~/ 1440}',
+                        ),
+                      if (minutes != null &&
+                          scheduled != null &&
+                          minutes != scheduled)
+                        Text(
+                          'Scheduled ${timeLabel(scheduled)} · +${minutes - scheduled} min',
+                        ),
                       const SizedBox(height: 4),
                       Text(
                         stop,

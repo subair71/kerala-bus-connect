@@ -136,9 +136,11 @@ class ServiceCard extends ConsumerWidget {
             ),
             const SizedBox(height: 8),
             if (service.hasDailyAdjustment)
-              Text('Scheduled: ${timeLabel(service.scheduledTime(boarding)!)} → '
+              Text(
+                'Scheduled: ${timeLabel(service.scheduledTime(boarding)!)} → '
                 '${timeLabel(service.scheduledTime(destination)!)} · '
-                'Delay: +${arrival! - service.scheduledTime(destination)!} min at destination'),
+                'Delay: +${arrival! - service.scheduledTime(destination)!} min at destination',
+              ),
             Wrap(
               alignment: WrapAlignment.spaceBetween,
               spacing: 8,

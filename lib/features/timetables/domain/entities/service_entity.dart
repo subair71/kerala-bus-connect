@@ -46,20 +46,30 @@ class ServiceEntity extends Equatable {
   int? expectedTime(String stop) =>
       expectedStopTimings[stop] ?? scheduledTime(stop);
 
-  bool get hasDailyAdjustment => expectedStopTimings.entries.any(
-    (e) => e.value != scheduledTime(e.key),
-  );
+  bool get hasDailyAdjustment =>
+      expectedStopTimings.entries.any((e) => e.value != scheduledTime(e.key));
 
   ServiceEntity withExpected(Map<String, int> times, String date) =>
       ServiceEntity(
-        id: id, ownerId: ownerId, businessId: businessId, routeId: routeId,
-        businessName: businessName, routeName: routeName, busName: busName,
-        stops: stops, departureMinutes: departureMinutes,
-        stopTimings: stopTimings, offDays: offDays,
-        offTimingsNote: offTimingsNote, published: published,
-        operatingDaysKnown: operatingDaysKnown, busId: busId,
-        scheduleRevision: scheduleRevision, stopIds: stopIds,
-        expectedStopTimings: Map.unmodifiable(times), serviceDate: date,
+        id: id,
+        ownerId: ownerId,
+        businessId: businessId,
+        routeId: routeId,
+        businessName: businessName,
+        routeName: routeName,
+        busName: busName,
+        stops: stops,
+        departureMinutes: departureMinutes,
+        stopTimings: stopTimings,
+        offDays: offDays,
+        offTimingsNote: offTimingsNote,
+        published: published,
+        operatingDaysKnown: operatingDaysKnown,
+        busId: busId,
+        scheduleRevision: scheduleRevision,
+        stopIds: stopIds,
+        expectedStopTimings: Map.unmodifiable(times),
+        serviceDate: date,
       );
 
   /// Returns only supplied times; an unknown stop never inherits a departure.
@@ -114,6 +124,10 @@ class ServiceEntity extends Equatable {
     offTimingsNote,
     published,
     operatingDaysKnown,
-    busId, scheduleRevision, stopIds, expectedStopTimings, serviceDate,
+    busId,
+    scheduleRevision,
+    stopIds,
+    expectedStopTimings,
+    serviceDate,
   ];
 }

@@ -50,11 +50,17 @@ class SearchController extends Notifier<SearchQuery> {
   void to(String value) => state = state.copyWith(to: value);
   void swap() => state = state.copyWith(from: state.to, to: state.from);
   void day(String value) {
-    final date = ref.read(journeyDatesProvider)
-        .where((d) => weekDays[d.weekday - 1] == value).firstOrNull;
-    state = state.copyWith(filterDay: value, serviceDate: date,
-      clearDate: date == null);
+    final date = ref
+        .read(journeyDatesProvider)
+        .where((d) => weekDays[d.weekday - 1] == value)
+        .firstOrNull;
+    state = state.copyWith(
+      filterDay: value,
+      serviceDate: date,
+      clearDate: date == null,
+    );
   }
+
   void runningToday(bool value) =>
       state = state.copyWith(onlyRunningToday: value);
 }
@@ -93,12 +99,17 @@ final serviceIndexProvider =
           .whenData((data) => ServiceSearchIndex(data.records)),
     );
 
-final passengerDailyUpdatesUnavailableProvider = Provider.autoDispose<bool>((ref) {
+final passengerDailyUpdatesUnavailableProvider = Provider.autoDispose<bool>((
+  ref,
+) {
   final query = ref.watch(debouncedSearchProvider);
   final records = ref.watch(serviceCatalogProvider).asData?.value.records;
   if (query.serviceDate == null ||
-      !(records?.any((s) => s.busId.isNotEmpty) ?? false)) return false;
-  return ref.watch(dailyAdjustmentsProvider(serviceDateKey(query.serviceDate!))).hasError;
+      !(records?.any((s) => s.busId.isNotEmpty) ?? false))
+    return false;
+  return ref
+      .watch(dailyAdjustmentsProvider(serviceDateKey(query.serviceDate!)))
+      .hasError;
 });
 
 final departureResultsProvider =
@@ -107,10 +118,14 @@ final departureResultsProvider =
       final today = ref.watch(todayProvider);
       return ref.watch(serviceIndexProvider).whenData((index) {
         var services = index.search(
-          from: query.from, to: query.to, filterDay: query.filterDay,
-          onlyRunningToday: query.onlyRunningToday, today: today,
+          from: query.from,
+          to: query.to,
+          filterDay: query.filterDay,
+          onlyRunningToday: query.onlyRunningToday,
+          today: today,
         );
-        if (query.serviceDate != null && services.any((s) => s.busId.isNotEmpty)) {
+        if (query.serviceDate != null &&
+            services.any((s) => s.busId.isNotEmpty)) {
           final date = serviceDateKey(query.serviceDate!);
           final daily = ref.watch(dailyAdjustmentsProvider(date));
           if (daily.hasValue && !daily.hasError && !daily.isLoading) {
@@ -124,12 +139,21 @@ final departureResultsProvider =
           }
         }
         int boardingTime(ServiceEntity service) {
-          final stop = query.from.trim().isEmpty ? service.stops.firstOrNull :
-              service.stops.where((s) =>
-                s.toLowerCase().contains(query.from.trim().toLowerCase())).firstOrNull;
+          final stop = query.from.trim().isEmpty
+              ? service.stops.firstOrNull
+              : service.stops
+                    .where(
+                      (s) => s.toLowerCase().contains(
+                        query.from.trim().toLowerCase(),
+                      ),
+                    )
+                    .firstOrNull;
           return stop == null ? 999999 : service.expectedTime(stop) ?? 999999;
         }
-        return List.unmodifiable([...services]
-          ..sort((a, b) => boardingTime(a).compareTo(boardingTime(b))));
+
+        return List.unmodifiable(
+          [...services]
+            ..sort((a, b) => boardingTime(a).compareTo(boardingTime(b))),
+        );
       });
     });

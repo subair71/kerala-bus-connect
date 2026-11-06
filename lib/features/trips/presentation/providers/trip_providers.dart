@@ -14,17 +14,19 @@ final tripRepositoryProvider = Provider<TripRepository>(
 
 final ownerBusesProvider = StreamProvider.autoDispose
     .family<List<BusEntity>, String>((ref, businessId) {
-  final owner = ref.watch(ownerIdProvider);
-  return owner == null ? Stream.value(const <BusEntity>[]) :
-      ref.watch(tripRepositoryProvider).watchBuses(owner, businessId);
-});
+      final owner = ref.watch(ownerIdProvider);
+      return owner == null
+          ? Stream.value(const <BusEntity>[])
+          : ref.watch(tripRepositoryProvider).watchBuses(owner, businessId);
+    });
 
 final dailyAdjustmentsProvider = StreamProvider.autoDispose
-    .family<List<DailyAdjustment>, String>((ref, date) =>
-        ref.watch(tripRepositoryProvider).watchAdjustments(date));
+    .family<List<DailyAdjustment>, String>(
+      (ref, date) => ref.watch(tripRepositoryProvider).watchAdjustments(date),
+    );
 
-final selectedBusProvider =
-    NotifierProvider.autoDispose.family<SelectedBus, String?, String>(SelectedBus.new);
+final selectedBusProvider = NotifierProvider.autoDispose
+    .family<SelectedBus, String?, String>(SelectedBus.new);
 
 class SelectedBus extends Notifier<String?> {
   SelectedBus(this.businessId);
@@ -34,6 +36,7 @@ class SelectedBus extends Notifier<String?> {
     ref.watch(ownerIdProvider);
     return null;
   }
+
   void select(String id) => state = id;
 }
 
@@ -47,7 +50,9 @@ class TripDraft {
 typedef TripEditorKey = ({TripPlan plan, String ownerId});
 
 final tripDraftProvider = NotifierProvider.autoDispose
-    .family<TripDraftController, TripDraft, TripEditorKey>(TripDraftController.new);
+    .family<TripDraftController, TripDraft, TripEditorKey>(
+      TripDraftController.new,
+    );
 
 class TripDraftController extends Notifier<TripDraft> {
   TripDraftController(this.args);
@@ -122,16 +127,22 @@ class TripDraftController extends Notifier<TripDraft> {
   }
 }
 
-typedef DelayEditorKey = ({TripPlan trip, DailyAdjustment? adjustment, String date});
+typedef DelayEditorKey = ({
+  TripPlan trip,
+  DailyAdjustment? adjustment,
+  String date,
+});
 final delayDraftProvider = NotifierProvider.autoDispose
     .family<DelayDraft, Map<String, int>, DelayEditorKey>(DelayDraft.new);
+
 class DelayDraft extends Notifier<Map<String, int>> {
   DelayDraft(this.args);
   final DelayEditorKey args;
   @override
   Map<String, int> build() => Map.unmodifiable(
     args.adjustment?.scheduleRevision == args.trip.revision
-        ? args.adjustment!.delays : <String, int>{},
+        ? args.adjustment!.delays
+        : <String, int>{},
   );
   void setDelay(String id, int value) {
     if (value < 0 || value > 1440) return;
@@ -143,21 +154,28 @@ class DelayDraft extends Notifier<Map<String, int>> {
     }
     state = Map.unmodifiable(next);
   }
+
   void reset() => state = const {};
 }
 
 final tripActionsProvider =
     AsyncNotifierProvider.autoDispose<TripActions, void>(TripActions.new);
+
 class TripActions extends AsyncNotifier<void> {
   @override
-  FutureOr<void> build() { ref.watch(ownerIdProvider); }
+  FutureOr<void> build() {
+    ref.watch(ownerIdProvider);
+  }
 
   Future<bool> run(Future<void> Function(String, TripRepository) action) async {
     if (state.isLoading) return false;
     final owner = ref.read(ownerIdProvider);
     final repository = ref.read(tripRepositoryProvider);
     if (owner == null) {
-      state = AsyncError(const AppFailure('Please sign in.'), StackTrace.current);
+      state = AsyncError(
+        const AppFailure('Please sign in.'),
+        StackTrace.current,
+      );
       return false;
     }
     state = const AsyncLoading();
@@ -167,16 +185,27 @@ class TripActions extends AsyncNotifier<void> {
     return !result.hasError;
   }
 
-  Future<bool> saveBus(BusinessEntity business, String name, {BusEntity? bus}) =>
-      run((owner, repo) => repo.saveBus(owner, business, name, bus: bus));
-  Future<bool> saveTrip(BusinessEntity business, BusEntity bus, TripPlan trip) =>
-      run((owner, repo) async { await repo.saveTrip(owner, business, bus, trip); });
+  Future<bool> saveBus(
+    BusinessEntity business,
+    String name, {
+    BusEntity? bus,
+  }) => run((owner, repo) => repo.saveBus(owner, business, name, bus: bus));
+  Future<bool> saveTrip(
+    BusinessEntity business,
+    BusEntity bus,
+    TripPlan trip,
+  ) => run((owner, repo) async {
+    await repo.saveTrip(owner, business, bus, trip);
+  });
   Future<bool> deleteTrip(BusEntity bus, TripPlan trip) =>
       run((owner, repo) => repo.deleteTrip(owner, bus, trip));
   Future<bool> deleteBus(BusEntity bus) =>
       run((owner, repo) => repo.deleteBus(owner, bus));
-  Future<bool> saveDelay(BusEntity bus, TripPlan trip, DailyAdjustment adjustment) =>
-      run((owner, repo) => repo.saveAdjustment(owner, bus, trip, adjustment));
+  Future<bool> saveDelay(
+    BusEntity bus,
+    TripPlan trip,
+    DailyAdjustment adjustment,
+  ) => run((owner, repo) => repo.saveAdjustment(owner, bus, trip, adjustment));
   Future<bool> resetDelay(BusEntity bus, TripPlan trip, String date) =>
       run((owner, repo) => repo.resetAdjustment(owner, bus, trip, date));
 }

@@ -170,10 +170,14 @@ class CompactServiceCard extends StatelessWidget {
               updated: service.hasDailyAdjustment,
             ),
             if (service.hasDailyAdjustment)
-              Padding(padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text('Scheduled: ${timeLabel(service.scheduledTime(boarding)!)} → '
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Scheduled: ${timeLabel(service.scheduledTime(boarding)!)} → '
                   '${timeLabel(service.scheduledTime(destination)!)} · '
-                  '+${arrival! - service.scheduledTime(destination)!} min at destination')),
+                  '+${arrival! - service.scheduledTime(destination)!} min at destination',
+                ),
+              ),
             const SizedBox(height: 4),
             LayoutBuilder(
               builder: (context, constraints) {
@@ -315,8 +319,10 @@ class _Timings extends StatelessWidget {
                 ),
               ),
               if (time != null && time >= 1440)
-                Text(time < 2880 ? 'Next day' : 'Day +${time ~/ 1440}',
-                  style: const TextStyle(fontSize: 11)),
+                Text(
+                  time < 2880 ? 'Next day' : 'Day +${time ~/ 1440}',
+                  style: const TextStyle(fontSize: 11),
+                ),
               Text(
                 stop.isEmpty ? 'Stop unavailable' : stop,
                 maxLines: 2,

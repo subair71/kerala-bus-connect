@@ -33,5 +33,11 @@ class SearchQuery extends Equatable {
   }
 
   @override
-  List<Object?> get props => [from, to, filterDay, onlyRunningToday, serviceDate];
+  List<Object?> get props => [
+    from,
+    to,
+    filterDay,
+    onlyRunningToday,
+    serviceDate,
+  ];
 }

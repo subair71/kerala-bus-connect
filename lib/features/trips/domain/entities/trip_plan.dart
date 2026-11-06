@@ -13,6 +13,7 @@ class BusEntity {
 
 class TripStop {
   final String id, name;
+
   /// Minutes since midnight of the service date; -1 means not entered.
   final int minutes;
   const TripStop(this.id, this.name, this.minutes);
@@ -68,7 +69,9 @@ class TripPlan {
 
   void validate() {
     if (stops.length < 2 || stops.length > 100) {
-      throw const AppFailure('Add an origin and destination (up to 100 stops).');
+      throw const AppFailure(
+        'Add an origin and destination (up to 100 stops).',
+      );
     }
     if (stops.any((s) => s.name.trim().isEmpty || s.id.isEmpty)) {
       throw const AppFailure('Enter a name for every stop.');
@@ -96,8 +99,13 @@ class TripPlan {
       previous = stop.minutes;
     }
     const days = {
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-      'Friday', 'Saturday', 'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
     };
     if (offDays.length >= 7 || !days.containsAll(offDays)) {
       throw const AppFailure('Select at least one valid operating day.');
@@ -121,10 +129,13 @@ class TripPlan {
               : stops[i].minutes + difference,
         ),
     ];
-    if (shifted.skip(1).any(
-      (s) => s.minutes != -1 &&
-          (s.minutes < departure || s.minutes - departure >= 1440),
-    )) {
+    if (shifted
+        .skip(1)
+        .any(
+          (s) =>
+              s.minutes != -1 &&
+              (s.minutes < departure || s.minutes - departure >= 1440),
+        )) {
       throw const AppFailure('This shift would put a stop before departure.');
     }
     return copyWith(stops: shifted);
@@ -154,7 +165,9 @@ class TripPlan {
     validate();
     if (delays.keys.any((id) => !stops.any((s) => s.id == id)) ||
         delays.values.any((minutes) => minutes < 0 || minutes > 1440)) {
-      throw const AppFailure('Use a delay of 0–1440 minutes at a current stop.');
+      throw const AppFailure(
+        'Use a delay of 0–1440 minutes at a current stop.',
+      );
     }
     var cumulative = 0;
     return [
@@ -185,9 +198,8 @@ class DailyAdjustment {
     }
     final plan = TripPlan.fromService(service);
     final times = plan.expectedTimes(delays);
-    return service.withExpected(
-      {for (var i = 0; i < plan.stops.length; i++) plan.stops[i].name: times[i]},
-      serviceDate,
-    );
+    return service.withExpected({
+      for (var i = 0; i < plan.stops.length; i++) plan.stops[i].name: times[i],
+    }, serviceDate);
   }
 }

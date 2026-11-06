@@ -109,7 +109,6 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
     await _firestore.collection('routes').doc(routeId).update(data);
     // Published trips own their stop snapshots; editing a template must not
     // invalidate their times or change an independently edited return trip.
-
   }
 
   @override
