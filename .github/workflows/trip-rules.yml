@@ -1,0 +1,24 @@
+name: Validate trip ownership rules
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm install --no-audit --no-fund
+        working-directory: tool/firestore-tests
+      - run: npx firebase emulators:exec --only firestore --project demo-owner-trips "npm test"
+        working-directory: tool/firestore-tests

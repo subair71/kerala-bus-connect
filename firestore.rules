@@ -3,27 +3,104 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function owns(data) { return signedIn() && data.ownerId == request.auth.uid; }
+    function sameOwner() {
+      return owns(resource.data) && request.resource.data.ownerId == resource.data.ownerId;
+    }
+    function ownsBusiness(data) {
+      return owns(get(/databases/$(database)/documents/businesses/$(data.businessId)).data);
+    }
+    function managed(data) { return data.get('busId', '') != ''; }
+    function validBus(data) {
+      let bus = get(/databases/$(database)/documents/buses/$(data.busId)).data;
+      return owns(bus) && bus.businessId == data.businessId;
+    }
+    function validTrip(data) {
+      return !managed(data) || (
+        validBus(data) && ownsBusiness(data) &&
+        data.stops is list && data.stops.size() >= 2 && data.stops.size() <= 100 &&
+        data.stopIds is list && data.stopIds.size() == data.stops.size() &&
+        data.stopTimings is map && data.stopTimings.keys().hasAll(data.stops) &&
+        data.departureMinutes is int && data.departureMinutes >= 0 &&
+        data.departureMinutes < 1440 &&
+        data.scheduleRevision is string && data.scheduleRevision.size() > 0
+      );
+    }
+    function countChange(busId, difference) {
+      return getAfter(/databases/$(database)/documents/buses/$(busId)).data.tripCount ==
+        get(/databases/$(database)/documents/buses/$(busId)).data.tripCount + difference;
+    }
+    function scheduleChanged() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasAny(
+        ['stops', 'stopIds', 'stopTimings', 'departureMinutes', 'offDays']
+      );
+    }
 
-    // Public readable so passenger timetables and route cards load seamlessly without login
     match /businesses/{id} {
       allow read: if true;
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if owns(resource.data);
+      allow create: if owns(request.resource.data);
+      allow update: if sameOwner();
       allow delete: if owns(resource.data);
     }
-
     match /routes/{id} {
       allow read: if true;
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if owns(resource.data);
+      allow create: if owns(request.resource.data) && ownsBusiness(request.resource.data);
+      allow update: if sameOwner() &&
+        request.resource.data.businessId == resource.data.businessId;
       allow delete: if owns(resource.data);
     }
-
+    match /buses/{id} {
+      allow read: if owns(resource.data);
+      allow create: if owns(request.resource.data) && ownsBusiness(request.resource.data) &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 100 && request.resource.data.tripCount == 0;
+      allow update: if sameOwner() &&
+        request.resource.data.businessId == resource.data.businessId &&
+        request.resource.data.name is string && request.resource.data.name.size() > 0 &&
+        request.resource.data.name.size() <= 100 &&
+        request.resource.data.tripCount is int && request.resource.data.tripCount >= 0;
+      allow delete: if owns(resource.data) && resource.data.tripCount == 0;
+    }
     match /services/{id} {
       allow read: if true;
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if owns(resource.data);
-      allow delete: if owns(resource.data);
+      allow create: if owns(request.resource.data) &&
+        ownsBusiness(request.resource.data) && validTrip(request.resource.data) &&
+        (!managed(request.resource.data) || countChange(request.resource.data.busId, 1));
+      allow update: if sameOwner() &&
+        request.resource.data.businessId == resource.data.businessId &&
+        validTrip(request.resource.data) &&
+        (!managed(resource.data) ||
+          (request.resource.data.busId == resource.data.busId &&
+            (!scheduleChanged() ||
+             request.resource.data.scheduleRevision != resource.data.scheduleRevision))) &&
+        (managed(resource.data) || !managed(request.resource.data) ||
+          countChange(request.resource.data.busId, 1));
+      allow delete: if owns(resource.data) &&
+        (!managed(resource.data) || countChange(resource.data.busId, -1));
+    }
+    match /trip_adjustments/{id} {
+      // Timetables and their daily expected times are public passenger information.
+      allow read: if true;
+      function ownsTrip(data) {
+        let trip = get(/databases/$(database)/documents/services/$(data.tripId)).data;
+        return owns(trip) && trip.busId == data.busId;
+      }
+      function validAdjustment(data) {
+        let trip = get(/databases/$(database)/documents/services/$(data.tripId)).data;
+        return owns(data) && ownsTrip(data) &&
+          data.serviceDate is string &&
+          data.serviceDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
+          id == data.tripId + '_' + data.serviceDate &&
+          data.scheduleRevision == trip.scheduleRevision &&
+          data.delays is map && data.delays.keys().hasOnly(trip.stopIds) &&
+          data.expectedStopTimings is map &&
+          data.expectedStopTimings.keys().hasOnly(trip.stops) &&
+          data.expectedStopTimings.keys().hasAll(trip.stops);
+      }
+      allow create: if validAdjustment(request.resource.data);
+      allow update: if sameOwner() && validAdjustment(request.resource.data) &&
+        request.resource.data.tripId == resource.data.tripId &&
+        request.resource.data.serviceDate == resource.data.serviceDate;
+      allow delete: if owns(resource.data) && ownsTrip(resource.data);
     }
   }
 }

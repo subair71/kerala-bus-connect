@@ -1,3 +1,4 @@
+import '../../../trips/presentation/widgets/bus_trip_dashboard.dart';
 import '../../../../core/utils/sample_ids.dart';
 import '../../../../core/widgets/data_notice.dart';
 import '../widgets/sample_owner_preview.dart';
@@ -68,7 +69,7 @@ class _OwnerWorkspace extends ConsumerWidget {
                     const PageHeading(
                       title: 'Owner portal',
                       subtitle:
-                          'Your businesses, routes and published timetables.',
+                          'Manage your buses, trips and daily timings.',
                     ),
                     Wrap(
                       spacing: 12,
@@ -184,6 +185,10 @@ class _OwnerWorkspace extends ConsumerWidget {
               ),
             ),
             if (selected != null) ...[
+              SliverPadding(
+                padding: const EdgeInsets.all(16),
+                sliver: SliverToBoxAdapter(child: BusTripDashboard(business: selected)),
+              ),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 sliver: _OwnerRoutes(business: selected),
@@ -336,7 +341,7 @@ class _OwnerServices extends ConsumerWidget {
         ),
       ),
       data: (data) {
-        final list = data.records;
+        final list = data.records.where((s) => s.busId.isEmpty).toList();
         return SliverList(
           delegate: SliverChildBuilderDelegate((context, index) {
             if (index == 0)

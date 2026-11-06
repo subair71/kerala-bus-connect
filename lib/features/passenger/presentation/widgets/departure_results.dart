@@ -14,6 +14,12 @@ class CatalogNotice extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(serviceCatalogProvider).asData?.value;
+    if (ref.watch(passengerDailyUpdatesUnavailableProvider)) {
+      return const Padding(
+        padding: EdgeInsets.all(12),
+        child: Text('Daily updates unavailable. Showing the regular timetable.'),
+      );
+    }
     if (!(data?.unavailable ?? false)) return const SizedBox.shrink();
     return DataNotice(
       demo: data?.isDemo ?? false,
@@ -75,7 +81,7 @@ class DeparturesSliver extends ConsumerWidget {
                     ],
                   ),
                   Tooltip(
-                    message: 'Sorted by earliest scheduled departure',
+                    message: 'Sorted by earliest expected boarding time',
                     child: Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
