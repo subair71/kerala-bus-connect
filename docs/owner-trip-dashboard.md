@@ -2,8 +2,9 @@
 
 The owner portal uses the existing Flutter, Riverpod, Firebase Auth and Firestore stack.
 Select a business, add or select a bus, then create a trip. Each trip owns its ordered
-stop snapshot and times. The route/timetable tools remain available for older records;
-"Assign existing timetables" moves an existing timetable into bus management when saved.
+stop snapshot and times. The owner page follows one bus-first flow. "Assign existing timetables" associates
+an older timetable with the selected bus when saved; regular schedules stay readable
+for passengers before association.
 
 ## Timing behavior
 
