@@ -11,9 +11,10 @@ import 'support/fakes.dart';
 Widget carouselHarness(
   Stream<List<SponsoredAd>> stream, {
   bool reduceMotion = false,
+  String location = 'Aluva',
 }) => ProviderScope(
   overrides: [
-    sponsorLocationProvider.overrideWithValue('Aluva'),
+    sponsorLocationProvider.overrideWithValue(location),
     liveSponsorsProvider.overrideWith((ref, location) => stream),
   ],
   child: MaterialApp(
@@ -42,6 +43,43 @@ class TestSponsorRepository implements SponsorRepository {
 }
 
 void main() {
+  testWidgets('closing hides this location across rebuilds and stops rotation', (tester) async {
+    await tester.pumpWidget(carouselHarness(Stream.value([])));
+    await tester.pumpAndSettle();
+    final container = ProviderScope.containerOf(tester.element(find.byType(SponsoredCarousel)));
+    await tester.tap(find.byTooltip('Hide sponsored advertisements'));
+    await tester.pumpAndSettle();
+    expect(find.byType(PageView), findsNothing);
+    expect(find.text('Sample advertisement'), findsNothing);
+    expect(find.text('Search buses'), findsOneWidget);
+    expect(container.read(dismissedSponsorLocationsProvider), {'Aluva'});
+    await tester.pump(const Duration(seconds: 15));
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(carouselHarness(Stream.value([]), location: 'Kaloor'));
+    await tester.pumpAndSettle();
+    expect(find.text('Local sponsors near Kaloor'), findsOneWidget);
+    expect(find.byType(PageView), findsOneWidget);
+    await tester.pumpWidget(carouselHarness(Stream.value([])));
+    await tester.pumpAndSettle();
+    expect(find.byType(PageView), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('sample banner action opens complete details without an external link', (tester) async {
+    await tester.pumpWidget(carouselHarness(Stream.value([])));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, 'VIEW'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('No advertiser is contacted.'), findsOneWidget);
+    expect(find.byType(AlertDialog), findsOneWidget);
+    await tester.tap(find.widgetWithText(TextButton, 'Close'));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets(
     'sample ads cover pending, empty and failed reads; live ads replace them',
     (tester) async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kerala_bus_connect/app/app_shell.dart';
+import 'package:kerala_bus_connect/features/sponsors/presentation/widgets/sponsored_carousel.dart';
 import 'package:kerala_bus_connect/core/widgets/editor_sheet.dart';
 import 'package:kerala_bus_connect/features/auth/domain/entities/auth_user.dart';
 import 'package:kerala_bus_connect/features/owner/presentation/pages/owner_page.dart';
@@ -29,6 +30,7 @@ void main() {
     'mobile-home-no-ads': const Size(390, 844),
     'mobile-home': const Size(390, 844),
     'mobile-home-full': const Size(390, 1700),
+    'mobile-sponsor-large-text': const Size(390, 1700),
     'narrow-home': const Size(320, 740),
     'narrow-home-full-no-ads': const Size(320, 1700),
     'mobile-large-text-no-ads': const Size(390, 1700),
@@ -67,6 +69,38 @@ void main() {
       await expectLater(
         find.byKey(const ValueKey('capture')),
         matchesGoldenFile('screenshots/${entry.key}.png'),
+      );
+    });
+  }
+  for (final width in [320.0, 390.0, 760.0]) {
+    testWidgets('capture sponsor banner $width', (tester) async {
+      tester.view.physicalSize = Size(width, 360);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final auth = FakeAuthRepository();
+      addTearDown(auth.changes.close);
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: const ValueKey('capture'),
+          child: harness(
+            const Scaffold(
+              body: Padding(
+                padding: EdgeInsets.all(16),
+                child: SponsoredCarousel(),
+              ),
+            ),
+            FakeTransitRepository(),
+            auth,
+            sampleSponsors: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      await expectLater(
+        find.byKey(const ValueKey('capture')),
+        matchesGoldenFile('screenshots/sponsor-banner-${width.toInt()}.png'),
       );
     });
   }

@@ -73,3 +73,13 @@ final openSponsorProvider = Provider(
     return launchUrl(uri, mode: LaunchMode.externalApplication);
   },
 );
+
+final dismissedSponsorLocationsProvider =
+    NotifierProvider<SponsorDismissals, Set<String>>(SponsorDismissals.new);
+
+/// Session-only dismissals survive tab changes; a new location has its own ads.
+class SponsorDismissals extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const {};
+  void dismiss(String location) => state = {...state, location};
+}
