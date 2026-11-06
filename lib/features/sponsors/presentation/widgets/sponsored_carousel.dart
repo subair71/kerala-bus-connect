@@ -32,7 +32,6 @@ class SponsoredCarousel extends ConsumerWidget {
                   location: location,
                   ads: data.records,
                   demo: data.isDemo,
-                  unavailable: data.unavailable,
                 ),
         );
   }
@@ -41,13 +40,12 @@ class SponsoredCarousel extends ConsumerWidget {
 class _Slides extends HookConsumerWidget {
   final String location;
   final List<SponsoredAd> ads;
-  final bool demo, unavailable;
+  final bool demo;
   const _Slides({
     super.key,
     required this.location,
     required this.ads,
     required this.demo,
-    required this.unavailable,
   });
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -124,17 +122,6 @@ class _Slides extends HookConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (unavailable)
-              const Padding(
-                padding: EdgeInsets.only(bottom: 4),
-                child: Text(
-                  'Live sponsors unavailable • Sample advertisements',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
-              ),
             Stack(
               children: [
                 LayoutBuilder(

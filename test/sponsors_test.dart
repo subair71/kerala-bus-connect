@@ -121,7 +121,7 @@ void main() {
       expectSample();
       expect(
         find.text('Live sponsors unavailable • Sample advertisements'),
-        findsOneWidget,
+        findsNothing,
       );
       stream.add([
         sponsor('inactive', active: false),

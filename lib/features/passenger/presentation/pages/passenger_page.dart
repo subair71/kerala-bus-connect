@@ -26,12 +26,6 @@ class PassengerPage extends StatelessWidget {
             children: [
               SearchPanel(onSearch: mobile ? openResults : null),
               const SizedBox(height: 12),
-              const Text(
-                'Bus schedules across Kerala',
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 12),
               const SponsoredCarousel(),
             ],
           );
@@ -83,22 +77,7 @@ class PassengerPage extends StatelessWidget {
                   children: [
                     const Expanded(flex: 2, child: SearchPanel()),
                     const SizedBox(width: 20),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Bus schedules across Kerala',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(height: 12),
-                          SponsoredCarousel(),
-                        ],
-                      ),
-                    ),
+                    const Expanded(child: SponsoredCarousel()),
                   ],
                 ),
               ),
