@@ -1,7 +1,7 @@
 # FindMyBus
 
 Native Flutter web and mobile interface, based on the supplied Stitch references.
-This redesign is delivered on `feature/stitch-redesign`.
+Owner trip and daily-delay changes are delivered on `feature/owner-trip-dashboard`.
 
 ## Features
 
@@ -9,7 +9,7 @@ This redesign is delivered on `feature/stitch-redesign`.
 | --- | --- |
 | Find bus | Debounced boarding/destination search, direction and operating-day filters, stop timings |
 | Routes | Searchable published timetable directory |
-| Owner | Firebase email/password sign-in and registration; business, route, return-route and timetable management |
+| Owner | Firebase sign-in; businesses and buses; trip route/timing editor; independent return trips; service-date delays |
 | Tracking | Route position preview; never presented as live GPS |
 | Crew | Searchable duty roster and shift filters |
 | Sponsors | Home-only carousel selected by boarding location; no placements in results, directory or stop details |
@@ -22,13 +22,13 @@ The reference's unverified fares, registration numbers, platforms, GPS indicator
 
 ## Firebase and sample selection
 
-Existing Firebase configuration, authentication, `businesses`, `routes`, `services` and security rules are unchanged.
+Existing Firebase configuration and authentication are retained. `services` remains the published timetable catalogue. Bus management adds `buses`; date-specific operational changes use `trip_adjustments`. Deploy the updated `firestore.rules` before releasing the owner dashboard. See [owner trip dashboard](docs/owner-trip-dashboard.md) for behavior, schema and release checks.
 
 Providers select an entire live result or an explicitly labelled sample result. They never append fictional buses to a real catalogue. A no-match search in a populated live catalogue stays empty. Failed reads show “Live data unavailable” before sample content; streams replace the fallback when valid data arrives. Empty cache-only snapshots are reported as unavailable until the server responds.
 
 Sample fixtures have stable `demo:` identifiers and consistent businesses/routes/buses/crew/tracking references. Owner previews are read-only. Both domain commands and the Firebase repository reject sample IDs on write paths. Nothing seeds Firebase automatically.
 
-Missing display text uses neutral placeholders. Missing schedule times stay unavailable; valid midnight `0` and boolean `false` remain intact. Unknown operating days cannot satisfy a running-today filter. Publishing requires explicit times for every stop.
+Missing display text uses neutral placeholders. Missing schedule times stay unavailable; valid midnight `0` and boolean `false` remain intact. Unknown operating days cannot satisfy a running-today filter. Publishing requires explicit times for every stop. Managed trips have stable stop IDs and schedule revisions; regular timetable edits invalidate stale daily adjustments.
 
 Optional, read-only integrations use these collections:
 
@@ -38,7 +38,7 @@ Optional, read-only integrations use these collections:
 | `crew_assignments` | `ownerId` (signed-in owner query), `name`, `role`, `vehicle`, `shift`, `duty` |
 | `tracking_previews` | `vehicle`, `stops` (string list), `currentStop` (zero-based index) |
 
-The existing rules do not grant access to these optional collections. This branch deliberately preserves those rules: missing or denied optional data produces labelled previews. Enabling production records requires separately reviewed permissions and data. No location permission or GPS tracking was added. Sample sponsor actions explain the preview instead of contacting an invented advertiser.
+The existing rules do not grant access to these optional collections. Missing or denied optional data produces labelled previews. Enabling production records requires separately reviewed permissions and data. No location permission or GPS tracking was added. Sample sponsor actions explain the preview instead of contacting an invented advertiser.
 
 ## Architecture and performance
 
@@ -46,9 +46,9 @@ Feature-first Clean Architecture: domain contracts/use cases, data adapters/fixt
 
 Riverpod owns application state. No application `setState`, StatefulWidget, BLoC, GetIt, ChangeNotifier or ValueNotifier. Flutter Hooks manages text and page-controller lifecycles.
 
-- One shared published-timetable subscription, retained for 30 seconds of inactivity.
+- One shared published-timetable subscription, retained for 30 seconds of inactivity; daily adjustments share a separate subscription per selected service date.
 - Cached normalized search index and 200 ms query debounce.
-- Lazy passenger, route and owner lists; hidden tabs unmount.
+- Lazy passenger and route lists; owner trips grouped by selected bus; hidden tabs unmount.
 - Narrow state selectors and automatic disposal of timers, controllers and streams.
 - Auth-scoped owner and crew reads reset when accounts change.
 - Bundled font and compressed image; bounded thumbnail decoding; no blur or animation packages.
