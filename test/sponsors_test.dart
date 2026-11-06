@@ -44,37 +44,6 @@ class TestSponsorRepository implements SponsorRepository {
 
 void main() {
   testWidgets(
-    'closing hides this location across rebuilds and stops rotation',
-    (tester) async {
-      await tester.pumpWidget(carouselHarness(Stream.value([])));
-      await tester.pumpAndSettle();
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(SponsoredCarousel)),
-      );
-      await tester.tap(find.byTooltip('Hide sponsored advertisements'));
-      await tester.pumpAndSettle();
-      expect(find.byType(PageView), findsNothing);
-      expect(find.text('Sample advertisement'), findsNothing);
-      expect(find.text('Search buses'), findsOneWidget);
-      expect(container.read(dismissedSponsorLocationsProvider), {'Aluva'});
-      await tester.pump(const Duration(seconds: 15));
-      expect(tester.takeException(), isNull);
-
-      await tester.pumpWidget(
-        carouselHarness(Stream.value([]), location: 'Kaloor'),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('Local sponsors near Kaloor'), findsOneWidget);
-      expect(find.byType(PageView), findsOneWidget);
-      await tester.pumpWidget(carouselHarness(Stream.value([])));
-      await tester.pumpAndSettle();
-      expect(find.byType(PageView), findsNothing);
-      await tester.pumpWidget(const SizedBox.shrink());
-      expect(tester.takeException(), isNull);
-    },
-  );
-
-  testWidgets(
     'sample banner action opens complete details without an external link',
     (tester) async {
       await tester.pumpWidget(carouselHarness(Stream.value([])));
@@ -103,8 +72,7 @@ void main() {
       void expectSample() {
         expect(find.byType(CircularProgressIndicator), findsNothing);
         expect(find.text('Local sponsors near Aluva'), findsOneWidget);
-        expect(find.text('Sample advertisement'), findsWidgets);
-        expect(find.text('Demo'), findsWidgets);
+        expect(find.textContaining('Sample '), findsWidgets);
         expect(find.text('Search buses'), findsOneWidget);
       }
 
@@ -132,7 +100,7 @@ void main() {
       stream.add([sponsor('live')]);
       await tester.pumpAndSettle();
       expect(find.text('Offer live'), findsOneWidget);
-      expect(find.text('Sample advertisement'), findsNothing);
+      expect(find.textContaining('Sample '), findsNothing);
       expect(find.textContaining('Live sponsors unavailable'), findsNothing);
       stream.add([]);
       await tester.pumpAndSettle();

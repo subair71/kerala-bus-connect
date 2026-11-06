@@ -46,7 +46,13 @@ void main() {
           lessThan(tester.getTopLeft(find.byType(SponsoredCarousel)).dx),
         );
       }
-      expect(find.text('Sample advertisement'), findsWidgets);
+      expect(
+        find.descendant(
+          of: find.byType(SponsoredCarousel),
+          matching: find.textContaining('Sample '),
+        ),
+        findsWidgets,
+      );
       expect(tester.takeException(), isNull);
     });
   }
@@ -245,7 +251,13 @@ void main() {
       ]);
       await tester.pumpAndSettle();
       expect(find.text('Live local offer'), findsOneWidget);
-      expect(find.text('Sample advertisement'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byType(SponsoredCarousel),
+          matching: find.textContaining('Sample '),
+        ),
+        findsNothing,
+      );
       expect(tester.takeException(), isNull);
     },
   );
