@@ -17,79 +17,124 @@ class WidgetPlaces implements PlacesRepository {
   Future<List<PlacePrediction>> suggest(String input) async {
     calls++;
     if (fail) throw StateError('offline');
-    return const [PlacePrediction(id: 'p', name: 'Edappally',
-        address: 'Kochi, Ernakulam district, Kerala, India')];
+    return const [
+      PlacePrediction(
+        id: 'p',
+        name: 'Edappally',
+        address: 'Kochi, Ernakulam district, Kerala, India',
+      ),
+    ];
   }
 }
 
-Widget placesHarness(TextEditingController text, WidgetPlaces repo, {
-  ValueChanged<String>? onChanged, double textScale = 1,
-}) => ProviderScope(overrides: [
-  googlePlacesEnabledProvider.overrideWithValue(true),
-  placesRepositoryProvider.overrideWithValue(repo),
-  stopLabelsProvider.overrideWithValue(StopLabels(['Aluva', 'Kaloor'])),
-], child: MaterialApp(theme: AppTheme.lightTheme,
-  builder: (context, child) => MediaQuery(
-    data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(textScale)), child: child!),
-  home: Scaffold(body: SafeArea(child: Padding(padding: const EdgeInsets.all(16),
-    child: PlaceTextField(fieldKey: const ValueKey('place-input'), controller: text,
-      onChanged: onChanged, decoration: const InputDecoration(labelText: 'Starting stop')),
-  ))),
-));
+Widget placesHarness(
+  TextEditingController text,
+  WidgetPlaces repo, {
+  ValueChanged<String>? onChanged,
+  double textScale = 1,
+}) => ProviderScope(
+  overrides: [
+    googlePlacesEnabledProvider.overrideWithValue(true),
+    placesRepositoryProvider.overrideWithValue(repo),
+    stopLabelsProvider.overrideWithValue(StopLabels(['Aluva', 'Kaloor'])),
+  ],
+  child: MaterialApp(
+    theme: AppTheme.lightTheme,
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(textScale)),
+      child: child!,
+    ),
+    home: Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: PlaceTextField(
+            fieldKey: const ValueKey('place-input'),
+            controller: text,
+            onChanged: onChanged,
+            decoration: const InputDecoration(labelText: 'Starting stop'),
+          ),
+        ),
+      ),
+    ),
+  ),
+);
 
 void main() {
-  testWidgets('touch selection sends the short name and keeps the editable field', (tester) async {
-    final text = TextEditingController();
-    addTearDown(text.dispose);
-    String? selected;
-    await tester.pumpWidget(placesHarness(text, WidgetPlaces(), onChanged: (v) => selected = v));
-    await tester.enterText(find.byKey(const ValueKey('place-input')), 'Eda');
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump();
-    expect(find.text('Google Maps'), findsOneWidget);
-    await tester.tap(find.text('Edappally'));
-    await tester.pump();
-    expect(text.text, 'Edappally');
-    expect(selected, 'Edappally');
-    await tester.enterText(find.byKey(const ValueKey('place-input')), 'Owner entered stop');
-    expect(text.text, 'Owner entered stop');
-    await tester.pumpWidget(const SizedBox());
-    await tester.pump(const Duration(seconds: 1));
-  });
-  testWidgets('keyboard selects suggestions without changing unrelated fields', (tester) async {
-    final text = TextEditingController();
-    addTearDown(text.dispose);
-    await tester.pumpWidget(placesHarness(text, WidgetPlaces()));
-    await tester.enterText(find.byKey(const ValueKey('place-input')), 'Eda');
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump();
-    await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-    await tester.pump();
-    expect(text.text, 'Edappally');
-  });
-  testWidgets('unavailable Google still permits manual entry and timetable stops', (tester) async {
-    final text = TextEditingController();
-    addTearDown(text.dispose);
-    await tester.pumpWidget(placesHarness(text, WidgetPlaces(fail: true)));
-    await tester.enterText(find.byKey(const ValueKey('place-input')), 'Alu');
-    await tester.pump(const Duration(milliseconds: 400));
-    await tester.pump();
-    expect(find.text('Aluva'), findsOneWidget);
-    expect(find.textContaining('Google places unavailable'), findsOneWidget);
-    await tester.tap(find.text('Aluva'));
-    await tester.pump();
-    expect(text.text, 'Aluva');
-  });
+  testWidgets(
+    'touch selection sends the short name and keeps the editable field',
+    (tester) async {
+      final text = TextEditingController();
+      addTearDown(text.dispose);
+      String? selected;
+      await tester.pumpWidget(
+        placesHarness(text, WidgetPlaces(), onChanged: (v) => selected = v),
+      );
+      await tester.enterText(find.byKey(const ValueKey('place-input')), 'Eda');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
+      expect(find.text('Google Maps'), findsOneWidget);
+      await tester.tap(find.text('Edappally'));
+      await tester.pump();
+      expect(text.text, 'Edappally');
+      expect(selected, 'Edappally');
+      await tester.enterText(
+        find.byKey(const ValueKey('place-input')),
+        'Owner entered stop',
+      );
+      expect(text.text, 'Owner entered stop');
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 1));
+    },
+  );
+  testWidgets(
+    'keyboard selects suggestions without changing unrelated fields',
+    (tester) async {
+      final text = TextEditingController();
+      addTearDown(text.dispose);
+      await tester.pumpWidget(placesHarness(text, WidgetPlaces()));
+      await tester.enterText(find.byKey(const ValueKey('place-input')), 'Eda');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pump();
+      expect(tester.widget<ListTile>(find.byKey(const ValueKey('place-option-1'))).selected, isTrue);
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+      expect(text.text, 'Edappally');
+    },
+  );
+  testWidgets(
+    'unavailable Google still permits manual entry and timetable stops',
+    (tester) async {
+      final text = TextEditingController();
+      addTearDown(text.dispose);
+      await tester.pumpWidget(placesHarness(text, WidgetPlaces(fail: true)));
+      await tester.enterText(find.byKey(const ValueKey('place-input')), 'Alu');
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pump();
+      expect(find.text('Aluva'), findsOneWidget);
+      expect(find.textContaining('Google places unavailable'), findsOneWidget);
+      await tester.tap(find.text('Aluva'));
+      await tester.pump();
+      expect(text.text, 'Aluva');
+    },
+  );
   for (final width in [320.0, 390.0, 1440.0]) {
-    testWidgets('place suggestions fit $width with keyboard and long text', (tester) async {
+    testWidgets('place suggestions fit $width with keyboard and long text', (
+      tester,
+    ) async {
       tester.view.physicalSize = Size(width, 844);
       tester.view.devicePixelRatio = 1;
       tester.view.viewInsets = const FakeViewPadding(bottom: 300);
       addTearDown(tester.view.reset);
       final text = TextEditingController();
       addTearDown(text.dispose);
-      await tester.pumpWidget(placesHarness(text, WidgetPlaces(), textScale: 1.6));
+      await tester.pumpWidget(
+        placesHarness(text, WidgetPlaces(), textScale: 1.6),
+      );
       await tester.enterText(find.byKey(const ValueKey('place-input')), 'Eda');
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pump();

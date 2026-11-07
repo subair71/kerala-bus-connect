@@ -22,14 +22,19 @@ class GooglePlacesRepository implements PlacesRepository {
       final id = item['id'];
       final name = item['name'];
       final address = item['address'];
-      if (id is! String || id.isEmpty || name is! String || name.trim().isEmpty) {
+      if (id is! String ||
+          id.isEmpty ||
+          name is! String ||
+          name.trim().isEmpty) {
         continue;
       }
-      results.add(PlacePrediction(
-        id: id,
-        name: name.trim(),
-        address: address is String ? address : '',
-      ));
+      results.add(
+        PlacePrediction(
+          id: id,
+          name: name.trim(),
+          address: address is String ? address : '',
+        ),
+      );
     }
     return List.unmodifiable(results);
   }

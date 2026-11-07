@@ -11,7 +11,10 @@ final googlePlacesEnabledProvider = Provider<bool>(
 );
 final placesRepositoryProvider = Provider<PlacesRepository>((ref) {
   final client = FirebasePlacesClient(
-    region: const String.fromEnvironment('GOOGLE_PLACES_REGION', defaultValue: 'asia-south1'),
+    region: const String.fromEnvironment(
+      'GOOGLE_PLACES_REGION',
+      defaultValue: 'asia-south1',
+    ),
     webSiteKey: const String.fromEnvironment('FIREBASE_APP_CHECK_WEB_SITE_KEY'),
   );
   return GooglePlacesRepository(client.suggest);
@@ -79,7 +82,8 @@ class PlaceSearch extends Notifier<PlaceSearchState> {
       state = const PlaceSearchState();
       return Future.value(const []);
     }
-    final enabled = ref.read(googlePlacesEnabledProvider) && query.runes.length >= 3;
+    final enabled =
+        ref.read(googlePlacesEnabledProvider) && query.runes.length >= 3;
     state = PlaceSearchState(query: query, loading: enabled);
     final generation = _generation;
     final pending = Completer<List<PlaceOption>>();
@@ -88,21 +92,43 @@ class PlaceSearch extends Notifier<PlaceSearchState> {
     _timer = Timer(delay, () async {
       final labels = ref.read(stopLabelsProvider);
       final options = <PlaceOption>[
-        PlaceOption(input.text, 'Use “$query”', 'Keep the entered stop name', PlaceSource.typed),
+        PlaceOption(
+          input.text,
+          'Use “$query”',
+          'Keep the entered stop name',
+          PlaceSource.typed,
+        ),
         for (final name in labels.matching(query))
-          PlaceOption(input.replace(name), name, 'Timetable stop', PlaceSource.timetable),
+          PlaceOption(
+            input.replace(name),
+            name,
+            'Timetable stop',
+            PlaceSource.timetable,
+          ),
       ];
       var unavailable = false;
       if (enabled) {
         try {
-          final predictions = await ref.read(placesRepositoryProvider).suggest(query);
-          final seen = options.skip(1).map((o) => o.title.toLowerCase()).toSet();
+          final predictions = await ref
+              .read(placesRepositoryProvider)
+              .suggest(query);
+          final seen = options
+              .skip(1)
+              .map((o) => o.title.toLowerCase())
+              .toSet();
           for (final prediction in predictions) {
             final name = labels.canonical(prediction.name);
             // Keep Google alternatives with different addresses, but prefer an
             // identical timetable label when it exists.
             if (seen.contains(name.toLowerCase())) continue;
-            options.add(PlaceOption(input.replace(name), name, prediction.address, PlaceSource.google));
+            options.add(
+              PlaceOption(
+                input.replace(name),
+                name,
+                prediction.address,
+                PlaceSource.google,
+              ),
+            );
           }
         } catch (_) {
           unavailable = true;

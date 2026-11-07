@@ -19,6 +19,7 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: npm install --package-lock-only --prefix functions --no-audit --no-fund
+      - run: npm ci --prefix functions
       - run: dart format lib test tool/capture_screenshots.dart
       - name: Return normalized source
         run: |
@@ -37,6 +38,15 @@ jobs:
       - run: timeout 180s flutter test --reporter expanded --timeout 60s
       - name: Capture layouts
         run: flutter test tool/capture_screenshots.dart --update-goldens --reporter expanded
+      - name: Return place previews
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64, json
+          from pathlib import Path
+          for path in Path('tool/screenshots').glob('places-*.png'):
+              print('REVIEW_IMAGE '+json.dumps({'name':path.name,'data':base64.b64encode(path.read_bytes()).decode()}))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:

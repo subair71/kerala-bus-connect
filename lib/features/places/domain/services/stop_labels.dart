@@ -12,8 +12,9 @@ class StopLabels {
     final term = query.trim().toLowerCase();
     final matches = _labels.entries.where((e) => e.key.contains(term)).toList();
     matches.sort((a, b) {
-      final prefix = (a.key.startsWith(term) ? 0 : 1)
-          .compareTo(b.key.startsWith(term) ? 0 : 1);
+      final prefix = (a.key.startsWith(term) ? 0 : 1).compareTo(
+        b.key.startsWith(term) ? 0 : 1,
+      );
       return prefix != 0 ? prefix : a.key.compareTo(b.key);
     });
     return matches.take(4).map((e) => e.value).toList(growable: false);
