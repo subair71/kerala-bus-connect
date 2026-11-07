@@ -1,0 +1,40 @@
+name: Riverpod performance review
+on:
+  push:
+    branches: [feature/riverpod-performance]
+permissions:
+  contents: read
+concurrency:
+  group: performance-review
+  cancel-in-progress: true
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Format changed sources
+        run: |
+          dart format lib test
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          for name in ["lib/app/app_shell.dart","lib/core/providers/cache_lifetime.dart","lib/features/crew/presentation/pages/crew_page.dart","lib/features/crew/presentation/providers/crew_providers.dart","lib/features/owner/presentation/pages/owner_page.dart","lib/features/passenger/presentation/pages/passenger_page.dart","lib/features/passenger/presentation/providers/search_providers.dart","lib/features/routes/presentation/pages/routes_page.dart","lib/features/timetables/domain/entities/service_entity.dart","lib/features/timetables/presentation/providers/timetable_providers.dart","lib/features/tracking/presentation/pages/tracking_page.dart","lib/features/tracking/presentation/providers/tracking_providers.dart","lib/features/trips/presentation/providers/trip_providers.dart","lib/features/trips/presentation/widgets/bus_trip_dashboard.dart","lib/features/trips/presentation/widgets/trip_editor.dart","test/trip_dashboard_test.dart","lib/features/passenger/domain/services/departure_order.dart","test/performance_test.dart"]:
+              print('FORMATTED_SOURCE ' + json.dumps({'path': name, 'content': Path(name).read_text()}))
+          PY
+      - run: python3 tool/check_architecture.py
+      - run: flutter analyze
+      - run: timeout 180s flutter test --reporter expanded --timeout 60s
+      - name: Capture layouts
+        if: always()
+        run: flutter test tool/capture_screenshots.dart --update-goldens --reporter expanded
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-layouts
+          path: tool/screenshots

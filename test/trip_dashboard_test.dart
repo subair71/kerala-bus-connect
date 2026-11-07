@@ -200,8 +200,8 @@ void main() {
         child: MaterialApp(
           theme: AppTheme.lightTheme,
           home: const Scaffold(
-            body: SingleChildScrollView(
-              child: BusTripDashboard(business: business),
+            body: CustomScrollView(
+              slivers: [BusTripDashboard(business: business)],
             ),
           ),
         ),

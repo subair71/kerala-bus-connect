@@ -20,6 +20,7 @@ class RoutesPage extends HookConsumerWidget {
         constraints: const BoxConstraints(maxWidth: 860),
         child: CustomScrollView(
           key: const PageStorageKey('routes'),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
             SliverPadding(
               padding: const EdgeInsets.all(16),
@@ -35,18 +36,10 @@ class RoutesPage extends HookConsumerWidget {
                     DataNotice(
                       demo:
                           ref
-                              .watch(serviceCatalogProvider)
-                              .asData
-                              ?.value
-                              .isDemo ??
-                          false,
+                              .watch(serviceCatalogProvider.select((data) => data.asData?.value.isDemo ?? false)),
                       unavailable:
                           ref
-                              .watch(serviceCatalogProvider)
-                              .asData
-                              ?.value
-                              .unavailable ??
-                          false,
+                              .watch(serviceCatalogProvider.select((data) => data.asData?.value.unavailable ?? false)),
                       retry: () => ref.invalidate(publishedServicesProvider),
                     ),
                     TextField(

@@ -21,9 +21,14 @@ class TrackingPage extends ConsumerWidget {
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 860),
-        child: ListView(
+        child: ListView.builder(
+          key: PageStorageKey('tracking-${preview.id.isEmpty ? preview.vehicle : preview.id}'),
           padding: const EdgeInsets.all(16),
-          children: [
+          itemCount: preview.stops.length + 1,
+          itemBuilder: (context, index) {
+            if (index == 0) return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
             const PageHeading(
               title: 'Bus tracking preview',
               subtitle: 'Route position preview • not live GPS tracking.',
@@ -57,13 +62,24 @@ class TrackingPage extends ConsumerWidget {
               },
             ),
             const SizedBox(height: 20),
-            Card(
+
+              ],
+            );
+            final i = index - 1;
+            final first = i == 0;
+            final last = i == preview.stops.length - 1;
+            return DecoratedBox(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(
+                  top: first ? const Radius.circular(18) : Radius.zero,
+                  bottom: last ? const Radius.circular(18) : Radius.zero,
+                ),
+                border: Border.all(color: AppColors.border),
+              ),
               child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  children: [
-                    for (var i = 0; i < preview.stops.length; i++)
-                      ListTile(
+                padding: EdgeInsets.fromLTRB(8, first ? 8 : 0, 8, last ? 8 : 0),
+                child: ListTile(
                         tileColor: i == preview.currentStop
                             ? AppColors.secondaryContainer
                             : null,
@@ -91,11 +107,9 @@ class TrackingPage extends ConsumerWidget {
                               )
                             : null,
                       ),
-                  ],
-                ),
               ),
-            ),
-          ],
+            );
+          },
         ),
       ),
     );

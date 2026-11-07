@@ -10,7 +10,7 @@ for source in sources:
     relative = source.relative_to(root).as_posix()
     for pattern in [
         r"\bsetState\s*\(",
-        r"\b(?:StatefulWidget|ConsumerStatefulWidget|ValueNotifier|ChangeNotifier|StreamBuilder|ValueListenableBuilder)\b",
+        r"\b(?:StatefulWidget|ConsumerStatefulWidget|StatefulBuilder|ValueNotifier|ChangeNotifier|StreamBuilder|FutureBuilder|ValueListenableBuilder|useState|useReducer)\b",
         r"package:(?:flutter_bloc|bloc|get_it)/",
         r"\b(?:StateProvider|StateNotifierProvider|ChangeNotifierProvider)\b",
     ]:

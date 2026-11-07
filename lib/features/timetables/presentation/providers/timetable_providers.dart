@@ -22,7 +22,7 @@ final watchTimetablesProvider = Provider<WatchTimetables>(
   (ref) => WatchTimetables(ref.watch(transitRepositoryProvider)),
 );
 final catalogCacheDurationProvider = Provider<Duration>(
-  (ref) => const Duration(seconds: 30),
+  (ref) => ref.watch(liveDataCacheDurationProvider),
 );
 
 final publishedServicesProvider =
@@ -32,6 +32,7 @@ final publishedServicesProvider =
     });
 final ownerBusinessesProvider =
     StreamProvider.autoDispose<List<BusinessEntity>>((ref) {
+      retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
       final owner = ref.watch(ownerIdProvider);
       return owner == null
           ? Stream.value(const [])
@@ -39,6 +40,7 @@ final ownerBusinessesProvider =
     });
 final businessRoutesProvider = StreamProvider.autoDispose
     .family<List<RouteEntity>, String>((ref, businessId) {
+      retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
       final owner = ref.watch(ownerIdProvider);
       return owner == null
           ? Stream.value(const [])
@@ -47,6 +49,7 @@ final businessRoutesProvider = StreamProvider.autoDispose
 final ownerServicesProvider = StreamProvider.autoDispose<List<ServiceEntity>>((
   ref,
 ) {
+  retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
   final owner = ref.watch(ownerIdProvider);
   return owner == null
       ? Stream.value(const [])

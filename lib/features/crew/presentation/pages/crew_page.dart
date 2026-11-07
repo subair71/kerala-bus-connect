@@ -8,76 +8,104 @@ import '../../../../core/constants/colors.dart';
 import '../../../../core/widgets/app_components.dart';
 import '../providers/crew_providers.dart';
 
-class CrewPage extends HookConsumerWidget {
+class CrewPage extends StatelessWidget {
   const CrewPage({super.key});
   @override
+  Widget build(BuildContext context) => Center(
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 860),
+      child: const CustomScrollView(
+        key: PageStorageKey('crew'),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        slivers: [
+          SliverPadding(
+            padding: EdgeInsets.all(16),
+            sliver: SliverToBoxAdapter(child: _CrewHeader()),
+          ),
+          SliverPadding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 24),
+            sliver: _CrewList(),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _CrewHeader extends HookConsumerWidget {
+  const _CrewHeader();
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final controller = useTextEditingController(
-      text: ref.read(crewFilterProvider).query,
+    final controller = useTextEditingController(text: ref.read(crewFilterProvider).query);
+    final shift = ref.watch(crewFilterProvider.select((filter) => filter.shift));
+    final data = ref.watch(crewDataProvider.select((value) => (
+      demo: value.asData?.value.isDemo ?? false,
+      unavailable: value.asData?.value.unavailable ?? false,
+      loading: value.isLoading,
+    )));
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const PageHeading(
+          title: 'Crew duty roster',
+          subtitle: 'Assignments, vehicles and operating shifts.',
+        ),
+        DataNotice(
+          demo: data.demo,
+          unavailable: data.unavailable,
+          retry: () => ref.invalidate(liveCrewProvider),
+        ),
+        if (data.loading) const AsyncStatus(loading: true),
+        TextField(
+          controller: controller,
+          onChanged: ref.read(crewFilterProvider.notifier).search,
+          decoration: const InputDecoration(
+            labelText: 'Search crew or vehicle',
+            prefixIcon: Icon(Icons.search),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            for (final value in [
+              'All',
+              'Morning',
+              'Evening',
+              'Standby',
+            ])
+              ChoiceChip(
+                label: Text(value),
+                selected: value == shift,
+                onSelected: (_) => ref
+                    .read(crewFilterProvider.notifier)
+                    .shift(value),
+              ),
+          ],
+        ),
+
+      ],
     );
-    final shift = ref.watch(
-      crewFilterProvider.select((filter) => filter.shift),
-    );
+  }
+}
+
+class _CrewList extends ConsumerWidget {
+  const _CrewList();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     final crew = ref.watch(filteredCrewProvider);
-    final data = ref.watch(crewDataProvider);
-    return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 860),
-        child: ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: crew.length + 1,
-          itemBuilder: (context, index) {
-            if (index == 0)
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const PageHeading(
-                    title: 'Crew duty roster',
-                    subtitle: 'Assignments, vehicles and operating shifts.',
-                  ),
-                  DataNotice(
-                    demo: data.asData?.value.isDemo ?? false,
-                    unavailable: data.asData?.value.unavailable ?? false,
-                    retry: () => ref.invalidate(liveCrewProvider),
-                  ),
-                  if (data.isLoading) const AsyncStatus(loading: true),
-                  TextField(
-                    controller: controller,
-                    onChanged: ref.read(crewFilterProvider.notifier).search,
-                    decoration: const InputDecoration(
-                      labelText: 'Search crew or vehicle',
-                      prefixIcon: Icon(Icons.search),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      for (final value in [
-                        'All',
-                        'Morning',
-                        'Evening',
-                        'Standby',
-                      ])
-                        ChoiceChip(
-                          label: Text(value),
-                          selected: value == shift,
-                          onSelected: (_) => ref
-                              .read(crewFilterProvider.notifier)
-                              .shift(value),
-                        ),
-                    ],
-                  ),
-                  if (crew.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.all(24),
-                      child: Text('No matching assignments.'),
-                    ),
-                ],
-              );
-            final person = crew[index - 1];
+    if (crew.isEmpty) {
+      return const SliverToBoxAdapter(
+        child: Padding(padding: EdgeInsets.all(24), child: Text('No matching assignments.')),
+      );
+    }
+    return SliverList.builder(
+      itemCount: crew.length,
+      itemBuilder: (context, index) {
+        final person = crew[index];
             return Card(
+              key: ValueKey(person.id.isEmpty ? index : person.id),
               child: Padding(
                 padding: const EdgeInsets.all(20),
                 child: Row(
@@ -127,9 +155,7 @@ class CrewPage extends HookConsumerWidget {
                 ),
               ),
             );
-          },
-        ),
-      ),
+      },
     );
   }
 }

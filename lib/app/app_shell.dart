@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../core/constants/colors.dart';
 import '../core/theme/home_theme.dart';
@@ -10,7 +11,7 @@ import '../features/tracking/presentation/pages/tracking_page.dart';
 import '../features/crew/presentation/pages/crew_page.dart';
 import 'navigation_provider.dart';
 
-class AppShell extends ConsumerWidget {
+class AppShell extends HookConsumerWidget {
   const AppShell({super.key});
   static const _labels = ['Find bus', 'Routes', 'Owner', 'Tracking', 'Crew'];
   static const _icons = [
@@ -25,6 +26,8 @@ class AppShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tab = ref.watch(navigationProvider);
     final home = tab == AppTab.passenger;
+    final baseTheme = Theme.of(context);
+    final homeTheme = useMemoized(() => HomeTheme.from(baseTheme), [baseTheme]);
     final page = switch (tab) {
       AppTab.passenger => const PassengerPage(),
       AppTab.routes => const RoutesPage(),
@@ -40,7 +43,7 @@ class AppShell extends ConsumerWidget {
         final wide = constraints.maxWidth >= 1000 && scale <= 1.3;
         final headerHeight = scale > 1.5 ? 92.0 : 68.0;
         return Theme(
-          data: home ? HomeTheme.from(Theme.of(context)) : Theme.of(context),
+          data: home ? homeTheme : baseTheme,
           child: Scaffold(
             appBar: PreferredSize(
               preferredSize: Size.fromHeight(headerHeight),
