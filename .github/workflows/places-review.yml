@@ -1,0 +1,44 @@
+name: Places implementation checks
+on:
+  push:
+    branches: [feature/google-places]
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: npm install --package-lock-only --prefix functions --no-audit --no-fund
+      - run: dart format lib test tool/capture_screenshots.dart
+      - name: Return normalized source
+        run: |
+          python3 - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          paths = set(subprocess.check_output(['git','diff','--name-only'], text=True).splitlines())
+          paths.update(['pubspec.lock','functions/package-lock.json'])
+          for name in sorted(paths):
+              if name.endswith(('.dart','.lock')) or name == 'functions/package-lock.json':
+                  print('FORMATTED_SOURCE '+json.dumps({'path':name,'content':Path(name).read_text()}))
+          PY
+      - run: python3 tool/check_architecture.py
+      - run: flutter analyze
+      - run: npm test --prefix functions
+      - run: timeout 180s flutter test --reporter expanded --timeout 60s
+      - name: Capture layouts
+        run: flutter test tool/capture_screenshots.dart --update-goldens --reporter expanded
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: places-review-screenshots
+          path: tool/screenshots

@@ -1,3 +1,4 @@
+import '../../../places/presentation/widgets/place_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -67,8 +68,8 @@ class SearchPanel extends HookConsumerWidget {
                   ),
                   Semantics(
                     label: origin ? 'From Origin' : 'To Destination',
-                    child: TextField(
-                      key: ValueKey(origin ? 'search-from' : 'search-to'),
+                    child: PlaceTextField(
+                      fieldKey: ValueKey(origin ? 'search-from' : 'search-to'),
                       controller: origin ? from : to,
                       onChanged: origin ? controller.from : controller.to,
                       textInputAction: origin

@@ -1,3 +1,4 @@
+import '../../../places/presentation/widgets/place_text_field.dart';
 import '../../../../core/widgets/loading_skeletons.dart';
 import '../../../../core/widgets/data_notice.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +48,7 @@ class RoutesPage extends HookConsumerWidget {
                       ),
                       retry: () => ref.invalidate(publishedServicesProvider),
                     ),
-                    TextField(
+                    PlaceTextField(
                       controller: controller,
                       onChanged: ref.read(routeQueryProvider.notifier).update,
                       decoration: InputDecoration(
