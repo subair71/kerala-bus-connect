@@ -165,7 +165,7 @@ void main() {
   );
 
   test(
-    'cached owner streams are cleared on account changes even while off screen',
+    'cached owner data cannot cross accounts when a screen reopens',
     () async {
       final auth = FakeAuthRepository(
         user: const AuthUser(id: 'owner', email: 'one@test.com'),
@@ -195,8 +195,11 @@ void main() {
       await auth.signOut();
       await Future<void>.delayed(Duration.zero);
       await container.pump();
+      final signedOut = container.listen(ownerServicesProvider, (_, _) {});
       expect(await container.read(ownerServicesProvider.future), isEmpty);
       expect(repository.cancelledOwners, contains('owner'));
+      signedOut.close();
+      await container.pump();
       auth.user = const AuthUser(id: 'second', email: 'two@test.com');
       auth.changes.add(auth.user);
       final next = container.listen(ownerServicesProvider, (_, _) {});

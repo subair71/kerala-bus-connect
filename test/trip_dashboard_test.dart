@@ -111,7 +111,10 @@ void main() {
           findsOneWidget,
         );
         await tester.ensureVisible(find.byType(TextField));
-        await tester.enterText(find.byType(TextField), 'Updated passenger note');
+        await tester.enterText(
+          find.byType(TextField),
+          'Updated passenger note',
+        );
         await tester.pump();
         await tester.ensureVisible(find.text('Review trip'));
         await tester.tap(find.text('Review trip'));
