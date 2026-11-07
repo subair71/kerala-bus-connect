@@ -6,7 +6,7 @@ Existing timetable stop names appear first. Selecting a Google suggestion uses i
 
 ## Architecture and performance
 
-The feature has domain entities/repository interfaces, a Firebase callable adapter and Riverpod providers. Native Flutter RawAutocomplete supplies keyboard navigation and overlay positioning; Flutter hooks dispose text/focus resources. There is no application setState.
+The feature has domain entities/repository interfaces, a Firebase callable adapter and Riverpod providers. Flutter 3.47 or newer is required for RawAutocomplete's automatic above/below positioning around the keyboard. Native Flutter RawAutocomplete supplies keyboard navigation and overlay positioning; Flutter hooks dispose text/focus resources. There is no application setState.
 
 Queries have a 350 ms debounce, a three-character minimum for Google, bounded responses and timeouts. Each field cancels its pending debounce on focus loss/disposal and ignores stale responses. No Google requests run on startup, on unfocused field changes, or while an IME is composing text. Existing timetable suggestions work with two characters. Google content stays transient; no suggestions, addresses or coordinates are persisted or used to seed Firebase. Owner-confirmed stop names remain ordinary editable form input.
 

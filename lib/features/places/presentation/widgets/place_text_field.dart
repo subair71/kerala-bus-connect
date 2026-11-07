@@ -41,15 +41,6 @@ class PlaceTextField extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final identity = useMemoized(Object.new);
     final focus = useFocusNode();
-    final anchor = useMemoized(() => GlobalKey());
-    final viewport = MediaQuery.of(context);
-    final render = anchor.currentContext?.findRenderObject();
-    var opensUp = false;
-    if (render is RenderBox && render.hasSize) {
-      final top = render.localToGlobal(Offset.zero).dy;
-      final below = viewport.size.height - viewport.viewInsets.bottom - top - render.size.height;
-      opensUp = below < 240 && top - viewport.padding.top > below;
-    }
     final search = ref.watch(placeSearchProvider(identity));
     final notifier = ref.read(placeSearchProvider(identity).notifier);
     useEffect(() {
@@ -63,7 +54,7 @@ class PlaceTextField extends HookConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         return RawAutocomplete<PlaceOption>(
-          optionsViewOpenDirection: opensUp ? OptionsViewOpenDirection.up : OptionsViewOpenDirection.down,
+          optionsViewOpenDirection: OptionsViewOpenDirection.mostSpace,
           textEditingController: controller,
           focusNode: focus,
           displayStringForOption: (option) => option.value,
@@ -113,21 +104,22 @@ class PlaceTextField extends HookConsumerWidget {
             style: style,
             decoration: search.loading && decoration.suffixIcon == null
                 ? decoration.copyWith(
+                    suffixIconConstraints: const BoxConstraints.tightFor(width: 24, height: 24),
                     suffixIcon: const Padding(
-                      padding: EdgeInsets.all(12),
+                      padding: EdgeInsets.all(4),
                       child: SizedBox(
-                        width: 18,
-                        height: 18,
+                        width: 16,
+                        height: 16,
                         child: AppShimmer(
                           label: 'Finding places',
-                          child: SkeletonBox.circle(size: 18),
+                          child: SkeletonBox.circle(size: 16),
                         ),
                       ),
                     ),
                   )
                 : decoration,
             );
-            return KeyedSubtree(key: anchor, child: fieldBuilder?.call(field) ?? field);
+            return fieldBuilder?.call(field) ?? field;
           },
           optionsViewBuilder: (context, select, options) => Consumer(
             builder: (context, ref, _) {
@@ -140,9 +132,7 @@ class PlaceTextField extends HookConsumerWidget {
                 (o) => o.source == PlaceSource.google,
               );
               final googleEnabled = ref.watch(googlePlacesEnabledProvider) && current.query.runes.length >= 3;
-              return Align(
-                alignment: opensUp ? Alignment.bottomLeft : Alignment.topLeft,
-                child: Material(
+              return Material(
                   elevation: 0,
                   color: Theme.of(context).colorScheme.surface,
                   shape: RoundedRectangleBorder(
@@ -170,7 +160,6 @@ class PlaceTextField extends HookConsumerWidget {
                       ),
                     ),
                   ),
-                ),
               );
             },
           ),

@@ -45,42 +45,67 @@ class SearchPanel extends HookConsumerWidget {
         controller: origin ? from : to,
         onChanged: origin ? controller.from : controller.to,
         textInputAction: origin ? TextInputAction.next : TextInputAction.search,
-        onSubmitted: (_) => origin ? FocusScope.of(context).nextFocus() : submit(),
+        onSubmitted: (_) =>
+            origin ? FocusScope.of(context).nextFocus() : submit(),
         style: const TextStyle(
-          fontSize: 20, height: 1.25, fontWeight: FontWeight.w500, color: HomeTheme.text,
+          fontSize: 20,
+          height: 1.25,
+          fontWeight: FontWeight.w500,
+          color: HomeTheme.text,
         ),
         decoration: InputDecoration(
           hintText: origin ? 'Choose origin' : 'Choose destination',
           hintStyle: const TextStyle(fontSize: 16, color: HomeTheme.muted),
-          isDense: true, filled: false,
-          border: InputBorder.none, enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none, contentPadding: EdgeInsets.zero,
+          isDense: true,
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: EdgeInsets.zero,
         ),
         // Anchor suggestions to the whole row so they remain readable and
         // tappable even when icons leave a narrow editable area on mobile.
         fieldBuilder: (field) => Padding(
           padding: EdgeInsets.fromLTRB(16, 8, wide ? 12 : 68, 8),
-          child: Row(children: [
-            Icon(origin ? Icons.navigation_outlined : Icons.location_on_outlined,
-              size: 24, color: HomeTheme.muted),
-            const SizedBox(width: 12),
-            Expanded(child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(origin ? 'Leaving From' : 'Going To',
-                  maxLines: 1, overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 12, height: 1.3, color: HomeTheme.muted)),
-                Semantics(label: origin ? 'From Origin' : 'To Destination', child: field),
-              ],
-            )),
-            IconButton(
-              tooltip: origin ? 'Clear boarding stop' : 'Clear destination',
-              onPressed: () => origin ? controller.from('') : controller.to(''),
-              color: HomeTheme.muted,
-              icon: const Icon(Icons.cancel_outlined, size: 17),
-            ),
-          ]),
+          child: Row(
+            children: [
+              Icon(
+                origin ? Icons.navigation_outlined : Icons.location_on_outlined,
+                size: 24,
+                color: HomeTheme.muted,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      origin ? 'Leaving From' : 'Going To',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        height: 1.3,
+                        color: HomeTheme.muted,
+                      ),
+                    ),
+                    Semantics(
+                      label: origin ? 'From Origin' : 'To Destination',
+                      child: field,
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: origin ? 'Clear boarding stop' : 'Clear destination',
+                onPressed: () =>
+                    origin ? controller.from('') : controller.to(''),
+                color: HomeTheme.muted,
+                icon: const Icon(Icons.cancel_outlined, size: 17),
+              ),
+            ],
+          ),
         ),
       ),
     );

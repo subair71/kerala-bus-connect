@@ -1,3 +1,5 @@
+import 'package:kerala_bus_connect/core/providers/clock_provider.dart';
+import 'package:kerala_bus_connect/features/passenger/presentation/widgets/search_panel.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,8 +35,10 @@ Widget placesHarness(
   PlacesRepository repo, {
   ValueChanged<String>? onChanged,
   double textScale = 1,
+  Widget? child,
 }) => ProviderScope(
   overrides: [
+    clockProvider.overrideWithValue(AsyncData(DateTime(2026, 11, 7, 8))),
     googlePlacesEnabledProvider.overrideWithValue(true),
     placesRepositoryProvider.overrideWithValue(repo),
     stopLabelsProvider.overrideWithValue(StopLabels(['Aluva', 'Kaloor'])),
@@ -51,7 +55,7 @@ Widget placesHarness(
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: PlaceTextField(
+          child: child ?? PlaceTextField(
             fieldKey: const ValueKey('place-input'),
             controller: text,
             onChanged: onChanged,
@@ -71,6 +75,28 @@ class PendingPlaces implements PlacesRepository {
 }
 
 void main() {
+  for (final width in [320.0, 390.0]) {
+    testWidgets('home loading and full-row suggestions fit $width', (tester) async {
+      tester.view.physicalSize = Size(width, 844);
+      tester.view.devicePixelRatio = 1;
+      tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+      addTearDown(tester.view.reset);
+      final unused = TextEditingController();
+      addTearDown(unused.dispose);
+      final repo = PendingPlaces();
+      await tester.pumpWidget(placesHarness(unused, repo, child: const SearchPanel()));
+      await tester.enterText(find.byKey(const ValueKey('search-from')), 'Eda');
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(tester.takeException(), isNull);
+      repo.requests['Eda']!.complete(const [PlacePrediction(id: 'p', name: 'Edappally')]);
+      await tester.pumpAndSettle();
+      expect(tester.getSize(find.byKey(const ValueKey('place-option-1'))).width, greaterThan(200));
+      await tester.tap(find.text('Edappally'));
+      await tester.pump();
+      expect(tester.widget<TextField>(find.byKey(const ValueKey('search-from'))).controller!.text, 'Edappally');
+      expect(tester.takeException(), isNull);
+    });
+  }
   testWidgets('submit while loading never selects the previous query', (
     tester,
   ) async {
