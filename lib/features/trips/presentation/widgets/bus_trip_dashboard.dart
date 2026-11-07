@@ -24,8 +24,11 @@ class BusTripDashboard extends ConsumerWidget {
       slivers: [
         SliverToBoxAdapter(child: _BusHeader(business: business)),
         buses.when(
-          loading: () =>
-              const LoadingSliver(layout: SkeletonLayout.buses, count: 1, label: 'Loading buses'),
+          loading: () => const LoadingSliver(
+            layout: SkeletonLayout.buses,
+            count: 1,
+            label: 'Loading buses',
+          ),
           error: (_, _) => SliverToBoxAdapter(
             child: Column(
               children: [
@@ -161,7 +164,11 @@ class _BusControls extends ConsumerWidget {
                             .deleteBus(bus);
                       }
                     },
-              child: ActionShimmer(loading: busy, label: 'Delete bus', child: const Text('Delete bus')),
+              child: ActionShimmer(
+                loading: busy,
+                label: 'Delete bus',
+                child: const Text('Delete bus'),
+              ),
             ),
           ],
         ),
@@ -206,8 +213,10 @@ class _BusTrips extends ConsumerWidget {
       slivers: [
         const SliverToBoxAdapter(child: _OperationDateHeader()),
         services.when(
-          loading: () =>
-              const LoadingSliver(layout: SkeletonLayout.trips, label: 'Loading trips'),
+          loading: () => const LoadingSliver(
+            layout: SkeletonLayout.trips,
+            label: 'Loading trips',
+          ),
           error: (_, _) => SliverToBoxAdapter(
             child: TextButton(
               onPressed: () => ref.invalidate(ownerServicesProvider),
@@ -289,7 +298,10 @@ class _OperationDateHeader extends ConsumerWidget {
         SizedBox(
           height: 20,
           child: status.loading
-              ? const AppShimmer(label: 'Loading daily updates', child: SkeletonText(fraction: .6, height: 12))
+              ? const AppShimmer(
+                  label: 'Loading daily updates',
+                  child: SkeletonText(fraction: .6, height: 12),
+                )
               : null,
         ),
         if (status.error)
@@ -484,7 +496,11 @@ class _TripCard extends ConsumerWidget {
                                 .deleteTrip(bus, trip);
                           }
                         },
-                  child: ActionShimmer(loading: busy, label: 'Delete trip', child: const Text('Delete trip')),
+                  child: ActionShimmer(
+                    loading: busy,
+                    label: 'Delete trip',
+                    child: const Text('Delete trip'),
+                  ),
                 ),
               ],
             ),
@@ -528,7 +544,11 @@ class _BusEditor extends HookConsumerWidget {
                       .saveBus(business, name.text, bus: bus);
                   if (saved && context.mounted) Navigator.pop(context);
                 },
-          child: ActionShimmer(loading: action.isLoading, label: 'Save bus', child: const Text('Save bus')),
+          child: ActionShimmer(
+            loading: action.isLoading,
+            label: 'Save bus',
+            child: const Text('Save bus'),
+          ),
         ),
       ],
     );

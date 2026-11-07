@@ -39,8 +39,10 @@ class DeparturesSliver extends ConsumerWidget {
     final result = ref.watch(departureResultsProvider);
     final query = ref.watch(debouncedSearchProvider);
     return result.when(
-      loading: () =>
-          const LoadingSliver(layout: SkeletonLayout.departures, label: 'Loading bus results'),
+      loading: () => const LoadingSliver(
+        layout: SkeletonLayout.departures,
+        label: 'Loading bus results',
+      ),
       error: (_, _) => SliverToBoxAdapter(
         child: AsyncStatus(
           message: 'Unable to load timetables.',

@@ -142,7 +142,9 @@ class ServiceEditor extends HookConsumerWidget {
           child: ActionShimmer(
             loading: action.isLoading,
             label: service == null ? 'Publish timetable' : 'Save timetable',
-            child: Text(service == null ? 'Publish timetable' : 'Save timetable'),
+            child: Text(
+              service == null ? 'Publish timetable' : 'Save timetable',
+            ),
           ),
         ),
       ],

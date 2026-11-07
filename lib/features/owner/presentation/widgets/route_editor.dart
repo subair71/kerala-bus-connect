@@ -101,7 +101,11 @@ class RouteEditor extends HookConsumerWidget {
                       );
                   if (saved && context.mounted) Navigator.pop(context);
                 },
-          child: ActionShimmer(loading: action.isLoading, label: 'Save route', child: const Text('Save route')),
+          child: ActionShimmer(
+            loading: action.isLoading,
+            label: 'Save route',
+            child: const Text('Save route'),
+          ),
         ),
       ],
     );

@@ -60,8 +60,14 @@ class _OwnerWorkspace extends ConsumerWidget {
               sliver: SliverToBoxAdapter(child: _OwnerHeader()),
             ),
             businesses.when(
-              loading: () =>
-                  const SliverPadding(padding: EdgeInsets.all(16), sliver: LoadingSliver(layout: SkeletonLayout.businesses, count: 1, label: 'Loading businesses')),
+              loading: () => const SliverPadding(
+                padding: EdgeInsets.all(16),
+                sliver: LoadingSliver(
+                  layout: SkeletonLayout.businesses,
+                  count: 1,
+                  label: 'Loading businesses',
+                ),
+              ),
               error: (_, _) => SliverToBoxAdapter(
                 child: AsyncStatus(
                   message: 'Unable to load your businesses.',
@@ -178,7 +184,11 @@ class _OwnerHeader extends ConsumerWidget {
               onPressed: authAction.isLoading
                   ? null
                   : () => ref.read(authActionProvider.notifier).signOut(),
-              child: ActionShimmer(loading: authAction.isLoading, label: 'Sign out', child: const Text('Sign out')),
+              child: ActionShimmer(
+                loading: authAction.isLoading,
+                label: 'Sign out',
+                child: const Text('Sign out'),
+              ),
             ),
           ],
         ),

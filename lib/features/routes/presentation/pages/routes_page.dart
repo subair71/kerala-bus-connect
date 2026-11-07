@@ -84,8 +84,10 @@ class _RoutesList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => ref
       .watch(directoryResultsProvider)
       .when(
-        loading: () =>
-            const LoadingSliver(layout: SkeletonLayout.routes, label: 'Loading routes'),
+        loading: () => const LoadingSliver(
+          layout: SkeletonLayout.routes,
+          label: 'Loading routes',
+        ),
         error: (_, stack) => SliverToBoxAdapter(
           child: AsyncStatus(
             message: 'Unable to load routes.',

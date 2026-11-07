@@ -5,11 +5,7 @@ import 'app_components.dart';
 class AsyncStatus extends StatelessWidget {
   final String message;
   final VoidCallback? retry;
-  const AsyncStatus({
-    super.key,
-    this.message = '',
-    this.retry,
-  });
+  const AsyncStatus({super.key, this.message = '', this.retry});
 
   @override
   Widget build(BuildContext context) => Padding(

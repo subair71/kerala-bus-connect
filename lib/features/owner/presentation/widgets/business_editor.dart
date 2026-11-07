@@ -43,7 +43,11 @@ class BusinessEditor extends HookConsumerWidget {
                       .saveBusiness(name.text, id: business?.id);
                   if (saved && context.mounted) Navigator.pop(context);
                 },
-          child: ActionShimmer(loading: action.isLoading, label: 'Save business', child: const Text('Save business')),
+          child: ActionShimmer(
+            loading: action.isLoading,
+            label: 'Save business',
+            child: const Text('Save business'),
+          ),
         ),
       ],
     );

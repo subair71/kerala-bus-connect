@@ -23,8 +23,7 @@ class FindMyBusApp extends ConsumerWidget {
     home: ref
         .watch(initializationProvider)
         .when(
-          loading: () =>
-              const StartupSkeleton(),
+          loading: () => const StartupSkeleton(),
           error: (_, stack) => Scaffold(
             body: Center(
               child: AsyncStatus(

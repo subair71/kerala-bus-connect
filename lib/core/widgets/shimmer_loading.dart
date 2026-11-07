@@ -23,9 +23,12 @@ class AppShimmer extends HookConsumerWidget {
     );
     final regionKey = useMemoized(() => GlobalKey());
     final lifecycle = useAppLifecycleState();
-    final reduced = MediaQuery.disableAnimationsOf(context) ||
+    final reduced =
+        MediaQuery.disableAnimationsOf(context) ||
         MediaQuery.accessibleNavigationOf(context);
-    final enabled = ready && !reduced &&
+    final enabled =
+        ready &&
+        !reduced &&
         TickerMode.valuesOf(context).enabled &&
         (ModalRoute.of(context)?.isCurrent ?? true) &&
         (lifecycle == null || lifecycle == AppLifecycleState.resumed);
@@ -46,18 +49,23 @@ class AppShimmer extends HookConsumerWidget {
         scheduled = false;
         if (disposed) return;
         final box = regionKey.currentContext?.findRenderObject();
-        var visible = enabled && box is RenderBox && box.attached && box.hasSize;
+        var visible =
+            enabled && box is RenderBox && box.attached && box.hasSize;
         if (enabled && box is RenderBox && box.attached && box.hasSize) {
           final bounds = MatrixUtils.transformRect(
-            box.getTransformTo(null), Offset.zero & box.size,
+            box.getTransformTo(null),
+            Offset.zero & box.size,
           );
           var viewport = Offset.zero & MediaQuery.sizeOf(context);
           for (final scrollable in scrollables) {
             final render = scrollable.context.findRenderObject();
             if (render is RenderBox && render.attached && render.hasSize) {
-              viewport = viewport.intersect(MatrixUtils.transformRect(
-                render.getTransformTo(null), Offset.zero & render.size,
-              ));
+              viewport = viewport.intersect(
+                MatrixUtils.transformRect(
+                  render.getTransformTo(null),
+                  Offset.zero & render.size,
+                ),
+              );
             }
           }
           visible = !viewport.isEmpty && bounds.overlaps(viewport);
@@ -99,7 +107,12 @@ class AppShimmer extends HookConsumerWidget {
     );
     return label == null
         ? content
-        : Semantics(container: true, liveRegion: true, label: label, child: content);
+        : Semantics(
+            container: true,
+            liveRegion: true,
+            label: label,
+            child: content,
+          );
   }
 }
 
@@ -115,20 +128,18 @@ class _ShimmerMotion extends InheritedWidget {
 class SkeletonBox extends StatelessWidget {
   final double? width;
   final double height, radius;
-  const SkeletonBox({
-    super.key,
-    this.width,
-    this.height = 16,
-    this.radius = 6,
-  });
+  const SkeletonBox({super.key, this.width, this.height = 16, this.radius = 6});
   const SkeletonBox.circle({super.key, double size = 44})
-      : width = size, height = size, radius = size / 2;
+    : width = size,
+      height = size,
+      radius = size / 2;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final animation = context
-        .dependOnInheritedWidgetOfExactType<_ShimmerMotion>()?.animation;
+        .dependOnInheritedWidgetOfExactType<_ShimmerMotion>()
+        ?.animation;
     return SizedBox(
       width: width,
       height: height,
@@ -169,17 +180,20 @@ class _SkeletonPainter extends CustomPainter {
     canvas.clipRRect(shape);
     canvas.drawRect(
       bounds,
-      Paint()..shader = LinearGradient(
-        colors: [base, highlight, base],
-      ).createShader(Rect.fromLTWH(x - size.width, 0, size.width, size.height)),
+      Paint()
+        ..shader = LinearGradient(colors: [base, highlight, base]).createShader(
+          Rect.fromLTWH(x - size.width, 0, size.width, size.height),
+        ),
     );
     canvas.restore();
   }
 
   @override
   bool shouldRepaint(_SkeletonPainter oldDelegate) =>
-      animation != oldDelegate.animation || base != oldDelegate.base ||
-      highlight != oldDelegate.highlight || radius != oldDelegate.radius;
+      animation != oldDelegate.animation ||
+      base != oldDelegate.base ||
+      highlight != oldDelegate.highlight ||
+      radius != oldDelegate.radius;
 }
 
 class SkeletonText extends StatelessWidget {
@@ -190,7 +204,9 @@ class SkeletonText extends StatelessWidget {
     alignment: Alignment.centerLeft,
     child: FractionallySizedBox(
       widthFactor: fraction,
-      child: SkeletonBox(height: MediaQuery.textScalerOf(context).scale(height)),
+      child: SkeletonBox(
+        height: MediaQuery.textScalerOf(context).scale(height),
+      ),
     ),
   );
 }
@@ -217,7 +233,9 @@ class ActionShimmer extends StatelessWidget {
         child,
         if (loading)
           const Positioned(
-            left: 0, right: 0, bottom: -5,
+            left: 0,
+            right: 0,
+            bottom: -5,
             child: AppShimmer(
               label: null,
               child: SkeletonBox(height: 3, radius: 2),

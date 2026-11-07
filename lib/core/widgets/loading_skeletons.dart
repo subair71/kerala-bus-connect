@@ -1,7 +1,15 @@
 import 'package:flutter/material.dart';
 import 'shimmer_loading.dart';
 
-enum SkeletonLayout { departures, routes, crew, businesses, buses, trips, timeline }
+enum SkeletonLayout {
+  departures,
+  routes,
+  crew,
+  businesses,
+  buses,
+  trips,
+  timeline,
+}
 
 /// Sliver rows remain lazy and can also be appended after existing page items.
 class LoadingSliver extends StatelessWidget {
@@ -50,27 +58,36 @@ class _DepartureShape extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      const Row(children: [
-        Expanded(child: SkeletonText(fraction: .6, height: 24)),
-        SizedBox(width: 24),
-        Expanded(child: SkeletonText(fraction: .6, height: 28)),
-      ]),
+      const Row(
+        children: [
+          Expanded(child: SkeletonText(fraction: .6, height: 24)),
+          SizedBox(width: 24),
+          Expanded(child: SkeletonText(fraction: .6, height: 28)),
+        ],
+      ),
       const SizedBox(height: 16),
       const SkeletonText(fraction: .55, height: 20),
       const SizedBox(height: 6),
       const SkeletonText(fraction: .8, height: 12),
       const SizedBox(height: 18),
-      const Row(children: [
-        Expanded(child: _TimeShape()),
-        Padding(padding: EdgeInsets.all(12), child: SkeletonBox(width: 24, height: 2)),
-        Expanded(child: _TimeShape()),
-      ]),
+      const Row(
+        children: [
+          Expanded(child: _TimeShape()),
+          Padding(
+            padding: EdgeInsets.all(12),
+            child: SkeletonBox(width: 24, height: 2),
+          ),
+          Expanded(child: _TimeShape()),
+        ],
+      ),
       const SizedBox(height: 16),
-      const Row(children: [
-        Expanded(child: SkeletonText(fraction: .65, height: 12)),
-        SizedBox(width: 16),
-        SkeletonBox(width: 92, height: 36, radius: 18),
-      ]),
+      const Row(
+        children: [
+          Expanded(child: SkeletonText(fraction: .65, height: 12)),
+          SizedBox(width: 16),
+          SkeletonBox(width: 92, height: 36, radius: 18),
+        ],
+      ),
     ],
   );
 }
@@ -94,21 +111,29 @@ class _RouteShape extends StatelessWidget {
   Widget build(BuildContext context) => const Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
-      Row(children: [
-        SkeletonBox(width: 44, height: 44, radius: 12),
-        SizedBox(width: 12),
-        Expanded(child: Column(children: [
-          SkeletonText(fraction: .65, height: 20),
-          SizedBox(height: 8),
-          SkeletonText(fraction: .9, height: 13),
-        ])),
-      ]),
+      Row(
+        children: [
+          SkeletonBox(width: 44, height: 44, radius: 12),
+          SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              children: [
+                SkeletonText(fraction: .65, height: 20),
+                SizedBox(height: 8),
+                SkeletonText(fraction: .9, height: 13),
+              ],
+            ),
+          ),
+        ],
+      ),
       SizedBox(height: 20),
-      Row(children: [
-        Expanded(child: _TimeShape()),
-        SizedBox(width: 24),
-        Expanded(child: _TimeShape()),
-      ]),
+      Row(
+        children: [
+          Expanded(child: _TimeShape()),
+          SizedBox(width: 24),
+          Expanded(child: _TimeShape()),
+        ],
+      ),
       SizedBox(height: 20),
       SkeletonText(fraction: .75),
       SizedBox(height: 14),
@@ -125,16 +150,18 @@ class _CrewShape extends StatelessWidget {
     children: [
       SkeletonBox(width: 44, height: 44, radius: 12),
       SizedBox(width: 14),
-      Expanded(child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SkeletonText(fraction: .6, height: 18),
-          SizedBox(height: 8),
-          SkeletonText(fraction: .85),
-          SizedBox(height: 12),
-          SkeletonText(fraction: .45, height: 28),
-        ],
-      )),
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SkeletonText(fraction: .6, height: 18),
+            SizedBox(height: 8),
+            SkeletonText(fraction: .85),
+            SizedBox(height: 12),
+            SkeletonText(fraction: .45, height: 28),
+          ],
+        ),
+      ),
     ],
   );
 }
@@ -162,11 +189,13 @@ class _BusShape extends StatelessWidget {
     children: [
       SkeletonBox(height: 56, radius: 14),
       SizedBox(height: 12),
-      Row(children: [
-        Expanded(child: SkeletonText(fraction: .7, height: 32)),
-        SizedBox(width: 16),
-        Expanded(child: SkeletonText(fraction: .7, height: 32)),
-      ]),
+      Row(
+        children: [
+          Expanded(child: SkeletonText(fraction: .7, height: 32)),
+          SizedBox(width: 16),
+          Expanded(child: SkeletonText(fraction: .7, height: 32)),
+        ],
+      ),
       SizedBox(height: 12),
       SkeletonBox(height: 48, radius: 14),
     ],
@@ -185,11 +214,15 @@ class _TripShape extends StatelessWidget {
       SizedBox(height: 8),
       SkeletonText(fraction: .9),
       SizedBox(height: 16),
-      Wrap(spacing: 8, runSpacing: 8, children: [
-        SkeletonBox(width: 88, height: 40, radius: 20),
-        SkeletonBox(width: 132, height: 40, radius: 20),
-        SkeletonBox(width: 104, height: 40, radius: 20),
-      ]),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          SkeletonBox(width: 88, height: 40, radius: 20),
+          SkeletonBox(width: 132, height: 40, radius: 20),
+          SkeletonBox(width: 104, height: 40, radius: 20),
+        ],
+      ),
     ],
   );
 }
@@ -202,15 +235,21 @@ class _TimelineShape extends StatelessWidget {
       for (var i = 0; i < 4; i++)
         Padding(
           padding: const EdgeInsets.only(bottom: 24),
-          child: Row(children: [
-            const SkeletonBox.circle(size: 28),
-            const SizedBox(width: 16),
-            const Expanded(child: Column(children: [
-              SkeletonText(fraction: .7, height: 18),
-              SizedBox(height: 8),
-              SkeletonText(fraction: .4, height: 12),
-            ])),
-          ]),
+          child: Row(
+            children: [
+              const SkeletonBox.circle(size: 28),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  children: [
+                    SkeletonText(fraction: .7, height: 18),
+                    SizedBox(height: 8),
+                    SkeletonText(fraction: .4, height: 12),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
     ],
   );
@@ -226,26 +265,30 @@ class AccountSkeleton extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 460),
         child: const AppShimmer(
           label: 'Loading your account',
-          child: Card(child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Align(alignment: Alignment.centerLeft,
-                  child: SkeletonBox(width: 48, height: 48, radius: 14)),
-                SizedBox(height: 20),
-                SkeletonText(fraction: .7, height: 26),
-                SizedBox(height: 16),
-                SkeletonText(height: 14),
-                SizedBox(height: 20),
-                SkeletonBox(height: 56, radius: 14),
-                SizedBox(height: 14),
-                SkeletonBox(height: 56, radius: 14),
-                SizedBox(height: 20),
-                SkeletonBox(height: 48, radius: 24),
-              ],
+          child: Card(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SkeletonBox(width: 48, height: 48, radius: 14),
+                  ),
+                  SizedBox(height: 20),
+                  SkeletonText(fraction: .7, height: 26),
+                  SizedBox(height: 16),
+                  SkeletonText(height: 14),
+                  SizedBox(height: 20),
+                  SkeletonBox(height: 56, radius: 14),
+                  SizedBox(height: 14),
+                  SkeletonBox(height: 56, radius: 14),
+                  SizedBox(height: 20),
+                  SkeletonBox(height: 48, radius: 24),
+                ],
+              ),
             ),
-          )),
+          ),
         ),
       ),
     ),
@@ -298,36 +341,52 @@ class SponsorSkeleton extends StatelessWidget {
               height: (stacked ? 198 : 148) * scale.clamp(1, 2.5),
               child: Card(
                 margin: const EdgeInsets.only(bottom: 8),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Column(children: [
-                    const Expanded(child: Row(children: [
-                      SkeletonBox(width: 60, height: 60, radius: 14),
-                      SizedBox(width: 14),
-                      Expanded(child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SkeletonText(fraction: .5, height: 11),
-                          SizedBox(height: 6),
-                          SkeletonText(height: 15),
-                          SizedBox(height: 6),
-                          SkeletonText(fraction: .8, height: 12),
-                        ],
-                      )),
-                    ])),
-                    if (stacked) ...[
-                      const SizedBox(height: 8),
-                      const Align(alignment: Alignment.centerRight,
-                        child: SkeletonBox(width: 88, height: 48, radius: 24)),
+                  child: Column(
+                    children: [
+                      const Expanded(
+                        child: Row(
+                          children: [
+                            SkeletonBox(width: 60, height: 60, radius: 14),
+                            SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  SkeletonText(fraction: .5, height: 11),
+                                  SizedBox(height: 6),
+                                  SkeletonText(height: 15),
+                                  SizedBox(height: 6),
+                                  SkeletonText(fraction: .8, height: 12),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (stacked) ...[
+                        const SizedBox(height: 8),
+                        const Align(
+                          alignment: Alignment.centerRight,
+                          child: SkeletonBox(width: 88, height: 48, radius: 24),
+                        ),
+                      ],
                     ],
-                  ]),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 48,
-              child: Align(alignment: Alignment.centerLeft,
-                child: SkeletonText(fraction: .55, height: 11))),
+            const SizedBox(
+              height: 48,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SkeletonText(fraction: .55, height: 11),
+              ),
+            ),
             const SizedBox(height: 16),
           ],
         ),
@@ -343,11 +402,13 @@ class StartupSkeleton extends StatelessWidget {
     appBar: AppBar(
       title: const AppShimmer(
         label: 'Starting FindMyBus',
-        child: Row(children: [
-          SkeletonBox.circle(size: 36),
-          SizedBox(width: 12),
-          Expanded(child: SkeletonText(fraction: .45, height: 22)),
-        ]),
+        child: Row(
+          children: [
+            SkeletonBox.circle(size: 36),
+            SizedBox(width: 12),
+            Expanded(child: SkeletonText(fraction: .45, height: 22)),
+          ],
+        ),
       ),
     ),
     body: Center(
@@ -358,18 +419,22 @@ class StartupSkeleton extends StatelessWidget {
           children: const [
             AppShimmer(
               label: null,
-              child: Card(child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(children: [
-                  SkeletonBox(height: 72, radius: 12),
-                  SizedBox(height: 8),
-                  SkeletonBox(height: 72, radius: 12),
-                  SizedBox(height: 16),
-                  SkeletonBox(height: 48, radius: 14),
-                  SizedBox(height: 16),
-                  SkeletonBox(height: 56, radius: 14),
-                ]),
-              )),
+              child: Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      SkeletonBox(height: 72, radius: 12),
+                      SizedBox(height: 8),
+                      SkeletonBox(height: 72, radius: 12),
+                      SizedBox(height: 16),
+                      SkeletonBox(height: 48, radius: 14),
+                      SizedBox(height: 16),
+                      SkeletonBox(height: 56, radius: 14),
+                    ],
+                  ),
+                ),
+              ),
             ),
             SizedBox(height: 12),
             SponsorSkeleton(),
@@ -380,13 +445,19 @@ class StartupSkeleton extends StatelessWidget {
     bottomNavigationBar: const SafeArea(
       child: Padding(
         padding: EdgeInsets.all(16),
-        child: AppShimmer(label: null,
-          child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround,
+        child: AppShimmer(
+          label: null,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              SkeletonBox.circle(size: 28), SkeletonBox.circle(size: 28),
-              SkeletonBox.circle(size: 28), SkeletonBox.circle(size: 28),
               SkeletonBox.circle(size: 28),
-            ])),
+              SkeletonBox.circle(size: 28),
+              SkeletonBox.circle(size: 28),
+              SkeletonBox.circle(size: 28),
+              SkeletonBox.circle(size: 28),
+            ],
+          ),
+        ),
       ),
     ),
   );

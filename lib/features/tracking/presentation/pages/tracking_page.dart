@@ -16,10 +16,13 @@ class TrackingPage extends ConsumerWidget {
     final data = ref.watch(trackingDataProvider);
     if (data.isLoading && !data.hasValue) return const TrackingSkeleton();
     if (data.hasError) {
-      return AsyncStatus(message: 'Unable to load tracking details.',
-        retry: () => ref.invalidate(liveTrackingProvider));
+      return AsyncStatus(
+        message: 'Unable to load tracking details.',
+        retry: () => ref.invalidate(liveTrackingProvider),
+      );
     }
-    if (preview == null) return const AsyncStatus(message: 'No tracking details available.');
+    if (preview == null)
+      return const AsyncStatus(message: 'No tracking details available.');
     final vehicles = data.asData!.value.records;
     final selected = ref
         .watch(trackingSelectionProvider)

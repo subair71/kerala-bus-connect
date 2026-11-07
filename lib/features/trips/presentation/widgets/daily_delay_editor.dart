@@ -140,7 +140,11 @@ class DailyDelayEditor extends ConsumerWidget {
                       );
                   if (saved && context.mounted) Navigator.pop(context);
                 },
-          child: ActionShimmer(loading: action.isLoading, label: 'Save daily adjustments', child: const Text('Save daily adjustments')),
+          child: ActionShimmer(
+            loading: action.isLoading,
+            label: 'Save daily adjustments',
+            child: const Text('Save daily adjustments'),
+          ),
         ),
         OutlinedButton(
           onPressed: action.isLoading
@@ -172,7 +176,11 @@ class DailyDelayEditor extends ConsumerWidget {
                     if (saved && context.mounted) Navigator.pop(context);
                   }
                 },
-          child: ActionShimmer(loading: action.isLoading, label: 'Reset daily adjustments', child: const Text('Reset daily adjustments')),
+          child: ActionShimmer(
+            loading: action.isLoading,
+            label: 'Reset daily adjustments',
+            child: const Text('Reset daily adjustments'),
+          ),
         ),
         TextButton(
           onPressed: action.isLoading ? null : () => Navigator.pop(context),

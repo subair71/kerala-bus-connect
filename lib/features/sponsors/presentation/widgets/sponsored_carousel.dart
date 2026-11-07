@@ -270,7 +270,11 @@ class _AdCard extends ConsumerWidget {
                   fit: BoxFit.cover,
                   cacheWidth: 180,
                   frameBuilder: (_, child, frame, sync) => sync || frame != null
-                      ? child : const AppShimmer(label: null, child: SkeletonBox(width: 60, height: 60, radius: 14)),
+                      ? child
+                      : const AppShimmer(
+                          label: null,
+                          child: SkeletonBox(width: 60, height: 60, radius: 14),
+                        ),
                   errorBuilder: (_, _, _) => fallback,
                 )
               : ad.imageUrl?.startsWith('https://') == true
@@ -279,7 +283,11 @@ class _AdCard extends ConsumerWidget {
                   fit: BoxFit.contain,
                   cacheWidth: 180,
                   frameBuilder: (_, child, frame, sync) => sync || frame != null
-                      ? child : const AppShimmer(label: null, child: SkeletonBox(width: 60, height: 60, radius: 14)),
+                      ? child
+                      : const AppShimmer(
+                          label: null,
+                          child: SkeletonBox(width: 60, height: 60, radius: 14),
+                        ),
                   errorBuilder: (_, _, _) => fallback,
                 )
               : fallback,

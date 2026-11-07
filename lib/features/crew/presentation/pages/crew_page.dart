@@ -96,13 +96,18 @@ class _CrewList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(crewDataProvider);
     if (data.isLoading && !data.hasValue) {
-      return const LoadingSliver(layout: SkeletonLayout.crew, label: 'Loading crew assignments');
+      return const LoadingSliver(
+        layout: SkeletonLayout.crew,
+        label: 'Loading crew assignments',
+      );
     }
     if (data.hasError) {
-      return SliverToBoxAdapter(child: AsyncStatus(
-        message: 'Unable to load crew assignments.',
-        retry: () => ref.invalidate(liveCrewProvider),
-      ));
+      return SliverToBoxAdapter(
+        child: AsyncStatus(
+          message: 'Unable to load crew assignments.',
+          retry: () => ref.invalidate(liveCrewProvider),
+        ),
+      );
     }
     final crew = ref.watch(filteredCrewProvider);
     if (crew.isEmpty) {
