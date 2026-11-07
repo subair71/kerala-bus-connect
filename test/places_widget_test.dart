@@ -55,12 +55,14 @@ Widget placesHarness(
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: child ?? PlaceTextField(
-            fieldKey: const ValueKey('place-input'),
-            controller: text,
-            onChanged: onChanged,
-            decoration: const InputDecoration(labelText: 'Starting stop'),
-          ),
+          child:
+              child ??
+              PlaceTextField(
+                fieldKey: const ValueKey('place-input'),
+                controller: text,
+                onChanged: onChanged,
+                decoration: const InputDecoration(labelText: 'Starting stop'),
+              ),
         ),
       ),
     ),
@@ -76,7 +78,9 @@ class PendingPlaces implements PlacesRepository {
 
 void main() {
   for (final width in [320.0, 390.0]) {
-    testWidgets('home loading and full-row suggestions fit $width', (tester) async {
+    testWidgets('home loading and full-row suggestions fit $width', (
+      tester,
+    ) async {
       tester.view.physicalSize = Size(width, 844);
       tester.view.devicePixelRatio = 1;
       tester.view.viewInsets = const FakeViewPadding(bottom: 280);
@@ -84,16 +88,29 @@ void main() {
       final unused = TextEditingController();
       addTearDown(unused.dispose);
       final repo = PendingPlaces();
-      await tester.pumpWidget(placesHarness(unused, repo, child: const SearchPanel()));
+      await tester.pumpWidget(
+        placesHarness(unused, repo, child: const SearchPanel()),
+      );
       await tester.enterText(find.byKey(const ValueKey('search-from')), 'Eda');
       await tester.pump(const Duration(milliseconds: 400));
       expect(tester.takeException(), isNull);
-      repo.requests['Eda']!.complete(const [PlacePrediction(id: 'p', name: 'Edappally')]);
+      repo.requests['Eda']!.complete(const [
+        PlacePrediction(id: 'p', name: 'Edappally'),
+      ]);
       await tester.pumpAndSettle();
-      expect(tester.getSize(find.byKey(const ValueKey('place-option-1'))).width, greaterThan(200));
+      expect(
+        tester.getSize(find.byKey(const ValueKey('place-option-1'))).width,
+        greaterThan(200),
+      );
       await tester.tap(find.text('Edappally'));
       await tester.pump();
-      expect(tester.widget<TextField>(find.byKey(const ValueKey('search-from'))).controller!.text, 'Edappally');
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const ValueKey('search-from')))
+            .controller!
+            .text,
+        'Edappally',
+      );
       expect(tester.takeException(), isNull);
     });
   }

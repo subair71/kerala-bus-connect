@@ -81,43 +81,46 @@ class PlaceTextField extends HookConsumerWidget {
           },
           fieldViewBuilder: (context, text, node, submit) {
             final field = TextField(
-            key: fieldKey,
-            controller: text,
-            focusNode: node,
-            enabled: enabled,
-            onChanged: onChanged,
-            onEditingComplete: () {},
-            onTapOutside: (_) => focus.unfocus(),
-            onSubmitted: (value) {
-              final state = ref.read(placeSearchProvider(identity));
-              if (!state.loading && state.query.isNotEmpty) submit();
-              if (onSubmitted != null) {
-                onSubmitted!(controller.text);
-              } else {
-                focus.unfocus();
-              }
-            },
-            textInputAction: textInputAction,
-            textCapitalization: textCapitalization,
-            minLines: minLines,
-            maxLines: maxLines,
-            style: style,
-            decoration: search.loading && decoration.suffixIcon == null
-                ? decoration.copyWith(
-                    suffixIconConstraints: const BoxConstraints.tightFor(width: 24, height: 24),
-                    suffixIcon: const Padding(
-                      padding: EdgeInsets.all(4),
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: AppShimmer(
-                          label: 'Finding places',
-                          child: SkeletonBox.circle(size: 16),
+              key: fieldKey,
+              controller: text,
+              focusNode: node,
+              enabled: enabled,
+              onChanged: onChanged,
+              onEditingComplete: () {},
+              onTapOutside: (_) => focus.unfocus(),
+              onSubmitted: (value) {
+                final state = ref.read(placeSearchProvider(identity));
+                if (!state.loading && state.query.isNotEmpty) submit();
+                if (onSubmitted != null) {
+                  onSubmitted!(controller.text);
+                } else {
+                  focus.unfocus();
+                }
+              },
+              textInputAction: textInputAction,
+              textCapitalization: textCapitalization,
+              minLines: minLines,
+              maxLines: maxLines,
+              style: style,
+              decoration: search.loading && decoration.suffixIcon == null
+                  ? decoration.copyWith(
+                      suffixIconConstraints: const BoxConstraints.tightFor(
+                        width: 24,
+                        height: 24,
+                      ),
+                      suffixIcon: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: AppShimmer(
+                            label: 'Finding places',
+                            child: SkeletonBox.circle(size: 16),
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                : decoration,
+                    )
+                  : decoration,
             );
             return fieldBuilder?.call(field) ?? field;
           },
@@ -131,35 +134,44 @@ class PlaceTextField extends HookConsumerWidget {
               final hasGoogle = items.any(
                 (o) => o.source == PlaceSource.google,
               );
-              final googleEnabled = ref.watch(googlePlacesEnabledProvider) && current.query.runes.length >= 3;
+              final googleEnabled =
+                  ref.watch(googlePlacesEnabledProvider) &&
+                  current.query.runes.length >= 3;
               return Material(
-                  elevation: 0,
-                  color: Theme.of(context).colorScheme.surface,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                elevation: 0,
+                color: Theme.of(context).colorScheme.surface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  child: SizedBox(
-                    width: constraints.maxWidth,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxHeight: 300),
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            for (var i = 0; i < items.length; i++)
-                              _PlaceOptionTile(option: items[i], index: i, select: select),
-                            if (googleEnabled) _PlacesFooter(
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: SizedBox(
+                  width: constraints.maxWidth,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 300),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          for (var i = 0; i < items.length; i++)
+                            _PlaceOptionTile(
+                              option: items[i],
+                              index: i,
+                              select: select,
+                            ),
+                          if (googleEnabled)
+                            _PlacesFooter(
                               unavailable: current.unavailable,
                               hasGoogle: hasGoogle,
                             ),
-                          ],
-                        ),
+                        ],
                       ),
                     ),
                   ),
+                ),
               );
             },
           ),
@@ -175,14 +187,19 @@ class _PlaceOptionTile extends HookWidget {
   final PlaceOption option;
   final int index;
   final ValueChanged<PlaceOption> select;
-  const _PlaceOptionTile({required this.option, required this.index, required this.select});
+  const _PlaceOptionTile({
+    required this.option,
+    required this.index,
+    required this.select,
+  });
   @override
   Widget build(BuildContext context) {
     final selected = AutocompleteHighlightedOption.of(context) == index;
     useEffect(() {
-      if (selected) WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) Scrollable.ensureVisible(context, alignment: .5);
-      });
+      if (selected)
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) Scrollable.ensureVisible(context, alignment: .5);
+        });
       return null;
     }, [selected, option.value]);
     return ListTile(
@@ -214,17 +231,18 @@ class _PlacesFooter extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (unavailable || !hasGoogle) Text(
-          unavailable
-              ? 'Google places unavailable. Keep typing or choose a timetable stop.'
-              : hasGoogle
-              ? 'Google Maps'
-              : 'No additional Google places. You can use the entered name.',
-          style: TextStyle(
-            fontSize: hasGoogle && !unavailable ? 14 : 12,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+        if (unavailable || !hasGoogle)
+          Text(
+            unavailable
+                ? 'Google places unavailable. Keep typing or choose a timetable stop.'
+                : hasGoogle
+                ? 'Google Maps'
+                : 'No additional Google places. You can use the entered name.',
+            style: TextStyle(
+              fontSize: hasGoogle && !unavailable ? 14 : 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
-        ),
         if (hasGoogle)
           Wrap(
             spacing: 8,
