@@ -114,8 +114,12 @@ class TripEditor extends ConsumerWidget {
             itemBuilder: (context, index) {
               final stop = plan.stops[index];
               return _RouteStopRow(
-                key: ValueKey(stop.id), args: args, stopId: stop.id,
-                index: index, count: plan.stops.length, enabled: !action.isLoading,
+                key: ValueKey(stop.id),
+                args: args,
+                stopId: stop.id,
+                index: index,
+                count: plan.stops.length,
+                enabled: !action.isLoading,
               );
             },
           ),
@@ -233,7 +237,11 @@ class TripEditor extends ConsumerWidget {
                   } else {
                     final saved = await ref
                         .read(tripActionsProvider.notifier)
-                        .saveTrip(business, bus, ref.read(tripDraftProvider(args)).plan);
+                        .saveTrip(
+                          business,
+                          bus,
+                          ref.read(tripDraftProvider(args)).plan,
+                        );
                     if (saved && context.mounted) Navigator.pop(context);
                   }
                 },
@@ -260,86 +268,89 @@ class _RouteStopRow extends ConsumerWidget {
   final int index, count;
   final bool enabled;
   const _RouteStopRow({
-    super.key, required this.args, required this.stopId, required this.index,
-    required this.count, required this.enabled,
+    super.key,
+    required this.args,
+    required this.stopId,
+    required this.index,
+    required this.count,
+    required this.enabled,
   });
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stop = ref.watch(tripDraftProvider(args).select((draft) {
-      final stops = draft.plan.stops;
-      if (index < stops.length && stops[index].id == stopId) return stops[index];
-      return stops.where((stop) => stop.id == stopId).firstOrNull;
-    }));
+    final stop = ref.watch(
+      tripDraftProvider(args).select((draft) {
+        final stops = draft.plan.stops;
+        if (index < stops.length && stops[index].id == stopId)
+          return stops[index];
+        return stops.where((stop) => stop.id == stopId).firstOrNull;
+      }),
+    );
     if (stop == null) return const SizedBox.shrink();
     final controller = ref.read(tripDraftProvider(args).notifier);
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          ReorderableDragStartListener(
-                            index: index,
-                            enabled: enabled,
-                            child: Semantics(
-                              label: 'Drag to reorder ${stop.name}',
-                              child: const SizedBox(
-                                width: 48,
-                                height: 48,
-                                child: Icon(Icons.drag_handle),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: _StopName(
-                              key: ValueKey('name-${stop.id}'),
-                              stop: stop,
-                              enabled: enabled,
-                              label: index == 0
-                                  ? 'Origin'
-                                  : index == count - 1
-                                  ? 'Destination'
-                                  : 'Stop ${index + 1}',
-                              onChanged: (name) =>
-                                  controller.rename(index, name),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Wrap(
-                        children: [
-                          IconButton(
-                            tooltip: 'Move up ${stop.name}',
-                            onPressed: index == 0 || !enabled
-                                ? null
-                                : () => controller.move(index, index - 1),
-                            icon: const Icon(Icons.arrow_upward),
-                          ),
-                          IconButton(
-                            tooltip: 'Move down ${stop.name}',
-                            onPressed:
-                                index == count - 1 ||
-                                    !enabled
-                                ? null
-                                : () => controller.move(index, index + 1),
-                            icon: const Icon(Icons.arrow_downward),
-                          ),
-                          IconButton(
-                            tooltip: 'Remove ${stop.name}',
-                            onPressed:
-                                count <= 2 || !enabled
-                                ? null
-                                : () => controller.remove(index),
-                            icon: const Icon(Icons.delete_outline),
-                          ),
-                        ],
-                      ),
-                    ],
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                ReorderableDragStartListener(
+                  index: index,
+                  enabled: enabled,
+                  child: Semantics(
+                    label: 'Drag to reorder ${stop.name}',
+                    child: const SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Icon(Icons.drag_handle),
+                    ),
                   ),
                 ),
-              );
+                Expanded(
+                  child: _StopName(
+                    key: ValueKey('name-${stop.id}'),
+                    stop: stop,
+                    enabled: enabled,
+                    label: index == 0
+                        ? 'Origin'
+                        : index == count - 1
+                        ? 'Destination'
+                        : 'Stop ${index + 1}',
+                    onChanged: (name) => controller.rename(index, name),
+                  ),
+                ),
+              ],
+            ),
+            Wrap(
+              children: [
+                IconButton(
+                  tooltip: 'Move up ${stop.name}',
+                  onPressed: index == 0 || !enabled
+                      ? null
+                      : () => controller.move(index, index - 1),
+                  icon: const Icon(Icons.arrow_upward),
+                ),
+                IconButton(
+                  tooltip: 'Move down ${stop.name}',
+                  onPressed: index == count - 1 || !enabled
+                      ? null
+                      : () => controller.move(index, index + 1),
+                  icon: const Icon(Icons.arrow_downward),
+                ),
+                IconButton(
+                  tooltip: 'Remove ${stop.name}',
+                  onPressed: count <= 2 || !enabled
+                      ? null
+                      : () => controller.remove(index),
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -394,7 +405,9 @@ class _TimelineStop extends StatelessWidget {
     children: [
       if (!last)
         Positioned(
-          left: 19, top: 28, bottom: 0,
+          left: 19,
+          top: 28,
+          bottom: 0,
           child: SizedBox(
             width: 2,
             child: ColoredBox(color: Theme.of(context).colorScheme.primary),
@@ -403,7 +416,12 @@ class _TimelineStop extends StatelessWidget {
       Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 40, child: Center(child: CircleAvatar(radius: 14, child: Text('$number')))),
+          SizedBox(
+            width: 40,
+            child: Center(
+              child: CircleAvatar(radius: 14, child: Text('$number')),
+            ),
+          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 24, left: 8),

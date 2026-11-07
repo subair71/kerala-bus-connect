@@ -34,12 +34,16 @@ class RoutesPage extends HookConsumerWidget {
                           'Browse published services by route name or stop.',
                     ),
                     DataNotice(
-                      demo:
-                          ref
-                              .watch(serviceCatalogProvider.select((data) => data.asData?.value.isDemo ?? false)),
-                      unavailable:
-                          ref
-                              .watch(serviceCatalogProvider.select((data) => data.asData?.value.unavailable ?? false)),
+                      demo: ref.watch(
+                        serviceCatalogProvider.select(
+                          (data) => data.asData?.value.isDemo ?? false,
+                        ),
+                      ),
+                      unavailable: ref.watch(
+                        serviceCatalogProvider.select(
+                          (data) => data.asData?.value.unavailable ?? false,
+                        ),
+                      ),
                       retry: () => ref.invalidate(publishedServicesProvider),
                     ),
                     TextField(

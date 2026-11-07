@@ -9,9 +9,15 @@ List<ServiceEntity> orderDepartures(List<ServiceEntity> services, String from) {
     final service = services[i];
     final stop = term.isEmpty
         ? service.stops.firstOrNull
-        : service.stops.where((stop) => stop.toLowerCase().contains(term)).firstOrNull;
+        : service.stops
+              .where((stop) => stop.toLowerCase().contains(term))
+              .firstOrNull;
     final time = stop == null ? null : service.expectedTime(stop);
-    ranked.add((service: service, time: time == null || time < 0 ? 999999 : time, order: i));
+    ranked.add((
+      service: service,
+      time: time == null || time < 0 ? 999999 : time,
+      order: i,
+    ));
   }
   ranked.sort((a, b) {
     final time = a.time.compareTo(b.time);

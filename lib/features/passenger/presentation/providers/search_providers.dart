@@ -106,13 +106,12 @@ class DebouncedSearch extends Notifier<SearchQuery> {
 }
 
 final serviceIndexProvider =
-    Provider.autoDispose<AsyncValue<ServiceSearchIndex>>(
-      (ref) {
-        retainWhileIdle(ref, ref.watch(catalogCacheDurationProvider));
-        return ref.watch(serviceCatalogProvider)
-            .whenData((data) => ServiceSearchIndex(data.records));
-      },
-    );
+    Provider.autoDispose<AsyncValue<ServiceSearchIndex>>((ref) {
+      retainWhileIdle(ref, ref.watch(catalogCacheDurationProvider));
+      return ref
+          .watch(serviceCatalogProvider)
+          .whenData((data) => ServiceSearchIndex(data.records));
+    });
 
 final passengerDailyUpdatesUnavailableProvider = Provider.autoDispose<bool>((
   ref,

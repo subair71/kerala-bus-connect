@@ -78,8 +78,7 @@ class ServiceEntity extends Equatable {
     if (exact != null) return exact;
     final normalized = stop.trim().toLowerCase();
     for (final entry in stopTimings.entries) {
-      if (entry.key.trim().toLowerCase() == normalized)
-        return entry.value;
+      if (entry.key.trim().toLowerCase() == normalized) return entry.value;
     }
     if (stops.isNotEmpty &&
         stops.first.toLowerCase() == stop.toLowerCase() &&

@@ -58,7 +58,8 @@ class _OwnerWorkspace extends ConsumerWidget {
               sliver: SliverToBoxAdapter(child: _OwnerHeader()),
             ),
             businesses.when(
-              loading: () => const SliverToBoxAdapter(child: AsyncStatus(loading: true)),
+              loading: () =>
+                  const SliverToBoxAdapter(child: AsyncStatus(loading: true)),
               error: (_, _) => SliverToBoxAdapter(
                 child: AsyncStatus(
                   message: 'Unable to load your businesses.',
@@ -67,7 +68,9 @@ class _OwnerWorkspace extends ConsumerWidget {
               ),
               data: (list) => list.isEmpty
                   ? const SliverToBoxAdapter(
-                      child: AsyncStatus(message: 'Create your first business to add buses.'),
+                      child: AsyncStatus(
+                        message: 'Create your first business to add buses.',
+                      ),
                     )
                   : SliverPadding(
                       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -81,16 +84,26 @@ class _OwnerWorkspace extends ConsumerWidget {
                                   key: ValueKey('business-${selected?.id}'),
                                   initialValue: selected?.id,
                                   isExpanded: true,
-                                  decoration: const InputDecoration(labelText: 'Business'),
+                                  decoration: const InputDecoration(
+                                    labelText: 'Business',
+                                  ),
                                   items: [
                                     for (final business in list)
                                       DropdownMenuItem(
                                         value: business.id,
-                                        child: Text(business.name, overflow: TextOverflow.ellipsis),
+                                        child: Text(
+                                          business.name,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
                                   ],
                                   onChanged: (id) {
-                                    if (id != null) ref.read(selectedBusinessIdProvider.notifier).select(id);
+                                    if (id != null)
+                                      ref
+                                          .read(
+                                            selectedBusinessIdProvider.notifier,
+                                          )
+                                          .select(id);
                                   },
                                 ),
                                 if (selected != null)
@@ -98,9 +111,19 @@ class _OwnerWorkspace extends ConsumerWidget {
                                     builder: (context, ref, _) => Align(
                                       alignment: Alignment.centerLeft,
                                       child: TextButton(
-                                        onPressed: ref.watch(ownerActionsProvider.select((value) => value.isLoading))
+                                        onPressed:
+                                            ref.watch(
+                                              ownerActionsProvider.select(
+                                                (value) => value.isLoading,
+                                              ),
+                                            )
                                             ? null
-                                            : () => openEditor(context, BusinessEditor(business: selected)),
+                                            : () => openEditor(
+                                                context,
+                                                BusinessEditor(
+                                                  business: selected,
+                                                ),
+                                              ),
                                         child: const Text('Rename business'),
                                       ),
                                     ),
@@ -110,7 +133,10 @@ class _OwnerWorkspace extends ConsumerWidget {
                             ),
                           ),
                           if (selected != null)
-                            BusTripDashboard(key: ValueKey(selected.id), business: selected),
+                            BusTripDashboard(
+                              key: ValueKey(selected.id),
+                              business: selected,
+                            ),
                         ],
                       ),
                     ),
@@ -140,17 +166,22 @@ class _OwnerHeader extends ConsumerWidget {
           runSpacing: 8,
           children: [
             FilledButton.icon(
-              onPressed: action.isLoading ? null : () => openEditor(context, const BusinessEditor()),
+              onPressed: action.isLoading
+                  ? null
+                  : () => openEditor(context, const BusinessEditor()),
               icon: const Icon(Icons.add_business),
               label: const Text('Add business'),
             ),
             OutlinedButton(
-              onPressed: authAction.isLoading ? null : () => ref.read(authActionProvider.notifier).signOut(),
+              onPressed: authAction.isLoading
+                  ? null
+                  : () => ref.read(authActionProvider.notifier).signOut(),
               child: const Text('Sign out'),
             ),
           ],
         ),
-        if (action.isLoading || authAction.isLoading) const LinearProgressIndicator(),
+        if (action.isLoading || authAction.isLoading)
+          const LinearProgressIndicator(),
         if (action.hasError || authAction.hasError)
           Text(
             (action.error ?? authAction.error).toString(),

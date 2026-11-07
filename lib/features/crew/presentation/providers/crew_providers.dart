@@ -63,9 +63,10 @@ final filteredCrewProvider = Provider.autoDispose<List<CrewAssignment>>((ref) {
       [];
 });
 
-final debouncedCrewQueryProvider = NotifierProvider.autoDispose<DebouncedCrewQuery, String>(
-  DebouncedCrewQuery.new,
-);
+final debouncedCrewQueryProvider =
+    NotifierProvider.autoDispose<DebouncedCrewQuery, String>(
+      DebouncedCrewQuery.new,
+    );
 
 class DebouncedCrewQuery extends Notifier<String> {
   @override

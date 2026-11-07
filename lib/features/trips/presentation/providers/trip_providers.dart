@@ -27,13 +27,10 @@ final ownerBusesProvider = StreamProvider.autoDispose
     });
 
 final dailyAdjustmentsProvider = StreamProvider.autoDispose
-    .family<List<DailyAdjustment>, String>(
-      (ref, date) {
-        retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
-        return ref.watch(tripRepositoryProvider).watchAdjustments(date);
-      },
-      retry: (_, _) => null,
-    );
+    .family<List<DailyAdjustment>, String>((ref, date) {
+      retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
+      return ref.watch(tripRepositoryProvider).watchAdjustments(date);
+    }, retry: (_, _) => null);
 
 final selectedBusProvider = NotifierProvider.autoDispose
     .family<SelectedBus, String?, String>(SelectedBus.new);
@@ -225,31 +222,39 @@ typedef BusTripsKey = ({String ownerId, String businessId, String busId});
 typedef BusTrips = ({List<ServiceEntity> trips, List<ServiceEntity> legacy});
 
 /// Filter and sort each owner snapshot once, independently of date or busy UI.
-final busTripsProvider = Provider.autoDispose.family<AsyncValue<BusTrips>, BusTripsKey>(
-  (ref, key) => ref.watch(ownerServicesProvider).whenData((all) {
-    final trips = <ServiceEntity>[];
-    final legacy = <ServiceEntity>[];
-    for (final service in all) {
-      if (service.ownerId != key.ownerId ||
-          service.businessId != key.businessId) continue;
-      if (service.busId == key.busId) {
-        trips.add(service);
-      } else if (service.busId.isEmpty) {
-        legacy.add(service);
-      }
-    }
-    trips.sort((a, b) => a.departureMinutes.compareTo(b.departureMinutes));
-    return (trips: List.unmodifiable(trips), legacy: List.unmodifiable(legacy));
-  }),
-);
+final busTripsProvider = Provider.autoDispose
+    .family<AsyncValue<BusTrips>, BusTripsKey>(
+      (ref, key) => ref.watch(ownerServicesProvider).whenData((all) {
+        final trips = <ServiceEntity>[];
+        final legacy = <ServiceEntity>[];
+        for (final service in all) {
+          if (service.ownerId != key.ownerId ||
+              service.businessId != key.businessId)
+            continue;
+          if (service.busId == key.busId) {
+            trips.add(service);
+          } else if (service.busId.isEmpty) {
+            legacy.add(service);
+          }
+        }
+        trips.sort((a, b) => a.departureMinutes.compareTo(b.departureMinutes));
+        return (
+          trips: List.unmodifiable(trips),
+          legacy: List.unmodifiable(legacy),
+        );
+      }),
+    );
 
 /// One lookup table per date, shared by the owner cards and passenger results.
 final dailyAdjustmentIndexProvider = Provider.autoDispose
     .family<AsyncValue<Map<String, DailyAdjustment>>, String>(
-  (ref, date) => ref.watch(dailyAdjustmentsProvider(date)).whenData(
-    (items) => Map.unmodifiable({for (final item in items) item.tripId: item}),
-  ),
-);
+      (ref, date) => ref
+          .watch(dailyAdjustmentsProvider(date))
+          .whenData(
+            (items) =>
+                Map.unmodifiable({for (final item in items) item.tripId: item}),
+          ),
+    );
 
 final operationDateProvider =
     NotifierProvider.autoDispose<OperationDate, DateTime>(OperationDate.new);
@@ -267,7 +272,6 @@ class OperationDate extends Notifier<DateTime> {
       state = DateTime(date.year, date.month, date.day);
 }
 
-
 final legacyTripsExpandedProvider = NotifierProvider.autoDispose
     .family<LegacyTripsExpanded, bool, String>(LegacyTripsExpanded.new);
 
@@ -281,8 +285,8 @@ class LegacyTripsExpanded extends Notifier<bool> {
 
 final tripEditorStructureProvider = Provider.autoDispose
     .family<TripEditorStructure, TripEditorKey>(
-  (ref, args) => TripEditorStructure(ref.watch(tripDraftProvider(args))),
-);
+      (ref, args) => TripEditorStructure(ref.watch(tripDraftProvider(args))),
+    );
 
 /// Route typing rebuilds its own row. Note typing doesn't rebuild the timeline.
 class TripEditorStructure extends Equatable {
@@ -290,8 +294,11 @@ class TripEditorStructure extends Equatable {
   const TripEditorStructure(this.draft);
   @override
   List<Object?> get props => [
-    draft.step, draft.error,
-    draft.step == 0 ? draft.plan.stops.map((stop) => stop.id).toList() : draft.plan.stops,
+    draft.step,
+    draft.error,
+    draft.step == 0
+        ? draft.plan.stops.map((stop) => stop.id).toList()
+        : draft.plan.stops,
     draft.plan.offDays,
     if (draft.step == 2) draft.plan.note,
   ];

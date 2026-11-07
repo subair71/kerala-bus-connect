@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
-import '../../../../core/utils/time_utils.dart';
 import '../../../../core/widgets/editor_sheet.dart';
 import '../../../timetables/domain/entities/business_entity.dart';
 import '../../../timetables/domain/entities/service_entity.dart';
@@ -23,13 +22,15 @@ class BusTripDashboard extends ConsumerWidget {
       slivers: [
         SliverToBoxAdapter(child: _BusHeader(business: business)),
         buses.when(
-          loading: () => const SliverToBoxAdapter(child: LinearProgressIndicator()),
+          loading: () =>
+              const SliverToBoxAdapter(child: LinearProgressIndicator()),
           error: (_, _) => SliverToBoxAdapter(
             child: Column(
               children: [
                 const Text('Unable to load your buses.'),
                 TextButton(
-                  onPressed: () => ref.invalidate(ownerBusesProvider(business.id)),
+                  onPressed: () =>
+                      ref.invalidate(ownerBusesProvider(business.id)),
                   child: const Text('Retry'),
                 ),
               ],
@@ -44,11 +45,16 @@ class BusTripDashboard extends ConsumerWidget {
                 ),
               );
             }
-            final bus = list.where((b) => b.id == selected).firstOrNull ?? list.first;
+            final bus =
+                list.where((b) => b.id == selected).firstOrNull ?? list.first;
             return SliverMainAxisGroup(
               slivers: [
                 SliverToBoxAdapter(
-                  child: _BusControls(business: business, bus: bus, buses: list),
+                  child: _BusControls(
+                    business: business,
+                    bus: bus,
+                    buses: list,
+                  ),
                 ),
                 _BusTrips(key: ValueKey(bus.id), business: business, bus: bus),
               ],
@@ -70,15 +76,22 @@ class _BusHeader extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text('Buses & trips', style: Theme.of(context).textTheme.headlineSmall),
-        const Text('Select bus → Manage trips → Route & stops → Timings → Review'),
+        const Text(
+          'Select bus → Manage trips → Route & stops → Timings → Review',
+        ),
         const SizedBox(height: 12),
         FilledButton.icon(
-          onPressed: action.isLoading ? null : () => openEditor(context, _BusEditor(business: business)),
+          onPressed: action.isLoading
+              ? null
+              : () => openEditor(context, _BusEditor(business: business)),
           icon: const Icon(Icons.add),
           label: const Text('Add bus'),
         ),
         if (action.hasError)
-          Text(action.error.toString(), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          Text(
+            action.error.toString(),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
       ],
     );
   }
@@ -88,10 +101,16 @@ class _BusControls extends ConsumerWidget {
   final BusinessEntity business;
   final BusEntity bus;
   final List<BusEntity> buses;
-  const _BusControls({required this.business, required this.bus, required this.buses});
+  const _BusControls({
+    required this.business,
+    required this.bus,
+    required this.buses,
+  });
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final busy = ref.watch(tripActionsProvider.select((value) => value.isLoading));
+    final busy = ref.watch(
+      tripActionsProvider.select((value) => value.isLoading),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -108,39 +127,58 @@ class _BusControls extends ConsumerWidget {
                 child: Text(item.name, overflow: TextOverflow.ellipsis),
               ),
           ],
-          onChanged: busy ? null : (id) {
-            if (id != null) ref.read(selectedBusProvider(business.id).notifier).select(id);
-          },
+          onChanged: busy
+              ? null
+              : (id) {
+                  if (id != null)
+                    ref
+                        .read(selectedBusProvider(business.id).notifier)
+                        .select(id);
+                },
         ),
         Wrap(
           spacing: 8,
           children: [
             TextButton(
-              onPressed: busy ? null : () => openEditor(context, _BusEditor(business: business, bus: bus)),
+              onPressed: busy
+                  ? null
+                  : () => openEditor(
+                      context,
+                      _BusEditor(business: business, bus: bus),
+                    ),
               child: const Text('Rename bus'),
             ),
             TextButton(
-              onPressed: busy ? null : () async {
-                if (await confirmDelete(context, bus.name) && context.mounted) {
-                  await ref.read(tripActionsProvider.notifier).deleteBus(bus);
-                }
-              },
+              onPressed: busy
+                  ? null
+                  : () async {
+                      if (await confirmDelete(context, bus.name) &&
+                          context.mounted) {
+                        await ref
+                            .read(tripActionsProvider.notifier)
+                            .deleteBus(bus);
+                      }
+                    },
               child: const Text('Delete bus'),
             ),
           ],
         ),
         FilledButton.tonalIcon(
-          onPressed: busy ? null : () => openEditor(
-            context,
-            TripEditor(
-              business: business,
-              bus: bus,
-              initial: TripPlan(stops: const [
-                TripStop('origin', '', -1),
-                TripStop('destination', '', -1),
-              ]),
-            ),
-          ),
+          onPressed: busy
+              ? null
+              : () => openEditor(
+                  context,
+                  TripEditor(
+                    business: business,
+                    bus: bus,
+                    initial: TripPlan(
+                      stops: const [
+                        TripStop('origin', '', -1),
+                        TripStop('destination', '', -1),
+                      ],
+                    ),
+                  ),
+                ),
           icon: const Icon(Icons.add_road),
           label: const Text('Create trip'),
         ),
@@ -155,14 +193,19 @@ class _BusTrips extends ConsumerWidget {
   const _BusTrips({super.key, required this.business, required this.bus});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final services = ref.watch(busTripsProvider((
-      ownerId: bus.ownerId, businessId: business.id, busId: bus.id,
-    )));
+    final services = ref.watch(
+      busTripsProvider((
+        ownerId: bus.ownerId,
+        businessId: business.id,
+        busId: bus.id,
+      )),
+    );
     return SliverMainAxisGroup(
       slivers: [
         const SliverToBoxAdapter(child: _OperationDateHeader()),
         services.when(
-          loading: () => const SliverToBoxAdapter(child: LinearProgressIndicator()),
+          loading: () =>
+              const SliverToBoxAdapter(child: LinearProgressIndicator()),
           error: (_, _) => SliverToBoxAdapter(
             child: TextButton(
               onPressed: () => ref.invalidate(ownerServicesProvider),
@@ -175,18 +218,26 @@ class _BusTrips extends ConsumerWidget {
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.all(16),
-                    child: Text('No trips for this bus yet. Create a trip above.'),
+                    child: Text(
+                      'No trips for this bus yet. Create a trip above.',
+                    ),
                   ),
                 ),
               SliverList.builder(
                 itemCount: data.trips.length,
                 itemBuilder: (context, i) => _TripCard(
                   key: ValueKey(data.trips[i].id),
-                  service: data.trips[i], business: business, bus: bus,
+                  service: data.trips[i],
+                  business: business,
+                  bus: bus,
                 ),
               ),
               if (data.legacy.isNotEmpty)
-                _LegacyTrips(business: business, bus: bus, services: data.legacy),
+                _LegacyTrips(
+                  business: business,
+                  bus: bus,
+                  services: data.legacy,
+                ),
             ],
           ),
         ),
@@ -201,28 +252,38 @@ class _OperationDateHeader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final date = ref.watch(operationDateProvider);
     final dateKey = serviceDateKey(date);
-    final busy = ref.watch(tripActionsProvider.select((value) => value.isLoading));
-    final status = ref.watch(dailyAdjustmentsProvider(dateKey).select(
-      (value) => (loading: value.isLoading, error: value.hasError),
-    ));
+    final busy = ref.watch(
+      tripActionsProvider.select((value) => value.isLoading),
+    );
+    final status = ref.watch(
+      dailyAdjustmentsProvider(
+        dateKey,
+      ).select((value) => (loading: value.isLoading, error: value.hasError)),
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 16),
         OutlinedButton.icon(
-          onPressed: busy ? null : () async {
-            final selected = await showDatePicker(
-              context: context, initialDate: date,
-              firstDate: DateTime(2020), lastDate: DateTime(2100),
-            );
-            if (selected != null && context.mounted) {
-              ref.read(operationDateProvider.notifier).select(selected);
-            }
-          },
+          onPressed: busy
+              ? null
+              : () async {
+                  final selected = await showDatePicker(
+                    context: context,
+                    initialDate: date,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2100),
+                  );
+                  if (selected != null && context.mounted) {
+                    ref.read(operationDateProvider.notifier).select(selected);
+                  }
+                },
           icon: const Icon(Icons.calendar_month),
           label: Text('Service date: $dateKey'),
         ),
-        const Text('The date applies to daily delays. Trips below are regular schedules.'),
+        const Text(
+          'The date applies to daily delays. Trips below are regular schedules.',
+        ),
         if (status.loading) const LinearProgressIndicator(),
         if (status.error)
           TextButton(
@@ -238,7 +299,11 @@ class _LegacyTrips extends ConsumerWidget {
   final BusinessEntity business;
   final BusEntity bus;
   final List<ServiceEntity> services;
-  const _LegacyTrips({required this.business, required this.bus, required this.services});
+  const _LegacyTrips({
+    required this.business,
+    required this.bus,
+    required this.services,
+  });
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final expanded = ref.watch(legacyTripsExpandedProvider(business.id));
@@ -247,9 +312,13 @@ class _LegacyTrips extends ConsumerWidget {
         SliverToBoxAdapter(
           child: ListTile(
             title: const Text('Assign existing timetables'),
-            subtitle: const Text('Select a timetable to associate with this bus.'),
+            subtitle: const Text(
+              'Select a timetable to associate with this bus.',
+            ),
             trailing: Icon(expanded ? Icons.expand_less : Icons.expand_more),
-            onTap: () => ref.read(legacyTripsExpandedProvider(business.id).notifier).toggle(),
+            onTap: () => ref
+                .read(legacyTripsExpandedProvider(business.id).notifier)
+                .toggle(),
           ),
         ),
         if (expanded)
@@ -259,17 +328,25 @@ class _LegacyTrips extends ConsumerWidget {
               key: ValueKey(services[i].id),
               builder: (context, ref, _) {
                 final service = services[i];
-                final busy = ref.watch(tripActionsProvider.select((value) => value.isLoading));
+                final busy = ref.watch(
+                  tripActionsProvider.select((value) => value.isLoading),
+                );
                 return ListTile(
                   title: Text('${service.busName} · ${service.routeName}'),
                   subtitle: Text(tripTimeLabel(service.departureMinutes)),
                   trailing: IconButton(
                     tooltip: 'Assign and edit',
                     icon: const Icon(Icons.edit),
-                    onPressed: busy ? null : () => openEditor(
-                      context,
-                      TripEditor(business: business, bus: bus, initial: TripPlan.fromService(service)),
-                    ),
+                    onPressed: busy
+                        ? null
+                        : () => openEditor(
+                            context,
+                            TripEditor(
+                              business: business,
+                              bus: bus,
+                              initial: TripPlan.fromService(service),
+                            ),
+                          ),
                   ),
                 );
               },
@@ -292,12 +369,18 @@ class _TripCard extends ConsumerWidget {
   });
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final busy = ref.watch(tripActionsProvider.select((value) => value.isLoading));
+    final busy = ref.watch(
+      tripActionsProvider.select((value) => value.isLoading),
+    );
     final date = ref.watch(operationDateProvider.select(serviceDateKey));
-    final daily = ref.watch(dailyAdjustmentIndexProvider(date).select((value) => (
-      ready: value.hasValue && !value.hasError && !value.isLoading,
-      adjustment: value.asData?.value[service.id],
-    )));
+    final daily = ref.watch(
+      dailyAdjustmentIndexProvider(date).select(
+        (value) => (
+          ready: value.hasValue && !value.hasError && !value.isLoading,
+          adjustment: value.asData?.value[service.id],
+        ),
+      ),
+    );
     final dailyReady = daily.ready;
     final adjustment = daily.adjustment;
     final trip = TripPlan.fromService(service);

@@ -33,6 +33,17 @@ jobs:
       - name: Capture layouts
         if: always()
         run: flutter test tool/capture_screenshots.dart --update-goldens --reporter expanded
+      - name: Review screenshots
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import base64, json
+          from pathlib import Path
+          for name in ['mobile-tracking', 'mobile-crew', 'mobile-workspace']:
+              path = Path('tool/screenshots') / (name + '.png')
+              if path.exists():
+                  print('REVIEW_IMAGE ' + json.dumps({'name': name, 'data': base64.b64encode(path.read_bytes()).decode()}))
+          PY
       - uses: actions/upload-artifact@v4
         if: always()
         with:

@@ -107,7 +107,11 @@ class _TimelinePreview extends ConsumerWidget {
   const _TimelinePreview();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final first = ref.watch(departureResultsProvider.select((value) => value.asData?.value.firstOrNull));
+    final first = ref.watch(
+      departureResultsProvider.select(
+        (value) => value.asData?.value.firstOrNull,
+      ),
+    );
     final query = ref.watch(debouncedSearchProvider);
     if (first == null) return const SizedBox.shrink();
     return Card(
