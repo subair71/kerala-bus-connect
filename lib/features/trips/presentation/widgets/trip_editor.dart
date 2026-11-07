@@ -1,3 +1,4 @@
+import '../../../places/presentation/widgets/place_text_field.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -373,7 +374,7 @@ class _StopName extends HookWidget {
   @override
   Widget build(BuildContext context) {
     final controller = useTextEditingController(text: stop.name);
-    return TextField(
+    return PlaceTextField(
       controller: controller,
       enabled: enabled,
       textCapitalization: TextCapitalization.words,

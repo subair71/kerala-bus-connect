@@ -20,7 +20,14 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - run: flutter build web --release --base-href /kerala-bus-connect/
+      - name: Build release web
+        env:
+          GOOGLE_PLACES_ENABLED: ${{ vars.GOOGLE_PLACES_ENABLED }}
+          FIREBASE_APP_CHECK_WEB_SITE_KEY: ${{ vars.FIREBASE_APP_CHECK_WEB_SITE_KEY }}
+        run: >-
+          flutter build web --release --base-href /kerala-bus-connect/
+          --dart-define=GOOGLE_PLACES_ENABLED=${GOOGLE_PLACES_ENABLED:-false}
+          --dart-define=FIREBASE_APP_CHECK_WEB_SITE_KEY=${FIREBASE_APP_CHECK_WEB_SITE_KEY}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build/web

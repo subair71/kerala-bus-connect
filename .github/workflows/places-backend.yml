@@ -1,0 +1,21 @@
+name: Validate Places backend
+on:
+  pull_request:
+    paths: ['functions/**', 'firebase.json', '.github/workflows/places-backend.yml']
+  push:
+    branches: [main, feature/google-places]
+    paths: ['functions/**', 'firebase.json', '.github/workflows/places-backend.yml']
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci --prefix functions
+      - run: npm test --prefix functions
+      - name: Verify callable function configuration
+        run: node --input-type=module -e "const {placeSuggestions} = await import('./functions/index.js'); if (!placeSuggestions.__endpoint) process.exit(1);"

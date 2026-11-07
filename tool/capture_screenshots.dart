@@ -1,3 +1,7 @@
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:kerala_bus_connect/features/places/domain/services/stop_labels.dart';
+import 'package:kerala_bus_connect/features/places/presentation/providers/places_providers.dart';
+import '../test/places_widget_test.dart' show WidgetPlaces;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,6 +27,42 @@ void main() {
       ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
     await icons.load();
   });
+  for (final width in [320.0, 390.0, 1440.0]) {
+    testWidgets('capture places $width', (tester) async {
+      tester.view.physicalSize = Size(width, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      final auth = FakeAuthRepository();
+      addTearDown(auth.changes.close);
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: const ValueKey('capture'),
+          child: ProviderScope(
+            overrides: [
+              googlePlacesEnabledProvider.overrideWithValue(true),
+              placesRepositoryProvider.overrideWithValue(WidgetPlaces()),
+              stopLabelsProvider.overrideWithValue(
+                StopLabels(['Aluva', 'Kaloor']),
+              ),
+            ],
+            child: harness(const AppShell(), FakeTransitRepository(), auth),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const ValueKey('search-from')), 'Eda');
+      if (width < 768)
+        tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+      expect(find.text('Edappally'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await expectLater(
+        find.byKey(const ValueKey('capture')),
+        matchesGoldenFile('screenshots/places-${width.toInt()}.png'),
+      );
+    });
+  }
   for (final entry in {
     'reference-home-no-ads': const Size(412, 1600),
     'desktop-home': const Size(1440, 1000),

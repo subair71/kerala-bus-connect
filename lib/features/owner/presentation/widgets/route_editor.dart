@@ -1,3 +1,4 @@
+import '../../../places/presentation/widgets/place_text_field.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/editor_sheet.dart';
@@ -40,8 +41,8 @@ class RouteEditor extends HookConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        TextField(
-          key: const ValueKey('route-from'),
+        PlaceTextField(
+          fieldKey: const ValueKey('route-from'),
           controller: from,
           decoration: const InputDecoration(
             labelText: 'Starting stop',
@@ -49,8 +50,8 @@ class RouteEditor extends HookConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        TextField(
-          key: const ValueKey('route-to'),
+        PlaceTextField(
+          fieldKey: const ValueKey('route-to'),
           controller: to,
           decoration: const InputDecoration(
             labelText: 'Ending stop',
@@ -58,7 +59,8 @@ class RouteEditor extends HookConsumerWidget {
           ),
         ),
         const SizedBox(height: 12),
-        TextField(
+        PlaceTextField(
+          commaSeparated: true,
           controller: stops,
           minLines: 2,
           maxLines: 4,
