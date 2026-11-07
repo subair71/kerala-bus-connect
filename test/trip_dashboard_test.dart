@@ -110,6 +110,12 @@ void main() {
           ),
           findsOneWidget,
         );
+        await tester.ensureVisible(find.byType(TextField));
+        await tester.enterText(
+          find.byType(TextField),
+          'Updated passenger note',
+        );
+        await tester.pump();
         await tester.ensureVisible(find.text('Review trip'));
         await tester.tap(find.text('Review trip'));
         await tester.pumpAndSettle();
@@ -117,7 +123,9 @@ void main() {
         await tester.tap(find.text('Save trip'));
         await tester.pumpAndSettle();
         expect(find.text('Open editor'), findsOneWidget);
-        expect((await db.collection('services').get()).docs, hasLength(1));
+        final saved = (await db.collection('services').get()).docs;
+        expect(saved, hasLength(1));
+        expect(saved.single.data()['offTimingsNote'], 'Updated passenger note');
         expect(tester.takeException(), isNull);
       },
     );
@@ -200,8 +208,8 @@ void main() {
         child: MaterialApp(
           theme: AppTheme.lightTheme,
           home: const Scaffold(
-            body: SingleChildScrollView(
-              child: BusTripDashboard(business: business),
+            body: CustomScrollView(
+              slivers: [BusTripDashboard(business: business)],
             ),
           ),
         ),

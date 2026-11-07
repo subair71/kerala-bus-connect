@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/data/data_set.dart';
+import '../../../../core/providers/cache_lifetime.dart';
 import '../../../../core/providers/firebase_providers.dart';
 import '../../../../core/providers/sample_fallback.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
@@ -13,6 +15,7 @@ final crewRepositoryProvider = Provider<CrewRepository>(
 );
 final liveCrewProvider = StreamProvider.autoDispose<List<CrewAssignment>>(
   (ref) {
+    retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
     final owner = ref.watch(ownerIdProvider);
     if (owner == null) return Stream.value([]);
     return ref.watch(crewRepositoryProvider).watch(owner);
@@ -42,7 +45,8 @@ class CrewFilterController extends Notifier<CrewFilter> {
 }
 
 final filteredCrewProvider = Provider.autoDispose<List<CrewAssignment>>((ref) {
-  final filter = ref.watch(crewFilterProvider);
+  final query = ref.watch(debouncedCrewQueryProvider);
+  final shift = ref.watch(crewFilterProvider.select((filter) => filter.shift));
   return ref
           .watch(crewDataProvider)
           .asData
@@ -50,11 +54,31 @@ final filteredCrewProvider = Provider.autoDispose<List<CrewAssignment>>((ref) {
           .records
           .where(
             (item) =>
-                (filter.shift == 'All' || item.shift == filter.shift) &&
+                (shift == 'All' || item.shift == shift) &&
                 '${item.name} ${item.role} ${item.vehicle}'
                     .toLowerCase()
-                    .contains(filter.query),
+                    .contains(query),
           )
           .toList() ??
       [];
 });
+
+final debouncedCrewQueryProvider =
+    NotifierProvider.autoDispose<DebouncedCrewQuery, String>(
+      DebouncedCrewQuery.new,
+    );
+
+class DebouncedCrewQuery extends Notifier<String> {
+  @override
+  String build() {
+    Timer? timer;
+    ref.listen(crewFilterProvider.select((filter) => filter.query), (_, next) {
+      timer?.cancel();
+      timer = Timer(const Duration(milliseconds: 200), () {
+        if (ref.mounted) state = next;
+      });
+    });
+    ref.onDispose(() => timer?.cancel());
+    return ref.read(crewFilterProvider).query;
+  }
+}

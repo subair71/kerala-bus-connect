@@ -74,9 +74,11 @@ class ServiceEntity extends Equatable {
 
   /// Returns only supplied times; an unknown stop never inherits a departure.
   int? scheduledTime(String stop) {
+    final exact = stopTimings[stop];
+    if (exact != null) return exact;
+    final normalized = stop.trim().toLowerCase();
     for (final entry in stopTimings.entries) {
-      if (entry.key.trim().toLowerCase() == stop.trim().toLowerCase())
-        return entry.value;
+      if (entry.key.trim().toLowerCase() == normalized) return entry.value;
     }
     if (stops.isNotEmpty &&
         stops.first.toLowerCase() == stop.toLowerCase() &&

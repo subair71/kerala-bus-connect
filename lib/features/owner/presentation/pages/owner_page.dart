@@ -46,108 +46,149 @@ class _OwnerWorkspace extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final businesses = ref.watch(ownerBusinessesProvider);
     final selected = ref.watch(selectedBusinessProvider);
-    final action = ref.watch(ownerActionsProvider);
-    final authAction = ref.watch(authActionProvider);
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 960),
-        child: ListView(
+        child: CustomScrollView(
           key: const PageStorageKey('owner'),
-          padding: const EdgeInsets.all(16),
-          children: [
-            const PageHeading(
-              title: 'Owner portal',
-              subtitle: 'Manage your buses, trips and daily timings.',
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          slivers: [
+            const SliverPadding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+              sliver: SliverToBoxAdapter(child: _OwnerHeader()),
             ),
-            Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              children: [
-                FilledButton.icon(
-                  onPressed: action.isLoading
-                      ? null
-                      : () => openEditor(context, const BusinessEditor()),
-                  icon: const Icon(Icons.add_business),
-                  label: const Text('Add business'),
-                ),
-                OutlinedButton(
-                  onPressed: authAction.isLoading
-                      ? null
-                      : () => ref.read(authActionProvider.notifier).signOut(),
-                  child: const Text('Sign out'),
-                ),
-              ],
-            ),
-            if (action.isLoading || authAction.isLoading)
-              const LinearProgressIndicator(),
-            if (action.hasError || authAction.hasError)
-              Text(
-                (action.error ?? authAction.error).toString(),
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-            const SizedBox(height: 16),
             businesses.when(
-              loading: () => const AsyncStatus(loading: true),
-              error: (_, _) => AsyncStatus(
-                message: 'Unable to load your businesses.',
-                retry: () => ref.invalidate(ownerBusinessesProvider),
+              loading: () =>
+                  const SliverToBoxAdapter(child: AsyncStatus(loading: true)),
+              error: (_, _) => SliverToBoxAdapter(
+                child: AsyncStatus(
+                  message: 'Unable to load your businesses.',
+                  retry: () => ref.invalidate(ownerBusinessesProvider),
+                ),
               ),
               data: (list) => list.isEmpty
-                  ? const AsyncStatus(
-                      message: 'Create your first business to add buses.',
+                  ? const SliverToBoxAdapter(
+                      child: AsyncStatus(
+                        message: 'Create your first business to add buses.',
+                      ),
                     )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        DropdownButtonFormField<String>(
-                          key: ValueKey('business-${selected?.id}'),
-                          initialValue: selected?.id,
-                          isExpanded: true,
-                          decoration: const InputDecoration(
-                            labelText: 'Business',
-                          ),
-                          items: [
-                            for (final business in list)
-                              DropdownMenuItem(
-                                value: business.id,
-                                child: Text(
-                                  business.name,
-                                  overflow: TextOverflow.ellipsis,
+                  : SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      sliver: SliverMainAxisGroup(
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                DropdownButtonFormField<String>(
+                                  key: ValueKey('business-${selected?.id}'),
+                                  initialValue: selected?.id,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Business',
+                                  ),
+                                  items: [
+                                    for (final business in list)
+                                      DropdownMenuItem(
+                                        value: business.id,
+                                        child: Text(
+                                          business.name,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                  ],
+                                  onChanged: (id) {
+                                    if (id != null)
+                                      ref
+                                          .read(
+                                            selectedBusinessIdProvider.notifier,
+                                          )
+                                          .select(id);
+                                  },
                                 ),
-                              ),
-                          ],
-                          onChanged: (id) {
-                            if (id != null)
-                              ref
-                                  .read(selectedBusinessIdProvider.notifier)
-                                  .select(id);
-                          },
-                        ),
-                        if (selected != null) ...[
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: TextButton(
-                              onPressed: action.isLoading
-                                  ? null
-                                  : () => openEditor(
-                                      context,
-                                      BusinessEditor(business: selected),
+                                if (selected != null)
+                                  Consumer(
+                                    builder: (context, ref, _) => Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: TextButton(
+                                        onPressed:
+                                            ref.watch(
+                                              ownerActionsProvider.select(
+                                                (value) => value.isLoading,
+                                              ),
+                                            )
+                                            ? null
+                                            : () => openEditor(
+                                                context,
+                                                BusinessEditor(
+                                                  business: selected,
+                                                ),
+                                              ),
+                                        child: const Text('Rename business'),
+                                      ),
                                     ),
-                              child: const Text('Rename business'),
+                                  ),
+                                const Divider(height: 32),
+                              ],
                             ),
                           ),
-                          const Divider(height: 32),
-                          BusTripDashboard(
-                            key: ValueKey(selected.id),
-                            business: selected,
-                          ),
+                          if (selected != null)
+                            BusTripDashboard(
+                              key: ValueKey(selected.id),
+                              business: selected,
+                            ),
                         ],
-                      ],
+                      ),
                     ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _OwnerHeader extends ConsumerWidget {
+  const _OwnerHeader();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final action = ref.watch(ownerActionsProvider);
+    final authAction = ref.watch(authActionProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const PageHeading(
+          title: 'Owner portal',
+          subtitle: 'Manage your buses, trips and daily timings.',
+        ),
+        Wrap(
+          spacing: 12,
+          runSpacing: 8,
+          children: [
+            FilledButton.icon(
+              onPressed: action.isLoading
+                  ? null
+                  : () => openEditor(context, const BusinessEditor()),
+              icon: const Icon(Icons.add_business),
+              label: const Text('Add business'),
+            ),
+            OutlinedButton(
+              onPressed: authAction.isLoading
+                  ? null
+                  : () => ref.read(authActionProvider.notifier).signOut(),
+              child: const Text('Sign out'),
+            ),
+          ],
+        ),
+        if (action.isLoading || authAction.isLoading)
+          const LinearProgressIndicator(),
+        if (action.hasError || authAction.hasError)
+          Text(
+            (action.error ?? authAction.error).toString(),
+            style: TextStyle(color: Theme.of(context).colorScheme.error),
+          ),
+        const SizedBox(height: 16),
+      ],
     );
   }
 }

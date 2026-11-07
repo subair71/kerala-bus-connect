@@ -1,5 +1,6 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/data/data_set.dart';
+import '../../../../core/providers/cache_lifetime.dart';
 import '../../../../core/providers/firebase_providers.dart';
 import '../../../../core/providers/sample_fallback.dart';
 import '../../domain/entities/tracking_preview.dart';
@@ -11,7 +12,10 @@ final trackingRepositoryProvider = Provider<TrackingRepository>(
   (ref) => FirebaseTrackingRepository(ref.watch(firestoreProvider)),
 );
 final liveTrackingProvider = StreamProvider.autoDispose<List<TrackingPreview>>(
-  (ref) => ref.watch(trackingRepositoryProvider).watch(),
+  (ref) {
+    retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
+    return ref.watch(trackingRepositoryProvider).watch();
+  },
   // Firestore owns reconnection; expose errors to the labelled preview fallback.
   retry: (_, _) => null,
 );

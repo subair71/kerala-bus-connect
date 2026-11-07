@@ -1,6 +1,8 @@
 import '../../../trips/domain/entities/trip_plan.dart';
 import '../../../trips/presentation/providers/trip_providers.dart';
 import 'dart:async';
+import '../../../../core/providers/cache_lifetime.dart';
+import '../../domain/services/departure_order.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/providers/clock_provider.dart';
 import '../../../../core/constants/transit_constants.dart';
@@ -104,11 +106,12 @@ class DebouncedSearch extends Notifier<SearchQuery> {
 }
 
 final serviceIndexProvider =
-    Provider.autoDispose<AsyncValue<ServiceSearchIndex>>(
-      (ref) => ref
+    Provider.autoDispose<AsyncValue<ServiceSearchIndex>>((ref) {
+      retainWhileIdle(ref, ref.watch(catalogCacheDurationProvider));
+      return ref
           .watch(serviceCatalogProvider)
-          .whenData((data) => ServiceSearchIndex(data.records)),
-    );
+          .whenData((data) => ServiceSearchIndex(data.records));
+    });
 
 final passengerDailyUpdatesUnavailableProvider = Provider.autoDispose<bool>((
   ref,
@@ -138,33 +141,15 @@ final departureResultsProvider =
         if (query.serviceDate != null &&
             services.any((s) => s.busId.isNotEmpty)) {
           final date = serviceDateKey(query.serviceDate!);
-          final daily = ref.watch(dailyAdjustmentsProvider(date));
+          final daily = ref.watch(dailyAdjustmentIndexProvider(date));
           if (daily.hasValue && !daily.hasError && !daily.isLoading) {
-            final adjustments = {
-              for (final item in daily.requireValue) item.tripId: item,
-            };
+            final adjustments = daily.requireValue;
             services = [
               for (final service in services)
                 adjustments[service.id]?.apply(service) ?? service,
             ];
           }
         }
-        int boardingTime(ServiceEntity service) {
-          final stop = query.from.trim().isEmpty
-              ? service.stops.firstOrNull
-              : service.stops
-                    .where(
-                      (s) => s.toLowerCase().contains(
-                        query.from.trim().toLowerCase(),
-                      ),
-                    )
-                    .firstOrNull;
-          return stop == null ? 999999 : service.expectedTime(stop) ?? 999999;
-        }
-
-        return List.unmodifiable(
-          [...services]
-            ..sort((a, b) => boardingTime(a).compareTo(boardingTime(b))),
-        );
+        return orderDepartures(services, query.from);
       });
     });

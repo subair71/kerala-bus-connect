@@ -57,7 +57,8 @@ class TripEditor extends ConsumerWidget {
     if (owner != bus.ownerId)
       return const Text('Please sign in to the bus owner account.');
     final args = (plan: initial, ownerId: owner!);
-    final state = ref.watch(tripDraftProvider(args));
+    ref.watch(tripEditorStructureProvider(args));
+    final state = ref.read(tripDraftProvider(args));
     final controller = ref.read(tripDraftProvider(args).notifier);
     final action = ref.watch(tripActionsProvider);
     final plan = state.plan;
@@ -112,74 +113,13 @@ class TripEditor extends ConsumerWidget {
             },
             itemBuilder: (context, index) {
               final stop = plan.stops[index];
-              return Card(
+              return _RouteStopRow(
                 key: ValueKey(stop.id),
-                child: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Row(
-                        children: [
-                          ReorderableDragStartListener(
-                            index: index,
-                            enabled: !action.isLoading,
-                            child: Semantics(
-                              label: 'Drag to reorder ${stop.name}',
-                              child: const SizedBox(
-                                width: 48,
-                                height: 48,
-                                child: Icon(Icons.drag_handle),
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            child: _StopName(
-                              key: ValueKey('name-${stop.id}'),
-                              stop: stop,
-                              enabled: !action.isLoading,
-                              label: index == 0
-                                  ? 'Origin'
-                                  : index == plan.stops.length - 1
-                                  ? 'Destination'
-                                  : 'Stop ${index + 1}',
-                              onChanged: (name) =>
-                                  controller.rename(index, name),
-                            ),
-                          ),
-                        ],
-                      ),
-                      Wrap(
-                        children: [
-                          IconButton(
-                            tooltip: 'Move up ${stop.name}',
-                            onPressed: index == 0 || action.isLoading
-                                ? null
-                                : () => controller.move(index, index - 1),
-                            icon: const Icon(Icons.arrow_upward),
-                          ),
-                          IconButton(
-                            tooltip: 'Move down ${stop.name}',
-                            onPressed:
-                                index == plan.stops.length - 1 ||
-                                    action.isLoading
-                                ? null
-                                : () => controller.move(index, index + 1),
-                            icon: const Icon(Icons.arrow_downward),
-                          ),
-                          IconButton(
-                            tooltip: 'Remove ${stop.name}',
-                            onPressed:
-                                plan.stops.length <= 2 || action.isLoading
-                                ? null
-                                : () => controller.remove(index),
-                            icon: const Icon(Icons.delete_outline),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                args: args,
+                stopId: stop.id,
+                index: index,
+                count: plan.stops.length,
+                enabled: !action.isLoading,
               );
             },
           ),
@@ -297,7 +237,11 @@ class TripEditor extends ConsumerWidget {
                   } else {
                     final saved = await ref
                         .read(tripActionsProvider.notifier)
-                        .saveTrip(business, bus, plan);
+                        .saveTrip(
+                          business,
+                          bus,
+                          ref.read(tripDraftProvider(args)).plan,
+                        );
                     if (saved && context.mounted) Navigator.pop(context);
                   }
                 },
@@ -314,6 +258,98 @@ class TripEditor extends ConsumerWidget {
           child: const Text('Cancel'),
         ),
       ],
+    );
+  }
+}
+
+class _RouteStopRow extends ConsumerWidget {
+  final TripEditorKey args;
+  final String stopId;
+  final int index, count;
+  final bool enabled;
+  const _RouteStopRow({
+    super.key,
+    required this.args,
+    required this.stopId,
+    required this.index,
+    required this.count,
+    required this.enabled,
+  });
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stop = ref.watch(
+      tripDraftProvider(args).select((draft) {
+        final stops = draft.plan.stops;
+        if (index < stops.length && stops[index].id == stopId)
+          return stops[index];
+        return stops.where((stop) => stop.id == stopId).firstOrNull;
+      }),
+    );
+    if (stop == null) return const SizedBox.shrink();
+    final controller = ref.read(tripDraftProvider(args).notifier);
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                ReorderableDragStartListener(
+                  index: index,
+                  enabled: enabled,
+                  child: Semantics(
+                    label: 'Drag to reorder ${stop.name}',
+                    child: const SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Icon(Icons.drag_handle),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _StopName(
+                    key: ValueKey('name-${stop.id}'),
+                    stop: stop,
+                    enabled: enabled,
+                    label: index == 0
+                        ? 'Origin'
+                        : index == count - 1
+                        ? 'Destination'
+                        : 'Stop ${index + 1}',
+                    onChanged: (name) => controller.rename(index, name),
+                  ),
+                ),
+              ],
+            ),
+            Wrap(
+              children: [
+                IconButton(
+                  tooltip: 'Move up ${stop.name}',
+                  onPressed: index == 0 || !enabled
+                      ? null
+                      : () => controller.move(index, index - 1),
+                  icon: const Icon(Icons.arrow_upward),
+                ),
+                IconButton(
+                  tooltip: 'Move down ${stop.name}',
+                  onPressed: index == count - 1 || !enabled
+                      ? null
+                      : () => controller.move(index, index + 1),
+                  icon: const Icon(Icons.arrow_downward),
+                ),
+                IconButton(
+                  tooltip: 'Remove ${stop.name}',
+                  onPressed: count <= 2 || !enabled
+                      ? null
+                      : () => controller.remove(index),
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -365,32 +401,35 @@ class _TimelineStop extends StatelessWidget {
     required this.child,
   });
   @override
-  Widget build(BuildContext context) => IntrinsicHeight(
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SizedBox(
-          width: 40,
-          child: Column(
-            children: [
-              CircleAvatar(radius: 14, child: Text('$number')),
-              if (!last)
-                Expanded(
-                  child: VerticalDivider(
-                    color: Theme.of(context).colorScheme.primary,
-                    thickness: 2,
-                  ),
-                ),
-            ],
+  Widget build(BuildContext context) => Stack(
+    children: [
+      if (!last)
+        Positioned(
+          left: 19,
+          top: 28,
+          bottom: 0,
+          child: SizedBox(
+            width: 2,
+            child: ColoredBox(color: Theme.of(context).colorScheme.primary),
           ),
         ),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 24, left: 8),
-            child: child,
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 40,
+            child: Center(
+              child: CircleAvatar(radius: 14, child: Text('$number')),
+            ),
           ),
-        ),
-      ],
-    ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24, left: 8),
+              child: child,
+            ),
+          ),
+        ],
+      ),
+    ],
   );
 }

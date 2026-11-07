@@ -1,6 +1,11 @@
 import 'dart:async';
+import 'package:equatable/equatable.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/errors/app_failure.dart';
+import '../../../../core/utils/time_utils.dart';
+import '../../../../core/providers/cache_lifetime.dart';
+import '../../../timetables/domain/entities/service_entity.dart';
+import '../../../timetables/presentation/providers/timetable_providers.dart';
 import '../../../../core/providers/firebase_providers.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../timetables/domain/entities/business_entity.dart';
@@ -14,6 +19,7 @@ final tripRepositoryProvider = Provider<TripRepository>(
 
 final ownerBusesProvider = StreamProvider.autoDispose
     .family<List<BusEntity>, String>((ref, businessId) {
+      retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
       final owner = ref.watch(ownerIdProvider);
       return owner == null
           ? Stream.value(const <BusEntity>[])
@@ -21,9 +27,10 @@ final ownerBusesProvider = StreamProvider.autoDispose
     });
 
 final dailyAdjustmentsProvider = StreamProvider.autoDispose
-    .family<List<DailyAdjustment>, String>(
-      (ref, date) => ref.watch(tripRepositoryProvider).watchAdjustments(date),
-    );
+    .family<List<DailyAdjustment>, String>((ref, date) {
+      retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
+      return ref.watch(tripRepositoryProvider).watchAdjustments(date);
+    }, retry: (_, _) => null);
 
 final selectedBusProvider = NotifierProvider.autoDispose
     .family<SelectedBus, String?, String>(SelectedBus.new);
@@ -33,6 +40,7 @@ class SelectedBus extends Notifier<String?> {
   final String businessId;
   @override
   String? build() {
+    retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
     ref.watch(ownerIdProvider);
     return null;
   }
@@ -208,4 +216,90 @@ class TripActions extends AsyncNotifier<void> {
   ) => run((owner, repo) => repo.saveAdjustment(owner, bus, trip, adjustment));
   Future<bool> resetDelay(BusEntity bus, TripPlan trip, String date) =>
       run((owner, repo) => repo.resetAdjustment(owner, bus, trip, date));
+}
+
+typedef BusTripsKey = ({String ownerId, String businessId, String busId});
+typedef BusTrips = ({List<ServiceEntity> trips, List<ServiceEntity> legacy});
+
+/// Filter and sort each owner snapshot once, independently of date or busy UI.
+final busTripsProvider = Provider.autoDispose
+    .family<AsyncValue<BusTrips>, BusTripsKey>(
+      (ref, key) => ref.watch(ownerServicesProvider).whenData((all) {
+        final trips = <ServiceEntity>[];
+        final legacy = <ServiceEntity>[];
+        for (final service in all) {
+          if (service.ownerId != key.ownerId ||
+              service.businessId != key.businessId)
+            continue;
+          if (service.busId == key.busId) {
+            trips.add(service);
+          } else if (service.busId.isEmpty) {
+            legacy.add(service);
+          }
+        }
+        trips.sort((a, b) => a.departureMinutes.compareTo(b.departureMinutes));
+        return (
+          trips: List.unmodifiable(trips),
+          legacy: List.unmodifiable(legacy),
+        );
+      }),
+    );
+
+/// One lookup table per date, shared by the owner cards and passenger results.
+final dailyAdjustmentIndexProvider = Provider.autoDispose
+    .family<AsyncValue<Map<String, DailyAdjustment>>, String>(
+      (ref, date) => ref
+          .watch(dailyAdjustmentsProvider(date))
+          .whenData(
+            (items) =>
+                Map.unmodifiable({for (final item in items) item.tripId: item}),
+          ),
+    );
+
+final operationDateProvider =
+    NotifierProvider.autoDispose<OperationDate, DateTime>(OperationDate.new);
+
+class OperationDate extends Notifier<DateTime> {
+  @override
+  DateTime build() {
+    retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
+    ref.watch(ownerIdProvider);
+    final now = keralaNow();
+    return DateTime(now.year, now.month, now.day);
+  }
+
+  void select(DateTime date) =>
+      state = DateTime(date.year, date.month, date.day);
+}
+
+final legacyTripsExpandedProvider = NotifierProvider.autoDispose
+    .family<LegacyTripsExpanded, bool, String>(LegacyTripsExpanded.new);
+
+class LegacyTripsExpanded extends Notifier<bool> {
+  LegacyTripsExpanded(this.businessId);
+  final String businessId;
+  @override
+  bool build() => false;
+  void toggle() => state = !state;
+}
+
+final tripEditorStructureProvider = Provider.autoDispose
+    .family<TripEditorStructure, TripEditorKey>(
+      (ref, args) => TripEditorStructure(ref.watch(tripDraftProvider(args))),
+    );
+
+/// Route typing rebuilds its own row. Note typing doesn't rebuild the timeline.
+class TripEditorStructure extends Equatable {
+  final TripDraft draft;
+  const TripEditorStructure(this.draft);
+  @override
+  List<Object?> get props => [
+    draft.step,
+    draft.error,
+    draft.step == 0
+        ? draft.plan.stops.map((stop) => stop.id).toList()
+        : draft.plan.stops,
+    draft.plan.offDays,
+    if (draft.step == 2) draft.plan.note,
+  ];
 }
