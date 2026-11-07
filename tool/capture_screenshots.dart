@@ -34,23 +34,33 @@ void main() {
       addTearDown(tester.view.reset);
       final auth = FakeAuthRepository();
       addTearDown(auth.changes.close);
-      await tester.pumpWidget(RepaintBoundary(
-        key: const ValueKey('capture'),
-        child: ProviderScope(overrides: [
-          googlePlacesEnabledProvider.overrideWithValue(true),
-          placesRepositoryProvider.overrideWithValue(WidgetPlaces()),
-          stopLabelsProvider.overrideWithValue(StopLabels(['Aluva', 'Kaloor'])),
-        ], child: harness(const AppShell(), FakeTransitRepository(), auth)),
-      ));
+      await tester.pumpWidget(
+        RepaintBoundary(
+          key: const ValueKey('capture'),
+          child: ProviderScope(
+            overrides: [
+              googlePlacesEnabledProvider.overrideWithValue(true),
+              placesRepositoryProvider.overrideWithValue(WidgetPlaces()),
+              stopLabelsProvider.overrideWithValue(
+                StopLabels(['Aluva', 'Kaloor']),
+              ),
+            ],
+            child: harness(const AppShell(), FakeTransitRepository(), auth),
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       await tester.enterText(find.byKey(const ValueKey('search-from')), 'Eda');
-      if (width < 768) tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+      if (width < 768)
+        tester.view.viewInsets = const FakeViewPadding(bottom: 280);
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
       expect(find.text('Edappally'), findsOneWidget);
       expect(tester.takeException(), isNull);
-      await expectLater(find.byKey(const ValueKey('capture')),
-        matchesGoldenFile('screenshots/places-${width.toInt()}.png'));
+      await expectLater(
+        find.byKey(const ValueKey('capture')),
+        matchesGoldenFile('screenshots/places-${width.toInt()}.png'),
+      );
     });
   }
   for (final entry in {

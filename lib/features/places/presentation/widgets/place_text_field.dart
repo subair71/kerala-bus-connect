@@ -58,8 +58,10 @@ class PlaceTextField extends HookConsumerWidget {
           optionsBuilder: (value) {
             if (!enabled ||
                 !focus.hasFocus ||
-                (value.composing.isValid && !value.composing.isCollapsed))
+                (value.composing.isValid && !value.composing.isCollapsed)) {
+              notifier.dismiss();
               return const <PlaceOption>[];
+            }
             return notifier.search(
               StopInput(
                 value.text,
