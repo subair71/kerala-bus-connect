@@ -184,6 +184,8 @@ void main() {
           await stream.close();
         }
       });
+      final account = container.listen(authUserProvider, (_, _) {});
+      addTearDown(account.close);
       await container.read(authUserProvider.future);
       final sub = container.listen(ownerServicesProvider, (_, _) {});
       repository.streams['owner']!.add([service('private')]);

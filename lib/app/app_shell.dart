@@ -10,6 +10,7 @@ import '../features/owner/presentation/pages/owner_page.dart';
 import '../features/tracking/presentation/pages/tracking_page.dart';
 import '../features/crew/presentation/pages/crew_page.dart';
 import 'navigation_provider.dart';
+import '../features/auth/presentation/providers/auth_providers.dart';
 
 class AppShell extends HookConsumerWidget {
   const AppShell({super.key});
@@ -24,6 +25,9 @@ class AppShell extends HookConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Observe session changes even while cached owner queries are off screen.
+    // A listener keeps auth current without rebuilding the shell on each event.
+    ref.listen(authUserProvider, (_, _) {});
     final tab = ref.watch(navigationProvider);
     final home = tab == AppTab.passenger;
     final baseTheme = Theme.of(context);
