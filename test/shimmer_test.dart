@@ -138,7 +138,6 @@ void main() {
     'skeleton semantics expose one announcement and hide decoration',
     (tester) async {
       final semantics = tester.ensureSemantics();
-      addTearDown(semantics.dispose);
       await tester.pumpWidget(
         shimmerHarness(
           const AppShimmer(
@@ -156,6 +155,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 150));
       expect(find.bySemanticsLabel('Loading bus results'), findsOneWidget);
       expect(find.bySemanticsLabel('Decorative placeholder'), findsNothing);
+      semantics.dispose();
     },
   );
 
