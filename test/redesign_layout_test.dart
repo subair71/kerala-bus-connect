@@ -197,7 +197,7 @@ void main() {
       final context = tester.element(find.byType(AppShell));
       await tester.runAsync(
         () => precacheImage(
-          const AssetImage('assets/images/sponsor-hotel.jpg'),
+          tester.widget<Image>(find.byType(Image).first).image,
           context,
         ),
       );
