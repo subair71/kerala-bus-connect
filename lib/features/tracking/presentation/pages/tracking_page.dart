@@ -1,3 +1,4 @@
+import '../../../../core/widgets/loading_skeletons.dart';
 import '../../../../core/widgets/data_notice.dart';
 import '../../../../core/widgets/async_status.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,12 @@ class TrackingPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final preview = ref.watch(trackingPreviewProvider);
     final data = ref.watch(trackingDataProvider);
-    if (preview == null) return const Center(child: AsyncStatus(loading: true));
+    if (data.isLoading && !data.hasValue) return const TrackingSkeleton();
+    if (data.hasError) {
+      return AsyncStatus(message: 'Unable to load tracking details.',
+        retry: () => ref.invalidate(liveTrackingProvider));
+    }
+    if (preview == null) return const AsyncStatus(message: 'No tracking details available.');
     final vehicles = data.asData!.value.records;
     final selected = ref
         .watch(trackingSelectionProvider)

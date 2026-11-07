@@ -1,3 +1,5 @@
+import '../../../../core/widgets/loading_skeletons.dart';
+import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../widgets/transit_advisory.dart';
@@ -113,6 +115,11 @@ class _TimelinePreview extends ConsumerWidget {
       ),
     );
     final query = ref.watch(debouncedSearchProvider);
+    final loading = ref.watch(departureResultsProvider.select(
+      (value) => value.isLoading && !value.hasValue,
+    ));
+    if (loading) return const AppShimmer(label: 'Loading stop timings',
+      child: SkeletonCard(layout: SkeletonLayout.timeline));
     if (first == null) return const SizedBox.shrink();
     return Card(
       child: TrainRouteView(

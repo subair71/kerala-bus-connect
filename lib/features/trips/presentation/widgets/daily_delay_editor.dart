@@ -1,3 +1,4 @@
+import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -121,7 +122,6 @@ class DailyDelayEditor extends ConsumerWidget {
           'Review the expected times above. Saving replaces the delays for this date.',
         ),
         const SizedBox(height: 12),
-        if (action.isLoading) const LinearProgressIndicator(),
         FilledButton(
           onPressed: action.isLoading
               ? null
@@ -140,7 +140,7 @@ class DailyDelayEditor extends ConsumerWidget {
                       );
                   if (saved && context.mounted) Navigator.pop(context);
                 },
-          child: const Text('Save daily adjustments'),
+          child: ActionShimmer(loading: action.isLoading, label: 'Save daily adjustments', child: const Text('Save daily adjustments')),
         ),
         OutlinedButton(
           onPressed: action.isLoading
@@ -172,7 +172,7 @@ class DailyDelayEditor extends ConsumerWidget {
                     if (saved && context.mounted) Navigator.pop(context);
                   }
                 },
-          child: const Text('Reset daily adjustments'),
+          child: ActionShimmer(loading: action.isLoading, label: 'Reset daily adjustments', child: const Text('Reset daily adjustments')),
         ),
         TextButton(
           onPressed: action.isLoading ? null : () => Navigator.pop(context),

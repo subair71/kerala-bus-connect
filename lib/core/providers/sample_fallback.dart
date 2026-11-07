@@ -6,7 +6,8 @@ AsyncValue<DataSet<T>> sampleFallback<T>(
   List<T> samples, {
   bool previewWhileLoading = false,
 }) => live.when(
-  skipLoadingOnRefresh: false,
+  // A refresh of the same source keeps its last records visible.
+  skipLoadingOnRefresh: true,
   loading: () => previewWhileLoading
       ? AsyncData(DataSet(samples, isDemo: true, unavailable: live.hasError))
       : const AsyncLoading(),

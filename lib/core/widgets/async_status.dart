@@ -4,12 +4,10 @@ import 'app_components.dart';
 
 class AsyncStatus extends StatelessWidget {
   final String message;
-  final bool loading;
   final VoidCallback? retry;
   const AsyncStatus({
     super.key,
     this.message = '',
-    this.loading = false,
     this.retry,
   });
 
@@ -19,13 +17,7 @@ class AsyncStatus extends StatelessWidget {
     child: Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (loading)
-          const SizedBox(
-            width: 28,
-            height: 28,
-            child: CircularProgressIndicator(strokeWidth: 2.5),
-          )
-        else ...[
+        ...[
           AppIconTile(
             retry == null ? Icons.search_off_outlined : Icons.wifi_off_rounded,
           ),

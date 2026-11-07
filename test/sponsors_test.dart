@@ -1,3 +1,4 @@
+import 'package:kerala_bus_connect/core/widgets/loading_skeletons.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -63,7 +64,7 @@ void main() {
   );
 
   testWidgets(
-    'sample ads cover pending, empty and failed reads; live ads replace them',
+    'skeleton covers pending ads; samples cover empty and failed reads',
     (tester) async {
       final stream = StreamController<List<SponsoredAd>>();
       addTearDown(stream.close);
@@ -76,6 +77,10 @@ void main() {
         expect(find.text('Search buses'), findsOneWidget);
       }
 
+      expect(find.byType(SponsorSkeleton), findsOneWidget);
+      expect(find.textContaining('Sample '), findsNothing);
+      stream.add([]);
+      await tester.pumpAndSettle();
       expectSample();
       expect(currentPage(tester), 0);
       await tester.pump(const Duration(seconds: 5));

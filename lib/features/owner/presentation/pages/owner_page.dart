@@ -1,3 +1,5 @@
+import '../../../../core/widgets/loading_skeletons.dart';
+import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/widgets/async_status.dart';
@@ -18,7 +20,7 @@ class OwnerPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => ref
       .watch(authUserProvider)
       .when(
-        loading: () => const Center(child: AsyncStatus(loading: true)),
+        loading: () => const AccountSkeleton(),
         error: (_, _) => AsyncStatus(
           message: 'Unable to check your account.',
           retry: () => ref.invalidate(authUserProvider),
@@ -59,7 +61,7 @@ class _OwnerWorkspace extends ConsumerWidget {
             ),
             businesses.when(
               loading: () =>
-                  const SliverToBoxAdapter(child: AsyncStatus(loading: true)),
+                  const SliverPadding(padding: EdgeInsets.all(16), sliver: LoadingSliver(layout: SkeletonLayout.businesses, count: 1, label: 'Loading businesses')),
               error: (_, _) => SliverToBoxAdapter(
                 child: AsyncStatus(
                   message: 'Unable to load your businesses.',
@@ -176,12 +178,10 @@ class _OwnerHeader extends ConsumerWidget {
               onPressed: authAction.isLoading
                   ? null
                   : () => ref.read(authActionProvider.notifier).signOut(),
-              child: const Text('Sign out'),
+              child: ActionShimmer(loading: authAction.isLoading, label: 'Sign out', child: const Text('Sign out')),
             ),
           ],
         ),
-        if (action.isLoading || authAction.isLoading)
-          const LinearProgressIndicator(),
         if (action.hasError || authAction.hasError)
           Text(
             (action.error ?? authAction.error).toString(),

@@ -1,3 +1,4 @@
+import '../../../../core/widgets/loading_skeletons.dart';
 import '../../../../core/widgets/data_notice.dart';
 import '../../../../core/widgets/async_status.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +48,6 @@ class _CrewHeader extends HookConsumerWidget {
         (value) => (
           demo: value.asData?.value.isDemo ?? false,
           unavailable: value.asData?.value.unavailable ?? false,
-          loading: value.isLoading,
         ),
       ),
     );
@@ -63,7 +63,6 @@ class _CrewHeader extends HookConsumerWidget {
           unavailable: data.unavailable,
           retry: () => ref.invalidate(liveCrewProvider),
         ),
-        if (data.loading) const AsyncStatus(loading: true),
         TextField(
           controller: controller,
           onChanged: ref.read(crewFilterProvider.notifier).search,
@@ -95,6 +94,16 @@ class _CrewList extends ConsumerWidget {
   const _CrewList();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final data = ref.watch(crewDataProvider);
+    if (data.isLoading && !data.hasValue) {
+      return const LoadingSliver(layout: SkeletonLayout.crew, label: 'Loading crew assignments');
+    }
+    if (data.hasError) {
+      return SliverToBoxAdapter(child: AsyncStatus(
+        message: 'Unable to load crew assignments.',
+        retry: () => ref.invalidate(liveCrewProvider),
+      ));
+    }
     final crew = ref.watch(filteredCrewProvider);
     if (crew.isEmpty) {
       return const SliverToBoxAdapter(

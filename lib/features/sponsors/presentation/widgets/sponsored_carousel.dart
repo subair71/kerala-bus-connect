@@ -1,3 +1,5 @@
+import '../../../../core/widgets/loading_skeletons.dart';
+import '../../../../core/widgets/shimmer_loading.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -14,8 +16,7 @@ class SponsoredCarousel extends ConsumerWidget {
     return ref
         .watch(sponsorsProvider)
         .when(
-          skipLoadingOnRefresh: false,
-          loading: () => const SizedBox.shrink(),
+          loading: () => const SponsorSkeleton(),
           error: (_, _) => const SizedBox.shrink(),
           data: (data) => data.records.isEmpty
               ? const SizedBox.shrink()
@@ -268,12 +269,17 @@ class _AdCard extends ConsumerWidget {
                   'assets/images/sponsor-hotel.jpg',
                   fit: BoxFit.cover,
                   cacheWidth: 180,
+                  frameBuilder: (_, child, frame, sync) => sync || frame != null
+                      ? child : const AppShimmer(label: null, child: SkeletonBox(width: 60, height: 60, radius: 14)),
+                  errorBuilder: (_, _, _) => fallback,
                 )
               : ad.imageUrl?.startsWith('https://') == true
               ? Image.network(
                   ad.imageUrl!,
                   fit: BoxFit.contain,
                   cacheWidth: 180,
+                  frameBuilder: (_, child, frame, sync) => sync || frame != null
+                      ? child : const AppShimmer(label: null, child: SkeletonBox(width: 60, height: 60, radius: 14)),
                   errorBuilder: (_, _, _) => fallback,
                 )
               : fallback,

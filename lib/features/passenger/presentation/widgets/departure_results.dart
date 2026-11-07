@@ -1,3 +1,4 @@
+import '../../../../core/widgets/loading_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/theme/home_theme.dart';
@@ -39,7 +40,7 @@ class DeparturesSliver extends ConsumerWidget {
     final query = ref.watch(debouncedSearchProvider);
     return result.when(
       loading: () =>
-          const SliverToBoxAdapter(child: AsyncStatus(loading: true)),
+          const LoadingSliver(layout: SkeletonLayout.departures, label: 'Loading bus results'),
       error: (_, _) => SliverToBoxAdapter(
         child: AsyncStatus(
           message: 'Unable to load timetables.',

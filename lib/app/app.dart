@@ -1,3 +1,4 @@
+import '../core/widgets/loading_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -23,7 +24,7 @@ class FindMyBusApp extends ConsumerWidget {
         .watch(initializationProvider)
         .when(
           loading: () =>
-              const Scaffold(body: Center(child: AsyncStatus(loading: true))),
+              const StartupSkeleton(),
           error: (_, stack) => Scaffold(
             body: Center(
               child: AsyncStatus(

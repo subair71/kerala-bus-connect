@@ -24,7 +24,6 @@ final trackingDataProvider =
       (ref) => sampleFallback(
         ref.watch(liveTrackingProvider),
         const DemoTrackingRepository().previews(),
-        previewWhileLoading: true,
       ),
     );
 final trackingSelectionProvider = NotifierProvider<TrackingSelection, int>(

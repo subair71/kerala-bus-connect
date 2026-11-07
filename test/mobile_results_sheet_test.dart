@@ -1,3 +1,4 @@
+import 'package:kerala_bus_connect/core/widgets/loading_skeletons.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -142,7 +143,8 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('show-bus-results')));
       await tester.pump(const Duration(milliseconds: 400));
-      expect(find.byType(CircularProgressIndicator), findsWidgets);
+      expect(find.byType(LoadingSliver), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
       stream.addError(StateError('offline'));
       await tester.pumpAndSettle();
       expect(find.text('Live data unavailable • Sample data'), findsOneWidget);
