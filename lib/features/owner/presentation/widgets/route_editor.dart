@@ -1,3 +1,4 @@
+import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/editor_sheet.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -100,7 +101,11 @@ class RouteEditor extends HookConsumerWidget {
                       );
                   if (saved && context.mounted) Navigator.pop(context);
                 },
-          child: Text(action.isLoading ? 'Saving…' : 'Save route'),
+          child: ActionShimmer(
+            loading: action.isLoading,
+            label: 'Save route',
+            child: const Text('Save route'),
+          ),
         ),
       ],
     );

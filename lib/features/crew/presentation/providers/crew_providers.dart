@@ -28,7 +28,6 @@ final crewDataProvider =
       (ref) => sampleFallback(
         ref.watch(liveCrewProvider),
         const DemoCrewRepository().assignments(),
-        previewWhileLoading: true,
       ),
     );
 typedef CrewFilter = ({String query, String shift});

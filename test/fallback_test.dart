@@ -19,7 +19,7 @@ import 'support/fakes.dart';
 
 void main() {
   test(
-    'tracking previews stay reviewable while pending and recover to live',
+    'tracking loads before falling back on failure and recovering to live',
     () async {
       final stream = StreamController<List<TrackingPreview>>();
       final container = ProviderContainer(
@@ -31,13 +31,10 @@ void main() {
         container.dispose();
         await stream.close();
       });
-      var data = container.read(trackingDataProvider).requireValue;
-      expect(data.isDemo, isTrue);
-      expect(data.records, isNotEmpty);
-      expect(data.unavailable, isFalse);
+      expect(container.read(trackingDataProvider).isLoading, isTrue);
       stream.addError(StateError('offline'));
       await Future<void>.delayed(Duration.zero);
-      data = container.read(trackingDataProvider).requireValue;
+      var data = container.read(trackingDataProvider).requireValue;
       expect(data.unavailable, isTrue);
       stream.add([
         TrackingPreview('Live bus', ['Aluva', 'Kaloor'], 0, id: 'live'),
@@ -64,7 +61,7 @@ void main() {
         container.dispose();
         await stream.close();
       });
-      expect(container.read(crewDataProvider).requireValue.isDemo, isTrue);
+      expect(container.read(crewDataProvider).isLoading, isTrue);
       stream.add([]);
       await Future<void>.delayed(Duration.zero);
       expect(container.read(crewDataProvider).requireValue.isDemo, isTrue);

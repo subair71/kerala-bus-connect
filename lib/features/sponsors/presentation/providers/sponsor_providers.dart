@@ -38,11 +38,12 @@ final sponsorsProvider = Provider.autoDispose<AsyncValue<DataSet<SponsoredAd>>>(
   (ref) {
     final location = ref.watch(sponsorLocationProvider);
     final live = ref.watch(liveSponsorsProvider(location));
+    if (live.isLoading && !live.hasValue) return const AsyncLoading();
     final ads = live.asData?.value
         .where((ad) => ad.active && ad.location == location)
         .toList();
-    // Read-only previews keep the home carousel usable while optional live ads
-    // are pending, empty or unavailable. Never combine demo and live campaigns.
+    // Read-only previews remain the fallback for empty or unavailable ads.
+    // Pending initial reads use skeletons; refreshes keep the current ads.
     return AsyncData(
       ads != null && ads.isNotEmpty
           ? DataSet(ads)

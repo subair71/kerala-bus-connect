@@ -195,6 +195,15 @@ void main() {
       );
       await tester.pumpAndSettle();
       final context = tester.element(find.byType(AppShell));
+      await tester.runAsync(
+        () => precacheImage(
+          const ResizeImage(
+            AssetImage('assets/images/sponsor-hotel.jpg'),
+            width: 180,
+          ),
+          context,
+        ),
+      );
       final container = ProviderScope.containerOf(context);
       container.read(searchQueryProvider.notifier).from('Thrissur Round');
       container.read(searchQueryProvider.notifier).to('Palakkad Stand');

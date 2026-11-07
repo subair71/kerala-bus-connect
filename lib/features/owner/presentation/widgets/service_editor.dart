@@ -1,3 +1,4 @@
+import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/editor_sheet.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -138,12 +139,12 @@ class ServiceEditor extends HookConsumerWidget {
                       );
                   if (saved && context.mounted) Navigator.pop(context);
                 },
-          child: Text(
-            action.isLoading
-                ? 'Saving…'
-                : service == null
-                ? 'Publish timetable'
-                : 'Save timetable',
+          child: ActionShimmer(
+            loading: action.isLoading,
+            label: service == null ? 'Publish timetable' : 'Save timetable',
+            child: Text(
+              service == null ? 'Publish timetable' : 'Save timetable',
+            ),
           ),
         ),
       ],

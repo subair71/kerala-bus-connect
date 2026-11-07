@@ -1,3 +1,4 @@
+import '../../../../core/widgets/loading_skeletons.dart';
 import '../../../../core/widgets/data_notice.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -83,8 +84,10 @@ class _RoutesList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) => ref
       .watch(directoryResultsProvider)
       .when(
-        loading: () =>
-            const SliverToBoxAdapter(child: AsyncStatus(loading: true)),
+        loading: () => const LoadingSliver(
+          layout: SkeletonLayout.routes,
+          label: 'Loading routes',
+        ),
         error: (_, stack) => SliverToBoxAdapter(
           child: AsyncStatus(
             message: 'Unable to load routes.',

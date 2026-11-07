@@ -1,3 +1,4 @@
+import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/widgets/editor_sheet.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -42,7 +43,11 @@ class BusinessEditor extends HookConsumerWidget {
                       .saveBusiness(name.text, id: business?.id);
                   if (saved && context.mounted) Navigator.pop(context);
                 },
-          child: Text(action.isLoading ? 'Saving…' : 'Save business'),
+          child: ActionShimmer(
+            loading: action.isLoading,
+            label: 'Save business',
+            child: const Text('Save business'),
+          ),
         ),
       ],
     );
