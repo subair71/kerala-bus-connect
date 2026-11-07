@@ -26,6 +26,8 @@ Future<void> showStopTimings(
                 child: Text(
                   isSampleId(service.id)
                       ? 'Sample data • not for travel planning'
+                      : service.hasDailyAdjustment
+                      ? 'Owner-updated expected times • ${service.serviceDate}'
                       : 'Scheduled timings • not live GPS tracking',
                   style: const TextStyle(fontSize: 12),
                 ),

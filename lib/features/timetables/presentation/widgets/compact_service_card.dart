@@ -167,7 +167,17 @@ class CompactServiceCard extends StatelessWidget {
               departure: departure,
               arrival: arrival,
               duration: duration,
+              updated: service.hasDailyAdjustment,
             ),
+            if (service.hasDailyAdjustment)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Scheduled: ${timeLabel(service.scheduledTime(boarding)!)} → '
+                  '${timeLabel(service.scheduledTime(destination)!)} · '
+                  '+${arrival! - service.scheduledTime(destination)!} min at destination',
+                ),
+              ),
             const SizedBox(height: 4),
             LayoutBuilder(
               builder: (context, constraints) {
@@ -260,12 +270,14 @@ class CompactServiceCard extends StatelessWidget {
 class _Timings extends StatelessWidget {
   final String boarding, destination;
   final int? departure, arrival, duration;
+  final bool updated;
   const _Timings({
     required this.boarding,
     required this.destination,
     required this.departure,
     required this.arrival,
     required this.duration,
+    this.updated = false,
   });
 
   @override
@@ -306,6 +318,11 @@ class _Timings extends StatelessWidget {
                   color: HomeTheme.text,
                 ),
               ),
+              if (time != null && time >= 1440)
+                Text(
+                  time < 2880 ? 'Next day' : 'Day +${time ~/ 1440}',
+                  style: const TextStyle(fontSize: 11),
+                ),
               Text(
                 stop.isEmpty ? 'Stop unavailable' : stop,
                 maxLines: 2,
@@ -371,8 +388,8 @@ class _Timings extends StatelessWidget {
                 ],
               ),
             ),
-            const Text(
-              'Scheduled',
+            Text(
+              updated ? 'Expected' : 'Scheduled',
               style: TextStyle(
                 fontSize: 11,
                 height: 1.2,

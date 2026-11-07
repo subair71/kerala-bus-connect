@@ -39,8 +39,8 @@ class ServiceCard extends ConsumerWidget {
               '';
     final boarding = matchingStop(from, false),
         destination = matchingStop(to, true);
-    final departure = service.scheduledTime(boarding),
-        arrival = service.scheduledTime(destination);
+    final departure = service.expectedTime(boarding),
+        arrival = service.expectedTime(destination);
     final duration =
         departure != null && arrival != null && arrival >= departure
         ? arrival - departure
@@ -51,7 +51,9 @@ class ServiceCard extends ConsumerWidget {
         ? null
         : departure - now.hour * 60 - now.minute;
     final demo = isSampleId(service.id);
-    final status = !service.operatingDaysKnown
+    final status = service.hasDailyAdjustment
+        ? 'Updated expected times · ${service.serviceDate}'
+        : !service.operatingDaysKnown
         ? 'Operating days unavailable'
         : !running
         ? 'Not operating on $effectiveDay'
@@ -133,6 +135,12 @@ class ServiceCard extends ConsumerWidget {
               stopCount: service.stops.length,
             ),
             const SizedBox(height: 8),
+            if (service.hasDailyAdjustment)
+              Text(
+                'Scheduled: ${timeLabel(service.scheduledTime(boarding)!)} → '
+                '${timeLabel(service.scheduledTime(destination)!)} · '
+                'Delay: +${arrival! - service.scheduledTime(destination)!} min at destination',
+              ),
             Wrap(
               alignment: WrapAlignment.spaceBetween,
               spacing: 8,

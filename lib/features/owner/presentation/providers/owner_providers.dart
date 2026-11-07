@@ -201,7 +201,9 @@ class ServiceDraftController extends Notifier<ServiceDraft> {
     departure: minutes,
     timings: {
       for (var i = 0; i < args.route.stops.length; i++)
-        args.route.stops[i]: minutes + i * 15,
+        args.route.stops[i]: (state.timings[args.route.stops[i]] ?? -1) < 0
+            ? -1
+            : state.timings[args.route.stops[i]]! + minutes - state.departure,
     },
     offDays: state.offDays,
   );

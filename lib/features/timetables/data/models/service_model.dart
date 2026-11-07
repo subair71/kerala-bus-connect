@@ -19,6 +19,9 @@ class ServiceModel extends ServiceEntity {
     super.offTimingsNote,
     super.published,
     super.operatingDaysKnown,
+    super.busId,
+    super.scheduleRevision,
+    super.stopIds,
   });
 
   factory ServiceModel.fromSnapshot(
@@ -39,6 +42,9 @@ class ServiceModel extends ServiceEntity {
     }
     return ServiceModel(
       id: id,
+      busId: displayText(data['busId'], ''),
+      scheduleRevision: displayText(data['scheduleRevision'], ''),
+      stopIds: stringList(data['stopIds']),
       ownerId: displayText(data['ownerId'], ''),
       businessId: displayText(data['businessId'], ''),
       routeId: displayText(data['routeId'], ''),
@@ -63,6 +69,9 @@ class ServiceModel extends ServiceEntity {
 
   Map<String, dynamic> toJson() => {
     'ownerId': ownerId,
+    'busId': busId,
+    'scheduleRevision': scheduleRevision,
+    'stopIds': stopIds,
     'businessId': businessId,
     'routeId': routeId,
     'businessName': businessName,

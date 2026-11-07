@@ -1,3 +1,5 @@
+import '../../../trips/domain/entities/trip_plan.dart';
+import '../../../trips/presentation/providers/trip_providers.dart';
 import 'dart:async';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/providers/clock_provider.dart';
@@ -12,7 +14,7 @@ final searchQueryProvider = NotifierProvider<SearchController, SearchQuery>(
   SearchController.new,
 );
 
-// Dates are a presentation of the existing weekly operating-day filter.
+// Service dates select recurring operating days and isolated daily adjustments.
 final journeyTodayProvider = Provider.autoDispose<DateTime>((ref) {
   final now = ref.watch(clockProvider.select((value) => value.asData?.value));
   final date = now ?? keralaNow();
@@ -27,9 +29,21 @@ final journeyDatesProvider = Provider.autoDispose<List<DateTime>>((ref) {
 
 class SearchController extends Notifier<SearchQuery> {
   @override
-  SearchQuery build() => SearchQuery(
-    filterDay: weekDays[ref.read(journeyTodayProvider).weekday - 1],
-  );
+  SearchQuery build() {
+    ref.listen(journeyTodayProvider, (previous, next) {
+      if (previous != null && state.serviceDate == previous) {
+        state = state.copyWith(
+          serviceDate: next,
+          filterDay: weekDays[next.weekday - 1],
+        );
+      }
+    });
+    return SearchQuery(
+      serviceDate: ref.read(journeyTodayProvider),
+      filterDay: weekDays[ref.read(journeyTodayProvider).weekday - 1],
+    );
+  }
+
   void journeyDate(DateTime date) {
     final today = ref.read(journeyTodayProvider);
     final isToday =
@@ -37,6 +51,7 @@ class SearchController extends Notifier<SearchQuery> {
         date.month == today.month &&
         date.day == today.day;
     state = state.copyWith(
+      serviceDate: DateTime(date.year, date.month, date.day),
       filterDay: weekDays[date.weekday - 1],
       onlyRunningToday: isToday && state.onlyRunningToday,
     );
@@ -45,7 +60,18 @@ class SearchController extends Notifier<SearchQuery> {
   void from(String value) => state = state.copyWith(from: value);
   void to(String value) => state = state.copyWith(to: value);
   void swap() => state = state.copyWith(from: state.to, to: state.from);
-  void day(String value) => state = state.copyWith(filterDay: value);
+  void day(String value) {
+    final date = ref
+        .read(journeyDatesProvider)
+        .where((d) => weekDays[d.weekday - 1] == value)
+        .firstOrNull;
+    state = state.copyWith(
+      filterDay: value,
+      serviceDate: date,
+      clearDate: date == null,
+    );
+  }
+
   void runningToday(bool value) =>
       state = state.copyWith(onlyRunningToday: value);
 }
@@ -84,19 +110,61 @@ final serviceIndexProvider =
           .whenData((data) => ServiceSearchIndex(data.records)),
     );
 
+final passengerDailyUpdatesUnavailableProvider = Provider.autoDispose<bool>((
+  ref,
+) {
+  final query = ref.watch(debouncedSearchProvider);
+  final records = ref.watch(serviceCatalogProvider).asData?.value.records;
+  if (query.serviceDate == null ||
+      !(records?.any((s) => s.busId.isNotEmpty) ?? false))
+    return false;
+  return ref
+      .watch(dailyAdjustmentsProvider(serviceDateKey(query.serviceDate!)))
+      .hasError;
+});
+
 final departureResultsProvider =
     Provider.autoDispose<AsyncValue<List<ServiceEntity>>>((ref) {
       final query = ref.watch(debouncedSearchProvider);
       final today = ref.watch(todayProvider);
-      return ref
-          .watch(serviceIndexProvider)
-          .whenData(
-            (index) => index.search(
-              from: query.from,
-              to: query.to,
-              filterDay: query.filterDay,
-              onlyRunningToday: query.onlyRunningToday,
-              today: today,
-            ),
-          );
+      return ref.watch(serviceIndexProvider).whenData((index) {
+        var services = index.search(
+          from: query.from,
+          to: query.to,
+          filterDay: query.filterDay,
+          onlyRunningToday: query.onlyRunningToday,
+          today: today,
+        );
+        if (query.serviceDate != null &&
+            services.any((s) => s.busId.isNotEmpty)) {
+          final date = serviceDateKey(query.serviceDate!);
+          final daily = ref.watch(dailyAdjustmentsProvider(date));
+          if (daily.hasValue && !daily.hasError && !daily.isLoading) {
+            final adjustments = {
+              for (final item in daily.requireValue) item.tripId: item,
+            };
+            services = [
+              for (final service in services)
+                adjustments[service.id]?.apply(service) ?? service,
+            ];
+          }
+        }
+        int boardingTime(ServiceEntity service) {
+          final stop = query.from.trim().isEmpty
+              ? service.stops.firstOrNull
+              : service.stops
+                    .where(
+                      (s) => s.toLowerCase().contains(
+                        query.from.trim().toLowerCase(),
+                      ),
+                    )
+                    .firstOrNull;
+          return stop == null ? 999999 : service.expectedTime(stop) ?? 999999;
+        }
+
+        return List.unmodifiable(
+          [...services]
+            ..sort((a, b) => boardingTime(a).compareTo(boardingTime(b))),
+        );
+      });
     });

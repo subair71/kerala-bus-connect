@@ -107,18 +107,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
   @override
   Future<void> updateRoute(String routeId, Map<String, dynamic> data) async {
     await _firestore.collection('routes').doc(routeId).update(data);
-    if (data.containsKey('name') || data.containsKey('stops')) {
-      final related = await _firestore
-          .collection('services')
-          .where('routeId', isEqualTo: routeId)
-          .get();
-      for (final doc in related.docs) {
-        await doc.reference.update({
-          if (data.containsKey('name')) 'routeName': data['name'],
-          if (data.containsKey('stops')) 'stops': data['stops'],
-        });
-      }
-    }
+    // Published trips own their stop snapshots; editing a template must not
+    // invalidate their times or change an independently edited return trip.
   }
 
   @override

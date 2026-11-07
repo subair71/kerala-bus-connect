@@ -1,3 +1,4 @@
+import 'package:kerala_bus_connect/features/trips/presentation/providers/trip_providers.dart';
 import 'package:kerala_bus_connect/core/data/data_set.dart';
 import 'package:kerala_bus_connect/features/sponsors/data/fixtures/sponsor_samples.dart';
 import 'package:kerala_bus_connect/features/sponsors/domain/entities/sponsored_ad.dart';
@@ -28,6 +29,7 @@ Widget harness(
   TextScaler? textScaler,
 }) => ProviderScope(
   overrides: [
+    ownerBusesProvider.overrideWith((ref, businessId) => Stream.value([])),
     sponsorRotationIntervalProvider.overrideWithValue(Duration.zero),
     if (!sampleSponsors && sponsorStream == null)
       sponsorsProvider.overrideWith(
