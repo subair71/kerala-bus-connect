@@ -67,18 +67,22 @@ class PendingPlaces implements PlacesRepository {
   final requests = <String, Completer<List<PlacePrediction>>>{};
   @override
   Future<List<PlacePrediction>> suggest(String input) =>
-    (requests[input] = Completer<List<PlacePrediction>>()).future;
+      (requests[input] = Completer<List<PlacePrediction>>()).future;
 }
 
 void main() {
-  testWidgets('submit while loading never selects the previous query', (tester) async {
+  testWidgets('submit while loading never selects the previous query', (
+    tester,
+  ) async {
     final text = TextEditingController();
     addTearDown(text.dispose);
     final repo = PendingPlaces();
     await tester.pumpWidget(placesHarness(text, repo));
     await tester.enterText(find.byKey(const ValueKey('place-input')), 'Eda');
     await tester.pump(const Duration(milliseconds: 400));
-    repo.requests['Eda']!.complete(const [PlacePrediction(id: 'p', name: 'Edappally')]);
+    repo.requests['Eda']!.complete(const [
+      PlacePrediction(id: 'p', name: 'Edappally'),
+    ]);
     await tester.pump();
     await tester.pump();
     await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
@@ -87,11 +91,15 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.done);
     await tester.pump();
     expect(text.text, 'Kala');
-    repo.requests['Kala']!.complete(const [PlacePrediction(id: 'k', name: 'Kalamassery')]);
+    repo.requests['Kala']!.complete(const [
+      PlacePrediction(id: 'k', name: 'Kalamassery'),
+    ]);
     await tester.pump();
     expect(text.text, 'Kala');
   });
-  testWidgets('unfocused edits and composing input do not call Google', (tester) async {
+  testWidgets('unfocused edits and composing input do not call Google', (
+    tester,
+  ) async {
     final text = TextEditingController(text: 'Aluva');
     addTearDown(text.dispose);
     final repo = WidgetPlaces();
@@ -101,10 +109,13 @@ void main() {
     expect(repo.calls, 0);
     await tester.enterText(find.byKey(const ValueKey('place-input')), 'Eda');
     await tester.pump(const Duration(milliseconds: 100));
-    tester.testTextInput.updateEditingValue(const TextEditingValue(
-      text: 'Edap', selection: TextSelection.collapsed(offset: 4),
-      composing: TextRange(start: 0, end: 4),
-    ));
+    tester.testTextInput.updateEditingValue(
+      const TextEditingValue(
+        text: 'Edap',
+        selection: TextSelection.collapsed(offset: 4),
+        composing: TextRange(start: 0, end: 4),
+      ),
+    );
     await tester.pump(const Duration(seconds: 1));
     expect(repo.calls, 0);
     await tester.pumpWidget(const SizedBox());
@@ -146,7 +157,12 @@ void main() {
       await tester.pump();
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pump();
-      expect(tester.widget<ListTile>(find.byKey(const ValueKey('place-option-1'))).selected, isTrue);
+      expect(
+        tester
+            .widget<ListTile>(find.byKey(const ValueKey('place-option-1')))
+            .selected,
+        isTrue,
+      );
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
       expect(text.text, 'Edappally');

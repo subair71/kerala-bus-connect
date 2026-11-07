@@ -10,6 +10,7 @@ import '../providers/places_providers.dart';
 /// Native Flutter input and accessible keyboard/touch autocomplete on all targets.
 class PlaceTextField extends HookConsumerWidget {
   final Key? fieldKey;
+  final Widget Function(Widget field)? fieldBuilder;
   final TextEditingController controller;
   final ValueChanged<String>? onChanged, onSubmitted;
   final InputDecoration decoration;
@@ -22,6 +23,7 @@ class PlaceTextField extends HookConsumerWidget {
   const PlaceTextField({
     super.key,
     this.fieldKey,
+    this.fieldBuilder,
     required this.controller,
     this.onChanged,
     this.onSubmitted,
@@ -39,6 +41,15 @@ class PlaceTextField extends HookConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final identity = useMemoized(Object.new);
     final focus = useFocusNode();
+    final anchor = useMemoized(() => GlobalKey());
+    final viewport = MediaQuery.of(context);
+    final render = anchor.currentContext?.findRenderObject();
+    var opensUp = false;
+    if (render is RenderBox && render.hasSize) {
+      final top = render.localToGlobal(Offset.zero).dy;
+      final below = viewport.size.height - viewport.viewInsets.bottom - top - render.size.height;
+      opensUp = below < 240 && top - viewport.padding.top > below;
+    }
     final search = ref.watch(placeSearchProvider(identity));
     final notifier = ref.read(placeSearchProvider(identity).notifier);
     useEffect(() {
@@ -52,6 +63,7 @@ class PlaceTextField extends HookConsumerWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         return RawAutocomplete<PlaceOption>(
+          optionsViewOpenDirection: opensUp ? OptionsViewOpenDirection.up : OptionsViewOpenDirection.down,
           textEditingController: controller,
           focusNode: focus,
           displayStringForOption: (option) => option.value,
@@ -76,7 +88,8 @@ class PlaceTextField extends HookConsumerWidget {
             onChanged?.call(option.value);
             notifier.dismiss();
           },
-          fieldViewBuilder: (context, text, node, submit) => TextField(
+          fieldViewBuilder: (context, text, node, submit) {
+            final field = TextField(
             key: fieldKey,
             controller: text,
             focusNode: node,
@@ -113,7 +126,9 @@ class PlaceTextField extends HookConsumerWidget {
                     ),
                   )
                 : decoration,
-          ),
+            );
+            return KeyedSubtree(key: anchor, child: fieldBuilder?.call(field) ?? field);
+          },
           optionsViewBuilder: (context, select, options) => Consumer(
             builder: (context, ref, _) {
               final current = ref.watch(placeSearchProvider(identity));
@@ -126,54 +141,32 @@ class PlaceTextField extends HookConsumerWidget {
               );
               final googleEnabled = ref.watch(googlePlacesEnabledProvider) && current.query.runes.length >= 3;
               return Align(
-                alignment: Alignment.topLeft,
+                alignment: opensUp ? Alignment.bottomLeft : Alignment.topLeft,
                 child: Material(
-                  elevation: 3,
+                  elevation: 0,
                   color: Theme.of(context).colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+                  ),
                   clipBehavior: Clip.antiAlias,
                   child: SizedBox(
                     width: constraints.maxWidth,
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxHeight: 300),
-                      child: ListView.builder(
+                      child: SingleChildScrollView(
                         padding: const EdgeInsets.symmetric(vertical: 4),
-                        shrinkWrap: true,
-                        itemCount: items.length + (googleEnabled ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == items.length) {
-                            return _PlacesFooter(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            for (var i = 0; i < items.length; i++)
+                              _PlaceOptionTile(option: items[i], index: i, select: select),
+                            if (googleEnabled) _PlacesFooter(
                               unavailable: current.unavailable,
                               hasGoogle: hasGoogle,
-                            );
-                          }
-                          final item = items[index];
-                          return ListTile(
-                            key: ValueKey('place-option-$index'),
-                            selected:
-                                AutocompleteHighlightedOption.of(context) ==
-                                index,
-                            dense: true,
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
                             ),
-                            minVerticalPadding: 10,
-                            title: Text(
-                              item.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (item.source == PlaceSource.google)
-                                  const Text('Google Maps', style: TextStyle(fontSize: 14)),
-                                Text(item.subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
-                              ],
-                            ),
-                            onTap: () => select(item),
-                          );
-                        },
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -183,6 +176,42 @@ class PlaceTextField extends HookConsumerWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// At most ten rows. Building this small bounded list allows keyboard focus
+/// to reveal any highlighted row, including one outside the visible viewport.
+class _PlaceOptionTile extends HookWidget {
+  final PlaceOption option;
+  final int index;
+  final ValueChanged<PlaceOption> select;
+  const _PlaceOptionTile({required this.option, required this.index, required this.select});
+  @override
+  Widget build(BuildContext context) {
+    final selected = AutocompleteHighlightedOption.of(context) == index;
+    useEffect(() {
+      if (selected) WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) Scrollable.ensureVisible(context, alignment: .5);
+      });
+      return null;
+    }, [selected, option.value]);
+    return ListTile(
+      key: ValueKey('place-option-$index'),
+      selected: selected,
+      dense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+      minVerticalPadding: 10,
+      title: Text(option.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (option.source == PlaceSource.google)
+            const Text('Google Maps', style: TextStyle(fontSize: 14)),
+          Text(option.subtitle, maxLines: 2, overflow: TextOverflow.ellipsis),
+        ],
+      ),
+      onTap: () => select(option),
     );
   }
 }
