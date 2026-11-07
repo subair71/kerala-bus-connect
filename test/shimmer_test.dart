@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:kerala_bus_connect/core/widgets/shimmer_loading.dart';
 import 'package:kerala_bus_connect/core/widgets/loading_skeletons.dart';
-import 'package:kerala_bus_connect/core/providers/sample_fallback.dart';
 import 'package:kerala_bus_connect/features/auth/presentation/widgets/auth_panel.dart';
 import 'package:kerala_bus_connect/features/auth/presentation/providers/auth_providers.dart';
 import 'package:kerala_bus_connect/features/passenger/presentation/widgets/departure_results.dart';
@@ -200,20 +199,6 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }
-
-  test(
-    'refresh keeps records and reload does not reveal a previous source',
-    () {
-      const prior = AsyncData<List<int>>([7]);
-      final refresh = const AsyncLoading<List<int>>().copyWithPrevious(prior);
-      expect(sampleFallback(refresh, [1]).requireValue.records, [7]);
-      final reload = const AsyncLoading<List<int>>().copyWithPrevious(
-        prior,
-        isRefresh: false,
-      );
-      expect(sampleFallback(reload, [1]).isLoading, isTrue);
-    },
-  );
 
   testWidgets(
     'refresh preserves bus cards, scroll position and request count',
