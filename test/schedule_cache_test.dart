@@ -272,9 +272,7 @@ void main() {
     );
     final container = ProviderContainer(
       overrides: [
-        publishedServicesProvider.overrideWith(
-          (ref) => Stream.value([saved]),
-        ),
+        publishedServicesProvider.overrideWith((ref) => Stream.value([saved])),
       ],
     );
     final sub = container.listen(serviceCatalogProvider, (_, _) {});
