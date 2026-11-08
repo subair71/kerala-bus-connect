@@ -5,26 +5,29 @@ import 'package:kerala_bus_connect/features/timetables/domain/entities/service_e
 import 'support/fakes.dart';
 
 void main() {
-  test('equivalent schedules emit once; updates and removals still emit', () async {
-    final input = StreamController<List<ServiceEntity>>(sync: true);
-    final received = <List<ServiceEntity>>[];
-    final sub = input.stream
-        .transform(const DistinctRecords<ServiceEntity>())
-        .listen(received.add);
+  test(
+    'equivalent schedules emit once; updates and removals still emit',
+    () async {
+      final input = StreamController<List<ServiceEntity>>(sync: true);
+      final received = <List<ServiceEntity>>[];
+      final sub = input.stream
+          .transform(const DistinctRecords<ServiceEntity>())
+          .listen(received.add);
 
-    input.add([service('one')]);
-    input.add([service('one')]);
-    expect(received, hasLength(1));
-    input.add([service('one', departure: 600)]);
-    input.add([]);
-    input.add([]);
-    expect(received, hasLength(3));
-    expect(received[1].single.departureMinutes, 600);
-    expect(received.last, isEmpty);
+      input.add([service('one')]);
+      input.add([service('one')]);
+      expect(received, hasLength(1));
+      input.add([service('one', departure: 600)]);
+      input.add([]);
+      input.add([]);
+      expect(received, hasLength(3));
+      expect(received[1].single.departureMinutes, 600);
+      expect(received.last, isEmpty);
 
-    await input.close();
-    await sub.cancel();
-  });
+      await input.close();
+      await sub.cancel();
+    },
+  );
 
   test('identical data after an error restores the successful state', () async {
     final input = StreamController<List<int>>(sync: true);
@@ -39,7 +42,10 @@ void main() {
     input.add([1]);
     input.add([1]);
     expect(errors, hasLength(1));
-    expect(received, [[1], [1]]);
+    expect(received, [
+      [1],
+      [1],
+    ]);
 
     await input.close();
     await sub.cancel();
@@ -53,15 +59,18 @@ void main() {
       [2, 1],
     ]).transform(transformer).toList();
     final second = await Stream.value([2, 1]).transform(transformer).toList();
-    expect(first, [[1, 2], [2, 1]]);
-    expect(second, [[2, 1]]);
+    expect(first, [
+      [1, 2],
+      [2, 1],
+    ]);
+    expect(second, [
+      [2, 1],
+    ]);
   });
 
   test('cancellation releases the source listener', () async {
     var cancelled = false;
-    final input = StreamController<List<int>>(
-      onCancel: () => cancelled = true,
-    );
+    final input = StreamController<List<int>>(onCancel: () => cancelled = true);
     final sub = input.stream
         .transform(const DistinctRecords<int>())
         .listen((_) {});
