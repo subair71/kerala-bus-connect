@@ -1,5 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:kerala_bus_connect/features/timetables/data/datasources/transit_remote_data_source.dart';
+import 'package:kerala_bus_connect/features/timetables/presentation/providers/timetable_providers.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kerala_bus_connect/features/timetables/data/datasources/schedule_cache.dart';
 import 'package:kerala_bus_connect/features/timetables/data/models/service_model.dart';
@@ -241,4 +245,46 @@ void main() {
       expect(rows.last.single.cachedAt, isNotNull);
     },
   );
+
+  test('owner service edits and deletion invalidate saved schedules', () async {
+    final db = FakeFirebaseFirestore();
+    final store = MemoryScheduleStore();
+    final cache = ScheduleCache(store);
+    final source = TransitRemoteDataSourceImpl(db, cache: cache);
+    await db.collection('services').doc('one').set(timetable('one').toJson());
+    cache.save([timetable('one')]);
+    await cache.flush();
+    await source.updateService('one', {'departureMinutes': 510});
+    await cache.flush();
+    expect(await cache.read(), isNull);
+    cache.save([timetable('one', time: 510)]);
+    await cache.flush();
+    await source.deleteService('one');
+    await cache.flush();
+    expect(await cache.read(), isNull);
+  });
+
+  test('saved schedules retain their cache notice through Riverpod', () async {
+    final saved = ServiceModel.fromMap(
+      'one',
+      timetable('one').toJson(),
+      cachedAt: DateTime.utc(2026, 11, 8),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        publishedServicesProvider.overrideWith(
+          (ref) => Stream.value([saved]),
+        ),
+      ],
+    );
+    final sub = container.listen(serviceCatalogProvider, (_, _) {});
+    await container.read(publishedServicesProvider.future);
+    final data = container.read(serviceCatalogProvider).requireValue;
+    expect(data.cached, isTrue);
+    expect(data.unavailable, isTrue);
+    expect(data.isDemo, isFalse);
+    expect(data.records.single.id, 'one');
+    sub.close();
+    container.dispose();
+  });
 }

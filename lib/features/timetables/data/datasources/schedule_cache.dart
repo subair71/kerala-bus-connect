@@ -192,6 +192,7 @@ class ScheduleCache {
         });
         read().then((saved) {
           if (cancelled || output.isClosed) return;
+          if (cachedGeneration != _generation) saved = null;
           diskLoaded = true;
           if (!confirmed) {
             cached = saved;
