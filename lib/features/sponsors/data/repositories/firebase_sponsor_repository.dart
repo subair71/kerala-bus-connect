@@ -10,6 +10,7 @@ class FirebaseSponsorRepository implements SponsorRepository {
   Stream<List<SponsoredAd>> watch(String location) => firestore
       .collection('sponsored_ads')
       .where('location', isEqualTo: location)
+      .where('active', isEqualTo: true)
       .snapshots()
       .map(
         (snapshot) => snapshot.docs

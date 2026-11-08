@@ -34,6 +34,7 @@ class FirebaseTripRepository implements TripRepository {
   Stream<List<BusEntity>> watchBuses(String ownerId, String businessId) => db
       .collection('buses')
       .where('ownerId', isEqualTo: ownerId)
+      .where('businessId', isEqualTo: businessId)
       .snapshots(includeMetadataChanges: true)
       .map((snapshot) {
         if (snapshot.docs.isEmpty && snapshot.metadata.isFromCache) {
@@ -94,6 +95,7 @@ class FirebaseTripRepository implements TripRepository {
         : await db
               .collection('services')
               .where('busId', isEqualTo: bus.id)
+              .limit(401)
               .get();
     if ((related?.docs.length ?? 0) > 400) {
       throw const AppFailure('This bus has too many trips to rename together.');

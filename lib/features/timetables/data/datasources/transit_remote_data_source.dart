@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/data/distinct_records.dart';
 import '../models/business_model.dart';
 import '../models/route_model.dart';
 import '../models/service_model.dart';
@@ -39,7 +40,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
               .map((d) => ServiceModel.fromSnapshot(d))
               .toList();
           return List<ServiceModel>.unmodifiable(list);
-        });
+        })
+        .transform(const DistinctRecords<ServiceModel>());
   }
 
   @override
@@ -52,7 +54,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
           if (snap.docs.isEmpty && snap.metadata.isFromCache)
             throw StateError('Live data is unavailable.');
           return snap.docs.map((d) => BusinessModel.fromSnapshot(d)).toList();
-        });
+        })
+        .transform(const DistinctRecords<BusinessModel>());
   }
 
   @override
@@ -65,7 +68,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
           if (snap.docs.isEmpty && snap.metadata.isFromCache)
             throw StateError('Live data is unavailable.');
           return snap.docs.map((d) => RouteModel.fromSnapshot(d)).toList();
-        });
+        })
+        .transform(const DistinctRecords<RouteModel>());
   }
 
   @override
@@ -78,7 +82,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
           if (snap.docs.isEmpty && snap.metadata.isFromCache)
             throw StateError('Live data is unavailable.');
           return snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList();
-        });
+        })
+        .transform(const DistinctRecords<ServiceModel>());
   }
 
   @override
