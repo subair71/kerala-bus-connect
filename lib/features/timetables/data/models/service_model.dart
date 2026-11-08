@@ -22,6 +22,7 @@ class ServiceModel extends ServiceEntity {
     super.busId,
     super.scheduleRevision,
     super.stopIds,
+    super.cachedAt,
   });
 
   factory ServiceModel.fromSnapshot(
@@ -30,7 +31,11 @@ class ServiceModel extends ServiceEntity {
     return ServiceModel.fromMap(snap.id, snap.data() ?? {});
   }
 
-  factory ServiceModel.fromMap(String id, Map<String, dynamic> data) {
+  factory ServiceModel.fromMap(
+    String id,
+    Map<String, dynamic> data, {
+    DateTime? cachedAt,
+  }) {
     final timings = <String, int>{};
     final raw = data['stopTimings'];
     if (raw is Map) {
@@ -42,6 +47,7 @@ class ServiceModel extends ServiceEntity {
     }
     return ServiceModel(
       id: id,
+      cachedAt: cachedAt,
       busId: displayText(data['busId'], ''),
       scheduleRevision: displayText(data['scheduleRevision'], ''),
       stopIds: stringList(data['stopIds']),

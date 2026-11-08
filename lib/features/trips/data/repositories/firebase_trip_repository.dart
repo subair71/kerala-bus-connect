@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../timetables/data/datasources/schedule_cache.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/errors/app_failure.dart';
 import '../../../../core/utils/sample_ids.dart';
@@ -8,7 +9,8 @@ import '../../domain/repositories/trip_repository.dart';
 
 class FirebaseTripRepository implements TripRepository {
   final FirebaseFirestore db;
-  FirebaseTripRepository(this.db);
+  final ScheduleCache? cache;
+  FirebaseTripRepository(this.db, {this.cache});
 
   void _owned(String owner, Map<String, dynamic>? data) {
     if (owner.isEmpty || data == null || data['ownerId'] != owner) {
@@ -129,6 +131,7 @@ class FirebaseTripRepository implements TripRepository {
         tx.update(trip.reference, {'busName': name.trim()});
       }
     });
+    cache?.invalidate();
   }
 
   @override
@@ -239,6 +242,7 @@ class FirebaseTripRepository implements TripRepository {
         });
       }
     });
+    cache?.invalidate();
     return target.id;
   }
 
@@ -257,6 +261,7 @@ class FirebaseTripRepository implements TripRepository {
         'tripCount': (busData['tripCount'] as int) - 1,
       });
     });
+    cache?.invalidate();
   }
 
   Future<void> _adjust(

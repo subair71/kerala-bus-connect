@@ -14,7 +14,10 @@ import '../../domain/entities/trip_plan.dart';
 import '../../domain/repositories/trip_repository.dart';
 
 final tripRepositoryProvider = Provider<TripRepository>(
-  (ref) => FirebaseTripRepository(ref.watch(firestoreProvider)),
+  (ref) => FirebaseTripRepository(
+    ref.watch(firestoreProvider),
+    cache: ref.watch(scheduleCacheProvider),
+  ),
 );
 
 final ownerBusesProvider = StreamProvider.autoDispose

@@ -16,6 +16,9 @@ class ServiceEntity extends Equatable {
   final bool published;
   final bool operatingDaysKnown;
 
+  /// Non-null only for a previously confirmed local timetable snapshot.
+  final DateTime? cachedAt;
+
   final String busId, scheduleRevision;
   final List<String> stopIds;
   final Map<String, int> expectedStopTimings;
@@ -41,6 +44,7 @@ class ServiceEntity extends Equatable {
     this.stopIds = const [],
     this.expectedStopTimings = const {},
     this.serviceDate,
+    this.cachedAt,
   });
 
   int? expectedTime(String stop) =>
@@ -70,6 +74,7 @@ class ServiceEntity extends Equatable {
         stopIds: stopIds,
         expectedStopTimings: Map.unmodifiable(times),
         serviceDate: date,
+        cachedAt: cachedAt,
       );
 
   /// Returns only supplied times; an unknown stop never inherits a departure.
@@ -131,5 +136,6 @@ class ServiceEntity extends Equatable {
     stopIds,
     expectedStopTimings,
     serviceDate,
+    cachedAt,
   ];
 }

@@ -3,17 +3,18 @@ import '../constants/colors.dart';
 import 'app_components.dart';
 
 class DataNotice extends StatelessWidget {
-  final bool demo, unavailable;
+  final bool demo, unavailable, cached;
   final VoidCallback? retry;
   const DataNotice({
     super.key,
     required this.demo,
     this.unavailable = false,
+    this.cached = false,
     this.retry,
   });
   @override
   Widget build(BuildContext context) {
-    if (!demo && !unavailable) return const SizedBox.shrink();
+    if (!demo && !unavailable && !cached) return const SizedBox.shrink();
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -34,7 +35,9 @@ class DataNotice extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              unavailable
+              cached
+                  ? 'Saved timetable • May be outdated. Reconnect to refresh.'
+                  : unavailable
                   ? 'Live data unavailable • Sample data'
                   : 'Sample data • Demo only',
               style: const TextStyle(

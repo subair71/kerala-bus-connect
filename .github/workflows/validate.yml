@@ -24,7 +24,7 @@ jobs:
       - name: Check formatting
         run: |
           dart format lib test tool/capture_screenshots.dart
-          git diff --exit-code -- lib test tool/capture_screenshots.dart
+          git diff --exit-code -- lib test tool/capture_screenshots.dart pubspec.lock
       - name: Analyze
         run: flutter analyze
       - name: Tests

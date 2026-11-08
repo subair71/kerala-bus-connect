@@ -36,6 +36,11 @@ class RoutesPage extends HookConsumerWidget {
                           'Browse published services by route name or stop.',
                     ),
                     DataNotice(
+                      cached: ref.watch(
+                        serviceCatalogProvider.select(
+                          (data) => data.asData?.value.cached ?? false,
+                        ),
+                      ),
                       demo: ref.watch(
                         serviceCatalogProvider.select(
                           (data) => data.asData?.value.isDemo ?? false,
