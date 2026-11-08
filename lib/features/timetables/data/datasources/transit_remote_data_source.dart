@@ -139,7 +139,10 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
   }
 
   @override
-  Future<void> updateService(String serviceId, Map<String, dynamic> data) async {
+  Future<void> updateService(
+    String serviceId,
+    Map<String, dynamic> data,
+  ) async {
     await _firestore.collection('services').doc(serviceId).update(data);
     cache?.invalidate();
   }

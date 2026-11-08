@@ -67,16 +67,14 @@ final ownerServicesProvider = StreamProvider.autoDispose<List<ServiceEntity>>((
 });
 
 final serviceCatalogProvider =
-    Provider.autoDispose<AsyncValue<DataSet<ServiceEntity>>>(
-      (ref) {
-        final live = ref.watch(publishedServicesProvider);
-        final records = live.asData?.value;
-        if (records != null && records.any((row) => row.cachedAt != null)) {
-          return AsyncData(DataSet(records, cached: true, unavailable: true));
-        }
-        return sampleFallback(live, TransitSamples.services);
-      },
-    );
+    Provider.autoDispose<AsyncValue<DataSet<ServiceEntity>>>((ref) {
+      final live = ref.watch(publishedServicesProvider);
+      final records = live.asData?.value;
+      if (records != null && records.any((row) => row.cachedAt != null)) {
+        return AsyncData(DataSet(records, cached: true, unavailable: true));
+      }
+      return sampleFallback(live, TransitSamples.services);
+    });
 final sampleBusinessesProvider = Provider((ref) => TransitSamples.businesses);
 final sampleRoutesProvider = Provider((ref) => TransitSamples.routes);
 final sampleServicesProvider = Provider((ref) => TransitSamples.services);

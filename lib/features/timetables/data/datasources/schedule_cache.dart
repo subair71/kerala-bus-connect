@@ -54,7 +54,8 @@ class ScheduleCache {
       for (final row in rows) {
         final item = Map<String, dynamic>.from(row as Map);
         final id = item.remove('id') as String;
-        if (id.isEmpty || !ids.add(id) || item['published'] != true) return null;
+        if (id.isEmpty || !ids.add(id) || item['published'] != true)
+          return null;
         records.add(ServiceModel.fromMap(id, item, cachedAt: date));
       }
       return CachedSchedule(List.unmodifiable(records), date);
@@ -166,7 +167,9 @@ class ScheduleCache {
                 for (final record in records)
                   ServiceModel.fromMap(record.id, {
                     ...record.toJson(),
-                    'offDays': record.operatingDaysKnown ? record.offDays : null,
+                    'offDays': record.operatingDaysKnown
+                        ? record.offDays
+                        : null,
                   }, cachedAt: date),
               ]),
               date,
@@ -182,7 +185,10 @@ class ScheduleCache {
           },
         );
         timer = Timer(timeout, () {
-          fallback(TimeoutException('Timetable refresh timed out.'), StackTrace.current);
+          fallback(
+            TimeoutException('Timetable refresh timed out.'),
+            StackTrace.current,
+          );
         });
         read().then((saved) {
           if (cancelled || output.isClosed) return;
