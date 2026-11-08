@@ -3,7 +3,11 @@ import '../../../timetables/domain/entities/business_entity.dart';
 
 abstract class TripRepository {
   Stream<List<BusEntity>> watchBuses(String ownerId, String businessId);
-  Stream<List<DailyAdjustment>> watchAdjustments(String date);
+  Stream<List<DailyAdjustment>> watchAdjustments(
+    String date, {
+    String? ownerId,
+    List<String>? tripIds,
+  });
   Future<void> saveBus(
     String ownerId,
     BusinessEntity business,

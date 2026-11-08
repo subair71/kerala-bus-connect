@@ -113,37 +113,52 @@ final serviceIndexProvider =
           .whenData((data) => ServiceSearchIndex(data.records));
     });
 
-final passengerDailyUpdatesUnavailableProvider = Provider.autoDispose<bool>((
-  ref,
-) {
-  final query = ref.watch(debouncedSearchProvider);
-  final records = ref.watch(serviceCatalogProvider).asData?.value.records;
-  if (query.serviceDate == null ||
-      !(records?.any((s) => s.busId.isNotEmpty) ?? false))
-    return false;
-  return ref
-      .watch(dailyAdjustmentsProvider(serviceDateKey(query.serviceDate!)))
-      .hasError;
-});
-
-final departureResultsProvider =
+/// Share candidate matching between result ordering and scoped delay queries.
+final matchingServicesProvider =
     Provider.autoDispose<AsyncValue<List<ServiceEntity>>>((ref) {
       final query = ref.watch(debouncedSearchProvider);
       final today = ref.watch(todayProvider);
-      return ref.watch(serviceIndexProvider).whenData((index) {
-        var services = index.search(
+      return ref.watch(serviceIndexProvider).whenData(
+        (index) => index.search(
           from: query.from,
           to: query.to,
           filterDay: query.filterDay,
           onlyRunningToday: query.onlyRunningToday,
           today: today,
-        );
+        ),
+      );
+    });
+
+final passengerAdjustmentsProvider = StreamProvider.autoDispose
+    .family<List<DailyAdjustment>, String>((ref, date) {
+      final candidates = ref.watch(matchingServicesProvider).asData?.value;
+      final ids = [
+        for (final service in candidates ?? const <ServiceEntity>[])
+          if (service.busId.isNotEmpty) service.id,
+      ];
+      if (ids.isEmpty) return Stream.value(const <DailyAdjustment>[]);
+      return ref.watch(tripRepositoryProvider).watchAdjustments(date, tripIds: ids);
+    }, retry: (_, _) => null);
+
+final passengerDailyUpdatesUnavailableProvider = Provider.autoDispose<bool>((ref) {
+  final query = ref.watch(debouncedSearchProvider);
+  if (query.serviceDate == null) return false;
+  return ref.watch(passengerAdjustmentsProvider(serviceDateKey(query.serviceDate!))).hasError;
+});
+
+final departureResultsProvider =
+    Provider.autoDispose<AsyncValue<List<ServiceEntity>>>((ref) {
+      final query = ref.watch(debouncedSearchProvider);
+      return ref.watch(matchingServicesProvider).whenData((matching) {
+        var services = matching;
         if (query.serviceDate != null &&
             services.any((s) => s.busId.isNotEmpty)) {
           final date = serviceDateKey(query.serviceDate!);
-          final daily = ref.watch(dailyAdjustmentIndexProvider(date));
+          final daily = ref.watch(passengerAdjustmentsProvider(date));
           if (daily.hasValue && !daily.hasError && !daily.isLoading) {
-            final adjustments = daily.requireValue;
+            final adjustments = {
+              for (final item in daily.requireValue) item.tripId: item,
+            };
             services = [
               for (final service in services)
                 adjustments[service.id]?.apply(service) ?? service,

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import '../../../../core/data/combine_complete_lists.dart';
 import '../../../timetables/data/datasources/schedule_cache.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/errors/app_failure.dart';
@@ -57,10 +58,30 @@ class FirebaseTripRepository implements TripRepository {
       });
 
   @override
-  Stream<List<DailyAdjustment>> watchAdjustments(String date) => db
-      .collection('trip_adjustments')
-      .where('serviceDate', isEqualTo: date)
-      .snapshots(includeMetadataChanges: true)
+  Stream<List<DailyAdjustment>> watchAdjustments(
+    String date, {
+    String? ownerId,
+    List<String>? tripIds,
+  }) {
+    Query<Map<String, dynamic>> query = db
+        .collection('trip_adjustments')
+        .where('serviceDate', isEqualTo: date);
+    if (ownerId != null) query = query.where('ownerId', isEqualTo: ownerId);
+    if (tripIds == null) return _watchAdjustments(query);
+    final ids = tripIds.toSet().toList()..sort();
+    final sources = <Stream<List<DailyAdjustment>>>[];
+    for (var start = 0; start < ids.length; start += 30) {
+      final end = start + 30 < ids.length ? start + 30 : ids.length;
+      sources.add(
+        _watchAdjustments(query.where('tripId', whereIn: ids.sublist(start, end))),
+      );
+    }
+    return combineCompleteLists(sources);
+  }
+
+  Stream<List<DailyAdjustment>> _watchAdjustments(
+    Query<Map<String, dynamic>> query,
+  ) => query.snapshots(includeMetadataChanges: true)
       .map((snapshot) {
         if (snapshot.metadata.isFromCache) {
           throw const AppFailure(

@@ -41,9 +41,16 @@ Writes serialize and coalesce. Owner schedule changes invalidate the local cache
 server snapshots replace the whole saved result, including deletions and empty
 results. Old disk reads cannot replace newly arrived server data.
 
+Daily adjustments are now scoped to matching passenger trip IDs in groups of up to
+30; empty searches create no adjustment query. Owner dashboard updates filter by
+ownerId. The batch combiner emits only complete results and retains an error until
+the failing batch recovers. Providers dispose obsolete passenger queries on search
+changes. An unfiltered search still matches all services and remains a scaling
+limitation until the stop-departure read model is introduced.
+
 This is a compatibility increment, not completion of the scaling stage: the
 all-published-services subscription remains. The existing 30-second Riverpod idle
-retention continues to share active requests; no extra Firestore listener was added.
+retention continues to share active requests; no extra timetable listener was added.
 The 7-day limit is an offline retention policy, not a promise of fresh schedules.
 Cross-device edits become visible through the existing server stream when online.
 
@@ -52,7 +59,7 @@ Cross-device edits become visible through the existing server stream when online
 | Stage | Status | Remaining gate |
 | --- | --- | --- |
 | 1. Analyze | Source inventory and key dependency paths reviewed | Identify the claimed nearby API source/contract; runtime audit needs staging |
-| 2. Optimize | Query narrowing, snapshot deduplication, persistent cache implemented | Server search read model, accurate cursor pagination, scoped adjustment reads, monitoring and realistic load tests |
+| 2. Optimize | Query narrowing, snapshot deduplication, persistent cache implemented | Server search read model, accurate cursor pagination, monitoring and realistic load tests |
 | 3. Passenger | Existing manual search and ordered-stop matching preserved | Nearby API contract, permission flow, distance refresh, next departures, timing reports |
 | 4. Owner | Existing editing, shifts and delays preserved | Duration suggestions, suspensions, cancellation and full running status |
 | 5. Ads | Existing sponsored_ads carousel preserved | Advertiser submission, packages, approval, route/stop/radius/district targeting and frequency limits |
@@ -100,9 +107,12 @@ activation or a payable commission. No automatic recurring charge is planned.
 
 ## Deployment and validation
 
-This increment adds shared_preferences. Run flutter pub get and commit its resolved
-lockfile. No database migration, collection deletion or Firebase rules deployment
-is required for the cache. Web persistence remains best effort: browser storage can
+This increment adds shared_preferences. The resolved
+lockfile is committed, and CI checks that dependency resolution leaves it unchanged. No database migration, collection deletion or Firebase rules deployment
+is required for the cache. The scoped adjustment queries have two declared composite
+indexes in firestore.indexes.json. Export and merge any existing production indexes
+before deploying this manifest; do not delete unmanaged indexes. Wait until new
+indexes are ready before publishing the client. This PR does not deploy indexes. Web persistence remains best effort: browser storage can
 be unavailable or evicted, and the app must continue with the live source.
 
 Tests added for restart round trips, old/corrupt/incomplete data, size bounds,
