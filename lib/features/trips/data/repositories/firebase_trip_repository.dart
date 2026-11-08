@@ -73,7 +73,9 @@ class FirebaseTripRepository implements TripRepository {
     for (var start = 0; start < ids.length; start += 30) {
       final end = start + 30 < ids.length ? start + 30 : ids.length;
       sources.add(
-        _watchAdjustments(query.where('tripId', whereIn: ids.sublist(start, end))),
+        _watchAdjustments(
+          query.where('tripId', whereIn: ids.sublist(start, end)),
+        ),
       );
     }
     return combineCompleteLists(sources);
@@ -81,23 +83,20 @@ class FirebaseTripRepository implements TripRepository {
 
   Stream<List<DailyAdjustment>> _watchAdjustments(
     Query<Map<String, dynamic>> query,
-  ) => query.snapshots(includeMetadataChanges: true)
-      .map((snapshot) {
-        if (snapshot.metadata.isFromCache) {
-          throw const AppFailure(
-            'Daily updates are unavailable while offline.',
-          );
-        }
-        return [
-          for (final doc in snapshot.docs)
-            DailyAdjustment(
-              tripId: doc.data()['tripId'] as String,
-              serviceDate: doc.data()['serviceDate'] as String,
-              scheduleRevision: doc.data()['scheduleRevision'] as String,
-              delays: Map<String, int>.from(doc.data()['delays'] as Map),
-            ),
-        ];
-      });
+  ) => query.snapshots(includeMetadataChanges: true).map((snapshot) {
+    if (snapshot.metadata.isFromCache) {
+      throw const AppFailure('Daily updates are unavailable while offline.');
+    }
+    return [
+      for (final doc in snapshot.docs)
+        DailyAdjustment(
+          tripId: doc.data()['tripId'] as String,
+          serviceDate: doc.data()['serviceDate'] as String,
+          scheduleRevision: doc.data()['scheduleRevision'] as String,
+          delays: Map<String, int>.from(doc.data()['delays'] as Map),
+        ),
+    ];
+  });
 
   @override
   Future<void> saveBus(

@@ -17,9 +17,11 @@ Stream<List<T>> combineCompleteLists<T>(List<Stream<List<T>>> sources) {
             (rows) {
               values[index] = rows;
               if (values.length == sources.length) {
-                controller.add(List.unmodifiable([
-                  for (var j = 0; j < sources.length; j++) ...values[j]!,
-                ]));
+                controller.add(
+                  List.unmodifiable([
+                    for (var j = 0; j < sources.length; j++) ...values[j]!,
+                  ]),
+                );
               }
             },
             onError: (Object error, StackTrace stack) {

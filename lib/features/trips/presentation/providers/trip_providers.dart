@@ -35,7 +35,9 @@ final dailyAdjustmentsProvider = StreamProvider.autoDispose
       final owner = ref.watch(ownerIdProvider);
       return owner == null
           ? Stream.value(const <DailyAdjustment>[])
-          : ref.watch(tripRepositoryProvider).watchAdjustments(date, ownerId: owner);
+          : ref
+                .watch(tripRepositoryProvider)
+                .watchAdjustments(date, ownerId: owner);
     }, retry: (_, _) => null);
 
 final selectedBusProvider = NotifierProvider.autoDispose

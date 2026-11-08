@@ -1,5 +1,8 @@
 # FindMyBus scalability audit and incremental plan
 
+This describes the first increment. See [current implementation status](platform-implementation-status.md)
+for the subsequent persistent-cache and scoped-adjustment changes and the expanded platform scope.
+
 Audit baseline: `3154291d64476589c97d286c63fd8e73bfbc06fa`.
 This is an initial optimization increment, not a claim of capacity for one million users.
 
