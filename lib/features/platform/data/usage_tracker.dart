@@ -5,8 +5,16 @@ import '../domain/platform_repository.dart';
 
 class UsageTracker {
   final PlatformRepository repository;
-  final SharedPreferencesAsync preferences = SharedPreferencesAsync();
+  late final SharedPreferencesAsync preferences = SharedPreferencesAsync();
   UsageTracker(this.repository);
+  Future<String>? _installation;
+  Future<String> _installationId() => _installation ??= () async {
+    final saved = await preferences.getString('findmybus.analytics.installation');
+    if (saved != null) return saved;
+    final created = _random();
+    await preferences.setString('findmybus.analytics.installation', created);
+    return created;
+  }();
   String _random() => List.generate(
     24,
     (_) => Random.secure().nextInt(16).toRadixString(16),
@@ -30,16 +38,8 @@ class UsageTracker {
   }) async {
     try {
       if (!await consent()) return;
-      var installation = await preferences.getString(
-        'findmybus.analytics.installation',
-      );
-      if (installation == null) {
-        installation = _random();
-        await preferences.setString(
-          'findmybus.analytics.installation',
-          installation,
-        );
-      }
+      final installation = await _installationId();
+      if (!await consent()) return;
       await repository.call('recordUsage', {
         'event': event,
         'eventId': eventId ?? _random(),

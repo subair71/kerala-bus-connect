@@ -26,7 +26,11 @@ export class SearchCache {
         next.pending = false; next.until = this.now() + this.ttl;
         next.bytes = Buffer.byteLength(JSON.stringify(result));
         this.bytes += next.bytes;
-        if (next.bytes > this.maxBytes) { this.values.delete(key); this.bytes -= next.bytes; }
+        while (this.bytes > this.maxBytes && this.values.size) {
+          const oldest = this.values.keys().next().value;
+          this.bytes -= this.values.get(oldest).bytes;
+          this.values.delete(oldest);
+        }
       }
       return {...result, cache: 'miss'};
     } catch (error) {

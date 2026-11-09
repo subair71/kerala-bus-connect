@@ -2,12 +2,14 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PublicPageCache {
-  final SharedPreferencesAsync preferences;
+  final SharedPreferencesAsync? _providedPreferences;
+  late final SharedPreferencesAsync preferences =
+      _providedPreferences ?? SharedPreferencesAsync();
   final String namespace;
   Future<void> _writes = Future.value();
   int _generation = 0;
   PublicPageCache(this.namespace, {SharedPreferencesAsync? preferences})
-    : preferences = preferences ?? SharedPreferencesAsync();
+    : _providedPreferences = preferences;
   String _key(String query) =>
       'findmybus.pages.v1.$namespace.${base64Url.encode(utf8.encode(query))}';
   Future<Map<String, dynamic>?> read(String query) async {

@@ -40,7 +40,7 @@ async function fixture(workflow) {
   return {advertiser, ad, order};
 }
 test('direct payments: verified once, approval required, recurring commission, payout and refund', {skip: !enabled}, async () => {
-  const {ad, order} = await fixture('direct');
+  const {advertiser, ad, order} = await fixture('direct');
   await assert.rejects(call(owner, 'verifyPayment', {orderId: order.id}), {code: 'permission-denied'});
   await call(owner, 'submitReceipt', {orderId: order.id, receipt: 'Bank receipt'});
   const verification = {orderId: order.id, receivedPaise: 100000, transactionReference: 'BANK-ONE'};
@@ -49,6 +49,8 @@ test('direct payments: verified once, approval required, recurring commission, p
   assert.equal((await db.doc('sponsored_ads/' + ad.id).get()).data().active, false);
   await call(admin, 'reviewAd', {adId: ad.id, approval: 'approved', note: 'Reviewed'});
   assert.equal((await targetedAds(db, {routeIds: ['route-a']}, now)).ads.length, 1);
+  assert.equal((await db.doc('advertisers/' + advertiser.id).get()).data().activeAds, 1);
+  assert.equal((await db.doc('sponsored_ads/' + ad.id).get()).data().nextTransitionAt, now + 23 * 86400000);
   const renewals = await Promise.all([
     call(owner, 'createOrder', {adId: ad.id, workflow: 'direct'}),
     call(owner, 'createOrder', {adId: ad.id, workflow: 'direct'}),
@@ -64,6 +66,7 @@ test('direct payments: verified once, approval required, recurring commission, p
   await call(admin, 'refundOrder', {orderId: order.id, reference: 'REFUND-ONE'});
   assert.equal((await db.doc('commissions/' + order.id).get()).data().status, 'recoveryDue');
   assert.equal((await targetedAds(db, {routeIds: ['route-a']}, now)).ads.length, 0);
+  assert.equal((await db.doc('advertisers/' + advertiser.id).get()).data().activeAds, 0);
 });
 test('owner-collected money retains commission without another payable balance', {skip: !enabled}, async () => {
   const {ad, order} = await fixture('ownerCollected');

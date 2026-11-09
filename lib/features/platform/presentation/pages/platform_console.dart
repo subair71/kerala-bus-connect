@@ -125,6 +125,7 @@ class PlatformConsole extends ConsumerWidget {
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         initialValue: selection.collection,
+                        isExpanded: true,
                         decoration: const InputDecoration(labelText: 'View'),
                         items: [
                           for (final entry in sections.entries)
