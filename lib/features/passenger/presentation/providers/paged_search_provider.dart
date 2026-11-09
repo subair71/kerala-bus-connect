@@ -64,7 +64,8 @@ class PagedDepartures extends AsyncNotifier<DeparturePage> {
   Future<DeparturePage> build() async {
     retainWhileIdle(ref, const Duration(seconds: 60));
     final timer = Timer.periodic(const Duration(minutes: 1), (_) {
-      if (state.asData?.value.records.length == 4) unawaited(refresh());
+      if (!query.directory && (state.asData?.value.records.length ?? 5) <= 4)
+        unawaited(refresh());
     });
     ref.onDispose(timer.cancel);
     final cached = await ref.watch(publicPageCacheProvider).read(_key);

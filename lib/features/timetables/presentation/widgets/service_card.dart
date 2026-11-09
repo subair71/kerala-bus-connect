@@ -54,15 +54,15 @@ class ServiceCard extends ConsumerWidget {
     final elapsed = serviceDay == null
         ? now.hour * 60 + now.minute
         : DateTime.utc(now.year, now.month, now.day, now.hour, now.minute)
-            .difference(DateTime.utc(serviceDay.year, serviceDay.month, serviceDay.day))
-            .inMinutes;
+              .difference(
+                DateTime.utc(serviceDay.year, serviceDay.month, serviceDay.day),
+              )
+              .inMinutes;
     final running =
         !service.offDays.contains(effectiveDay) &&
         service.runningStatus != RunningStatus.cancelled &&
         service.runningStatus != RunningStatus.completed;
-    final remaining = departure == null
-        ? null
-        : departure - elapsed;
+    final remaining = departure == null ? null : departure - elapsed;
     final demo = isSampleId(service.id);
     final status = service.runningStatus != RunningStatus.scheduled
         ? '${service.runningStatus.label} · Owner reported · ${service.serviceDate ?? ""}'
