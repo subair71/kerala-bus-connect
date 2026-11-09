@@ -3,7 +3,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../timetables/presentation/providers/timetable_providers.dart';
 import '../../domain/entities/trip_plan.dart';
-import '../../domain/entities/timetable_suggestion.dart';
+import '../providers/trip_providers.dart';
 import 'trip_editor.dart';
 
 class TimetableSuggestions extends HookConsumerWidget {
@@ -32,8 +32,8 @@ class TimetableSuggestions extends HookConsumerWidget {
         })()),
     ]);
     useEffect(() => () { for (final c in durations) { c.dispose(); } }, [durations]);
-    final error = useState<String?>(null);
-    final preview = useState<TripPlan?>(null);
+    final draft = ref.watch(suggestionPreviewProvider(plan));
+    final preview = ref.read(suggestionPreviewProvider(plan).notifier);
     return AlertDialog(
       title: const Text('Suggest stop timings'),
       content: SizedBox(width: 480, child: SingleChildScrollView(child: Form(
@@ -48,10 +48,10 @@ class TimetableSuggestions extends HookConsumerWidget {
           ),
           TextFormField(controller: factor, decoration: const InputDecoration(labelText: 'Travel adjustment factor (0.5–3)')),
           TextFormField(controller: dwell, decoration: const InputDecoration(labelText: 'Additional time at intermediate stops (minutes)')),
-          if (error.value != null) Text(error.value!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
-          if (preview.value != null) ...[
+          if (draft.error != null) Text(draft.error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+          if (draft.plan != null) ...[
             const Divider(),
-            for (final stop in preview.value!.stops) Text('${stop.name}: ${tripTimeLabel(stop.minutes)}'),
+            for (final stop in draft.plan!.stops) Text('${stop.name}: ${tripTimeLabel(stop.minutes)}'),
           ],
         ]),
       ))),
@@ -59,14 +59,10 @@ class TimetableSuggestions extends HookConsumerWidget {
         TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
         OutlinedButton(onPressed: () {
           if (!form.currentState!.validate()) return;
-          try {
-            preview.value = suggestTimetable(plan, durations.map((c) => int.parse(c.text)).toList(),
-              factor: double.tryParse(factor.text) ?? double.nan,
-              stopMinutes: int.tryParse(dwell.text) ?? -1);
-            error.value = null;
-          } catch (e) { error.value = e.toString(); preview.value = null; }
+          preview.calculate(durations.map((c) => int.parse(c.text)).toList(),
+            double.tryParse(factor.text) ?? double.nan, int.tryParse(dwell.text) ?? -1);
         }, child: const Text('Preview')),
-        FilledButton(onPressed: preview.value == null ? null : () => Navigator.pop(context, preview.value),
+        FilledButton(onPressed: draft.plan == null ? null : () => Navigator.pop(context, draft.plan),
           child: const Text('Apply to draft')),
       ],
     );

@@ -1,3 +1,4 @@
+import '../../domain/entities/timetable_suggestion.dart';
 import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -323,4 +324,19 @@ class RunningStatusDraft extends Notifier<RunningStatus> {
   RunningStatus build() => args.adjustment?.scheduleRevision == args.trip.revision
       ? args.adjustment!.status : RunningStatus.scheduled;
   void select(RunningStatus status) => state = status;
+}
+
+typedef SuggestionState = ({TripPlan? plan, String? error});
+final suggestionPreviewProvider = NotifierProvider.autoDispose
+    .family<SuggestionPreview, SuggestionState, TripPlan>(SuggestionPreview.new);
+class SuggestionPreview extends Notifier<SuggestionState> {
+  SuggestionPreview(this.plan);
+  final TripPlan plan;
+  @override
+  SuggestionState build() => (plan: null, error: null);
+  void calculate(List<int> minutes, double factor, int dwell) {
+    try {
+      state = (plan: suggestTimetable(plan, minutes, factor: factor, stopMinutes: dwell), error: null);
+    } catch (e) { state = (plan: null, error: e.toString()); }
+  }
 }
