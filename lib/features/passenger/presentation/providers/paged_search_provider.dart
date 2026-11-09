@@ -90,7 +90,7 @@ class PagedDepartures extends AsyncNotifier<DeparturePage> {
           data,
           cachedAt: cachedAt,
         );
-        if (cachedAt != null || data['serviceDate'] == null) return service;
+        if (data['serviceDate'] == null) return service;
         return service.withExpected(
           Map<String, int>.from(data['expectedStopTimings'] as Map? ?? {}),
           data['serviceDate'] as String,

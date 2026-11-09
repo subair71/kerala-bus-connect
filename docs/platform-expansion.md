@@ -93,7 +93,7 @@ Use an authenticated environment with access to project findmybus-535ae. Do not 
 7. Run node functions/seed-platform.js. Optionally set FINDMYBUS_ADMIN_UID to the existing intended administrator account ID; preserve other custom claims. Sign in again after assigning the claim.
 8. Run node functions/backfill.js after index triggers are deployed. It scans sources in bounded batches. Verify projected counts, representative routes, daily exceptions, overnight trips and missing legacy timings.
 9. Set platform_config/search.ready=true only after backfill and query/index checks succeed. This flag prevents partial migrations from being treated as complete.
-10. Add verified stop coordinates and route associations through the admin console. Old trip-local stop IDs (origin, destination, stop-0) are not global geographical stop identities.
+10. Use a staging web build with PLATFORM_ENABLED=true to add verified stop coordinates and route associations through the admin console before public rollout. Old trip-local stop IDs (origin, destination, stop-0) are not global geographical stop identities.
 11. Configure Firebase App Check for the production domain and set FIREBASE_APP_CHECK_WEB_SITE_KEY. Retain GOOGLE_PLACES_ENABLED if autocomplete is used.
 12. Set the GitHub repository variable PLATFORM_ENABLED=true and run the existing Pages deployment workflow. Until this variable is enabled, the previous search mode remains active.
 13. Configure usage TTL, Cloud Monitoring alerts and billing budget alerts. Run a staging test against the real region before increasing function instance limits or enabling broad rollout.
@@ -111,7 +111,7 @@ Projection storage and index writes grow with the number of recurring stops, not
 
 ## Verification and remaining limits
 
-CI executes Dart formatting, architecture checks, analyzer, Flutter tests, layout captures, release web compilation, browser smoke checks, Node unit tests, Firestore rules tests, transactional emulator tests and bounded emulator concurrency workloads. Final counts and measured workload results are recorded in the PR validation report.
+CI executes Dart formatting, architecture checks, analyzer, Flutter tests, layout captures, release web compilation, browser smoke checks, Node unit tests, Firestore rules tests, transactional emulator tests and bounded emulator concurrency workloads. Final counts and measured workload results are recorded in [the validation report](platform-validation.md).
 
 The emulator workload uses synthetic recurring trips, repeated hot queries, diverse route queries and pagination. It is a correctness/performance diagnostic, not a production latency or million-user certification. Network latency, App Check overhead, separate function instances, regional indexes and real dataset distributions require staging measurements. Native Android/iOS project folders are absent; only the existing web target and mobile browser layouts are validated.
 

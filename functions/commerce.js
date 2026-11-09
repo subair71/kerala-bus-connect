@@ -337,7 +337,7 @@ export async function platformList(db, auth, data) {
 }
 export function adMatches(ad, context, now = Date.now()) {
   if (!eligible(ad, now)) return false;
-  if (ad.coverage === 'district') return context.district && normalize(ad.district) === normalize(context.district);
+  if (ad.coverage === 'district') return (context.districts ?? [context.district]).some(region => region && normalize(ad.district) === normalize(region));
   if (ad.coverage === 'route') return ad.routeIds.some(r => context.routeIds?.includes(r)) ||
     ad.stopIds.some(s => context.stopIds?.includes(s));
   return (context.points ?? []).some(point => distanceKm(point, ad) <= ad.radiusKm);
@@ -351,8 +351,8 @@ export async function targetedAds(db, data, now = Date.now()) {
     const matches = await db.collection('stops').where('nameLower', '==', normalize(label)).where('active', '==', true).limit(5).get();
     for (const stop of matches.docs) { stops.push(stop); if (!stopIds.includes(stop.id)) stopIds.push(stop.id); }
   }
-  const points = stops.filter(s => s.exists).map(s => s.data());
-  const district = points[0]?.district ?? '';
+  const points = stops.filter(s => s.exists && s.data().active).map(s => s.data());
+  const districts = [...new Set(points.map(p => p.district))];
   const queries = [];
   const cells = [...new Set(points.map(cellFor))];
   if (cells.length) queries.push(db.collection('sponsored_ads').where('active', '==', true).where('coverageCells', 'array-contains-any', cells));
@@ -363,7 +363,7 @@ export async function targetedAds(db, data, now = Date.now()) {
   const matches = new Map();
   for (const query of queries) {
     const result = await query.orderBy(FieldPath.documentId()).limit(50).get();
-    for (const doc of result.docs) if (adMatches(doc.data(), {routeIds, stopIds, points, district}, now)) matches.set(doc.id, doc.data());
+    for (const doc of result.docs) if (adMatches(doc.data(), {routeIds, stopIds, points, districts}, now)) matches.set(doc.id, doc.data());
   }
   return {ads: [...matches].slice(0, 5).map(([id, ad]) => ({id, advertiser: ad.advertiser,
     title: ad.title, description: ad.description, imageUrl: ad.imageUrl, website: ad.website,

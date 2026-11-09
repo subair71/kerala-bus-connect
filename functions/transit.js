@@ -13,6 +13,7 @@ export const hash = value => createHash('sha256').update(value).digest('hex');
 export const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 export function dateKey(value) {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value) ||
+      !Number.isFinite(Date.parse(value + 'T00:00:00Z')) ||
       new Date(value + 'T00:00:00Z').toISOString().slice(0, 10) !== value) {
     throw new HttpsError('invalid-argument', 'Choose a valid date.');
   }

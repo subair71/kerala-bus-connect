@@ -75,10 +75,10 @@ class NearbyStops extends AsyncNotifier<NearbyState> {
       if (sqrt(dx * dx + dy * dy) < 250 && state.hasValue)
         return state.requireValue;
     }
-    final data = await repository.call(
-      'findNearbyStops',
-      {'latitude': point.latitude, 'longitude': point.longitude},
-    );
+    final data = await repository.call('findNearbyStops', {
+      'latitude': point.latitude,
+      'longitude': point.longitude,
+    });
     _position = point;
     _fetchedAt = DateTime.now();
     final stops = data['stops'] as List;

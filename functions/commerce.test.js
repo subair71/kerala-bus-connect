@@ -22,3 +22,10 @@ test('targeting requires approval, an actual paid period and geographic/route re
 test('unauthenticated financial actions fail before database access', async () => {
   await assert.rejects(platformAction({}, null, {}), {code: 'unauthenticated'});
 });
+
+test('district coverage matches either end of the passenger journey', () => {
+  const ad = {approval: 'approved', paidPeriods: [{start: 10, end: 100}],
+    coverage: 'district', district: 'Thrissur'};
+  assert.equal(adMatches(ad, {districts: ['Ernakulam', 'Thrissur']}, 50), true);
+  assert.equal(adMatches(ad, {districts: ['Kannur']}, 50), false);
+});
