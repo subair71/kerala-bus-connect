@@ -19,7 +19,8 @@ class FirebasePlacesClient {
     );
   }
 
-  Future<Object?> suggest(String input) => call('placeSuggestions', {'input': input});
+  Future<Object?> suggest(String input) =>
+      call('placeSuggestions', {'input': input});
 
   Future<Object?> call(String name, Map<String, Object?> data) async {
     try {

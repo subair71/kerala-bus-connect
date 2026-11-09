@@ -43,7 +43,9 @@ class DeparturesSliver extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(platformEnabledProvider)) {
-      return PagedDeparturesSliver(query: ref.watch(currentDepartureQueryProvider));
+      return PagedDeparturesSliver(
+        query: ref.watch(currentDepartureQueryProvider),
+      );
     }
     final result = ref.watch(departureResultsProvider);
     final query = ref.watch(debouncedSearchProvider);

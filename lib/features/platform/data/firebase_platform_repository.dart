@@ -5,6 +5,8 @@ class FirebasePlatformRepository implements PlatformRepository {
   final FirebasePlacesClient client;
   FirebasePlatformRepository(this.client);
   @override
-  Future<Map<String, dynamic>> call(String name, Map<String, Object?> data) async =>
-      Map<String, dynamic>.from(await client.call(name, data) as Map);
+  Future<Map<String, dynamic>> call(
+    String name,
+    Map<String, Object?> data,
+  ) async => Map<String, dynamic>.from(await client.call(name, data) as Map);
 }

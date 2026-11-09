@@ -40,24 +40,25 @@ class RoutesPage extends HookConsumerWidget {
                       subtitle:
                           'Browse published services by route name or stop.',
                     ),
-                    if (!ref.watch(platformEnabledProvider)) DataNotice(
-                      cached: ref.watch(
-                        serviceCatalogProvider.select(
-                          (data) => data.asData?.value.cached ?? false,
+                    if (!ref.watch(platformEnabledProvider))
+                      DataNotice(
+                        cached: ref.watch(
+                          serviceCatalogProvider.select(
+                            (data) => data.asData?.value.cached ?? false,
+                          ),
                         ),
-                      ),
-                      demo: ref.watch(
-                        serviceCatalogProvider.select(
-                          (data) => data.asData?.value.isDemo ?? false,
+                        demo: ref.watch(
+                          serviceCatalogProvider.select(
+                            (data) => data.asData?.value.isDemo ?? false,
+                          ),
                         ),
-                      ),
-                      unavailable: ref.watch(
-                        serviceCatalogProvider.select(
-                          (data) => data.asData?.value.unavailable ?? false,
+                        unavailable: ref.watch(
+                          serviceCatalogProvider.select(
+                            (data) => data.asData?.value.unavailable ?? false,
+                          ),
                         ),
+                        retry: () => ref.invalidate(publishedServicesProvider),
                       ),
-                      retry: () => ref.invalidate(publishedServicesProvider),
-                    ),
                     PlaceTextField(
                       controller: controller,
                       onChanged: ref.read(routeQueryProvider.notifier).update,
@@ -126,8 +127,13 @@ class _DirectoryResults extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!ref.watch(platformEnabledProvider)) return const _RoutesList();
-    return PagedDeparturesSliver(query: (
-      from: ref.watch(debouncedRouteQueryProvider), to: '',
-      date: serviceDateKey(ref.watch(journeyTodayProvider)), directory: true));
+    return PagedDeparturesSliver(
+      query: (
+        from: ref.watch(debouncedRouteQueryProvider),
+        to: '',
+        date: serviceDateKey(ref.watch(journeyTodayProvider)),
+        directory: true,
+      ),
+    );
   }
 }

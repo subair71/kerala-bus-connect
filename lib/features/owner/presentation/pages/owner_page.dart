@@ -175,10 +175,16 @@ class _OwnerHeader extends ConsumerWidget {
           spacing: 12,
           runSpacing: 8,
           children: [
-            if (ref.watch(platformEnabledProvider)) OutlinedButton(
-              onPressed: () => openPlatformConsole(context), child: const Text('Advertising & earnings')),
-            if (ref.watch(administratorProvider).asData?.value == true) OutlinedButton(
-              onPressed: () => openPlatformConsole(context, admin: true), child: const Text('Administration')),
+            if (ref.watch(platformEnabledProvider))
+              OutlinedButton(
+                onPressed: () => openPlatformConsole(context),
+                child: const Text('Advertising & earnings'),
+              ),
+            if (ref.watch(administratorProvider).asData?.value == true)
+              OutlinedButton(
+                onPressed: () => openPlatformConsole(context, admin: true),
+                child: const Text('Administration'),
+              ),
             FilledButton.icon(
               onPressed: action.isLoading
                   ? null
