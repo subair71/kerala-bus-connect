@@ -17,6 +17,7 @@ class AnalyticsConsent extends AsyncNotifier<bool> {
     if (consent) await tracker.record('session');
     return consent;
   }
+
   Future<void> change(bool value) async {
     await ref.read(usageTrackerProvider).setConsent(value);
     if (ref.mounted) state = AsyncData(value);

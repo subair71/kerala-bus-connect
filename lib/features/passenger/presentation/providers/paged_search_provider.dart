@@ -118,9 +118,16 @@ class PagedDepartures extends AsyncNotifier<DeparturePage> {
     if (ref.mounted && cursor == null && !query.directory && !_reportedSearch) {
       _reportedSearch = true;
       final stop = ref.read(selectedNearbyStopProvider);
-      unawaited(tracker.record('search', eventId: _eventId,
-        routeId: raw.isEmpty ? null : raw.first['routeId'] as String?,
-        stopId: stop?.name.toLowerCase() == query.from.toLowerCase() ? stop?.id : null));
+      unawaited(
+        tracker.record(
+          'search',
+          eventId: _eventId,
+          routeId: raw.isEmpty ? null : raw.first['routeId'] as String?,
+          stopId: stop?.name.toLowerCase() == query.from.toLowerCase()
+              ? stop?.id
+              : null,
+        ),
+      );
     }
     if (cursor == null &&
         !query.directory &&
@@ -132,8 +139,7 @@ class PagedDepartures extends AsyncNotifier<DeparturePage> {
             .record('search_failure', eventId: '${_eventId}failure'),
       );
     }
-    if (cursor == null)
-      unawaited(cache.write(_key, raw));
+    if (cursor == null) unawaited(cache.write(_key, raw));
     final records = <ServiceEntity>[...previous];
     final seen = records.map((s) => '${s.id}:${s.serviceDate}').toSet();
     for (final row in _decode(raw)) {

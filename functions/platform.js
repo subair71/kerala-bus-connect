@@ -5,7 +5,7 @@ import {onCall, HttpsError} from 'firebase-functions/v2/https';
 import {onDocumentWritten} from 'firebase-functions/v2/firestore';
 import {onSchedule} from 'firebase-functions/v2/scheduler';
 import {searchDepartures, nearbyStops, indexSource} from './transit.js';
-import {platformAction, platformList, targetedAds} from './commerce.js';
+import {platformAction, platformList, targetedAds, writeAd} from './commerce.js';
 import {recordEvent} from './usage.js';
 
 if (!getApps().length) initializeApp();
@@ -49,32 +49,30 @@ export const syncServiceDepartures = onDocumentWritten({
   }
 });
 export async function refreshAds(database, now = Date.now()) {
-  let cursor;
-  let activeAds = 0;
-  const activeAdvertisers = new Set();
+  // Process only advertisements reaching a start/reminder/expiry boundary.
+  // Passenger targeting also checks paid intervals, so expiration never waits on cron.
   while (true) {
-    const base = database.collection('sponsored_ads').orderBy(FieldPath.documentId());
-    const page = await (cursor ? base.startAfter(cursor) : base).limit(100).get();
-    for (const doc of page.docs) {
-      const summary = await database.runTransaction(async tx => {
+    const page = await database.collection('sponsored_ads')
+      .where('nextTransitionAt', '<=', now).orderBy('nextTransitionAt')
+      .orderBy(FieldPath.documentId()).limit(100).get();
+    for (const doc of page.docs) await database.runTransaction(async tx => {
       const current = (await tx.get(doc.ref)).data();
-      if (!current?.paidPeriods) return;
-      const active = current.approval === 'approved' && !current.cancelled &&
-        current.paidPeriods.some(p => !p.refunded && p.start <= now && p.end > now);
-      if (current.active !== active) tx.update(doc.ref, {active});
+      if (!current || current.nextTransitionAt > now) return;
+      writeAd(tx, database, doc.ref, current, {}, now);
       if (current.paidUntil > now && current.paidUntil - now <= 7 * 86400000) {
         tx.set(database.doc('platform_notifications/' + doc.id + '_' + current.paidUntil),
           {ownerId: current.ownerId, adId: doc.id, expiresAt: current.paidUntil,
             message: 'Your advertisement expires within seven days. Renew to continue advertising.'}, {merge: true});
       }
-      return {active, advertiserId: current.advertiserId};
     });
-      if (summary?.active) { activeAds++; activeAdvertisers.add(summary.advertiserId); }
-    }
     if (page.size < 100) break;
-    cursor = page.docs.at(-1);
   }
-  await database.doc('platform_metrics/advertising').set({activeAds, activeAdvertisers: activeAdvertisers.size, measuredAt: now});
+  const [ads, advertisers] = await Promise.all([
+    database.collection('sponsored_ads').where('active', '==', true).count().get(),
+    database.collection('advertisers').where('activeAds', '>', 0).count().get(),
+  ]);
+  await database.doc('platform_metrics/advertising').set({
+    activeAds: ads.data().count, activeAdvertisers: advertisers.data().count, measuredAt: now});
 }
 export const refreshAdvertisements = onSchedule({
   schedule: 'every 60 minutes', region: 'asia-south1', timeoutSeconds: 540,

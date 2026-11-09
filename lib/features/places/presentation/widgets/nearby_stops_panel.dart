@@ -15,8 +15,10 @@ class NearbyStopsPanel extends HookConsumerWidget {
     useEffect(() {
       if (!enabled) return null;
       final timer = Timer.periodic(const Duration(minutes: 5), (_) {
-        if (context.mounted && (ModalRoute.of(context)?.isCurrent ?? true) &&
-            WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        if (context.mounted &&
+            (ModalRoute.of(context)?.isCurrent ?? true) &&
+            WidgetsBinding.instance.lifecycleState ==
+                AppLifecycleState.resumed) {
           ref.read(nearbyStopsProvider.notifier).refresh();
         }
       });
@@ -31,7 +33,9 @@ class NearbyStopsPanel extends HookConsumerWidget {
             .read(searchQueryProvider.notifier)
             .autoOrigin(data.stops.first.name);
         if (ref.read(searchQueryProvider).from == data.stops.first.name) {
-          ref.read(selectedNearbyStopProvider.notifier).select(data.stops.first);
+          ref
+              .read(selectedNearbyStopProvider.notifier)
+              .select(data.stops.first);
         }
       }
     });
@@ -84,8 +88,12 @@ class NearbyStopsPanel extends HookConsumerWidget {
                                 : '${stop.name} · ${stop.distanceKm.toStringAsFixed(1)} km',
                           ),
                           onPressed: () {
-                            ref.read(searchQueryProvider.notifier).from(stop.name);
-                            ref.read(selectedNearbyStopProvider.notifier).select(stop);
+                            ref
+                                .read(searchQueryProvider.notifier)
+                                .from(stop.name);
+                            ref
+                                .read(selectedNearbyStopProvider.notifier)
+                                .select(stop);
                           },
                         ),
                     ],

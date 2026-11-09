@@ -34,14 +34,20 @@ void main() {
         tester.view.physicalSize = Size(width, 900);
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.reset);
-        await tester.pumpWidget(RepaintBoundary(
-          key: const ValueKey('capture'),
-          child: consoleHarness(admin: admin, scale: width == 320 ? 1.5 : 1),
-        ));
+        await tester.pumpWidget(
+          RepaintBoundary(
+            key: const ValueKey('capture'),
+            child: consoleHarness(admin: admin, scale: width == 320 ? 1.5 : 1),
+          ),
+        );
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
-        await expectLater(find.byKey(const ValueKey('capture')),
-          matchesGoldenFile('screenshots/platform-${admin ? "admin" : "owner"}-${width.toInt()}.png'));
+        await expectLater(
+          find.byKey(const ValueKey('capture')),
+          matchesGoldenFile(
+            'screenshots/platform-${admin ? "admin" : "owner"}-${width.toInt()}.png',
+          ),
+        );
       });
     }
   }

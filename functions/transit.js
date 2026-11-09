@@ -37,6 +37,10 @@ export function publicService(id, data) {
     'offTimingsNote', 'published', 'scheduleRevision', 'arrivalStopTimings'];
   return {id, ...Object.fromEntries(fields.filter(k => data[k] !== undefined).map(k => [k, data[k]]))};
 }
+export function scheduleFingerprint(service) {
+  return hash(JSON.stringify([service.stops, service.stopTimings, service.departureMinutes,
+    service.offDays, service.published, service.scheduleRevision]));
+}
 export function projectDepartures(tripId, service, adjustment = null) {
   if (!service?.published || !Array.isArray(service.stops) || service.stops.length > 100) return [];
   if (adjustment && adjustment.scheduleRevision !== service.scheduleRevision) return [];
@@ -70,7 +74,7 @@ export function projectDepartures(tripId, service, adjustment = null) {
     records.push({
       tripId, stopIndex: i, stopName: stop, minute: minutes % 1440, dayOffset,
       scope, keys, status, serviceDate: adjustment?.serviceDate ?? null,
-      revision: service.scheduleRevision ?? '',
+      revision: scheduleFingerprint(service),
       service: {stops: service.stops, routeName: service.routeName ?? ''},
       expectedStopTimings: adjustment ? Object.fromEntries(service.stops.map((name, n) => [
         name, service.stopTimings?.[name] + (status === 'delayed' ?
@@ -194,7 +198,7 @@ export async function queryDepartures(db, raw, now = new Date()) {
       }
     }
     const service = (await read('services/' + row.tripId)).data();
-    if (!service?.published || (service.scheduleRevision ?? '') !== row.revision) continue;
+    if (!service?.published || scheduleFingerprint(service) !== row.revision) continue;
     const startDate = row.serviceDate ?? shiftDate(input.date, -row.dayOffset);
     const adjustment = (await read('trip_adjustments/' + row.tripId + '_' + startDate)).data();
     const validDaily = adjustment && adjustment.scheduleRevision === service.scheduleRevision;

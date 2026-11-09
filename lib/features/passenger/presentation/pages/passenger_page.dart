@@ -82,7 +82,11 @@ class PassengerPage extends StatelessWidget {
                   children: [
                     const Expanded(flex: 2, child: SearchPanel()),
                     const SizedBox(width: 20),
-                    const Expanded(child: Column(children: [SponsoredCarousel(), _AnalyticsChoice()])),
+                    const Expanded(
+                      child: Column(
+                        children: [SponsoredCarousel(), _AnalyticsChoice()],
+                      ),
+                    ),
                   ],
                 ),
               ),

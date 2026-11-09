@@ -105,7 +105,7 @@ export async function platformAction(db, auth, input, now = Date.now()) {
         category: text(data.category, 'business category', 80),
         contact: text(data.contact, 'contact details', 200),
         location: validatePoint(data), district: normalize(text(data.district, 'district', 80)),
-        createdAt: now,
+        activeAds: 0, createdAt: now,
       });
       result.id = target.id;
     } else if (action === 'submitAd') {
@@ -143,7 +143,7 @@ export async function platformAction(db, auth, input, now = Date.now()) {
         paidPeriods: existing?.paidPeriods ?? [], paidUntil: existing?.paidUntil ?? 0,
       };
       if (!Number.isFinite(ad.requestedStart) || ad.requestedStart > now + 366 * 86400000) fail('Choose a start date within one year.');
-      tx.set(target, ad); result.id = target.id;
+      writeAd(tx, db, target, existing, ad, now); result.id = target.id;
     } else if (action === 'createOrder') {
       const adRef = db.doc('sponsored_ads/' + id(data.adId));
       const ad = (await tx.get(adRef)).data(); owner(ad, actor);
@@ -174,7 +174,7 @@ export async function platformAction(db, auth, input, now = Date.now()) {
           workflow: data.workflow, status: 'pending', createdAt: now,
           renewal: (ad.paidPeriods?.length ?? 0) > 0,
         });
-        tx.update(adRef, {pendingOrderId: orderId});
+        writeAd(tx, db, adRef, ad, {pendingOrderId: orderId}, now);
         result.id = orderId;
       }
     } else if (action === 'submitReceipt') {
@@ -208,8 +208,7 @@ export async function platformAction(db, auth, input, now = Date.now()) {
         orderId: target.id, amountPaise: order.commissionPaise, basisPoints: order.commissionBasisPoints,
         paymentPaise: order.pricePaise, renewalDate: now,
         status: order.workflow === 'ownerCollected' ? 'retained' : 'payable', createdAt: now});
-      tx.update(adRef, {paidPeriods: periods, paidUntil: end, pendingOrderId: null,
-        active: eligible({...ad, paidPeriods: periods}, now)});
+      writeAd(tx, db, adRef, ad, {paidPeriods: periods, paidUntil: end, pendingOrderId: null}, now);
       financialStats(tx, db, order.ownerId, now, {revenuePaise: order.pricePaise,
         platformSharePaise: order.platformSharePaise, earnedPaise: order.commissionPaise,
         [order.workflow === 'ownerCollected' ? 'retainedPaise' : 'pendingPaise']: order.commissionPaise,
@@ -221,15 +220,14 @@ export async function platformAction(db, auth, input, now = Date.now()) {
       if (!ad) fail('Advertisement not found.', 'not-found');
       if (!['approved', 'rejected'].includes(data.approval)) fail('Choose approve or reject.');
       const update = {approval: data.approval, reviewNote: text(data.note, 'review note', 1000), reviewedBy: actor.uid, reviewedAt: now};
-      tx.update(target, {...update, active: eligible({...ad, ...update}, now)});
+      writeAd(tx, db, target, ad, update, now);
     } else if (action === 'cancelAd') {
       admin(actor);
       const target = db.doc('sponsored_ads/' + id(data.adId));
       const ad = (await tx.get(target)).data();
       if (!ad) fail('Advertisement not found.', 'not-found');
       const cancelled = data.cancelled !== false;
-      tx.update(target, {cancelled, cancellationNote: text(data.note, 'reason', 1000),
-        active: eligible({...ad, cancelled}, now)});
+      writeAd(tx, db, target, ad, {cancelled, cancellationNote: text(data.note, 'reason', 1000)}, now);
     } else if (action === 'cancelOrder') {
       const target = db.doc('advertising_orders/' + id(data.orderId));
       const order = (await tx.get(target)).data(); owner(order, actor);
@@ -253,8 +251,8 @@ export async function platformAction(db, auth, input, now = Date.now()) {
         refundedAt: now, refundedBy: actor.uid});
       tx.update(commissionRef, {status: commission.status === 'payable' ? 'reversed' : 'recoveryDue',
         recoveryDuePaise: commission.status === 'payable' ? 0 : commission.amountPaise, reversedAt: now});
-      tx.update(adRef, {paidPeriods: periods, active: eligible({...ad, paidPeriods: periods}, now),
-        paidUntil: Math.max(0, ...periods.filter(p => !p.refunded).map(p => p.end))});
+      writeAd(tx, db, adRef, ad, {paidPeriods: periods,
+        paidUntil: Math.max(0, ...periods.filter(p => !p.refunded).map(p => p.end))}, now);
       financialStats(tx, db, order.ownerId, now, {refundPaise: order.pricePaise, earnedPaise: -order.commissionPaise,
         ...(commission.status === 'payable' ? {pendingPaise: -order.commissionPaise} : {recoveryDuePaise: order.commissionPaise})});
     } else if (action === 'recordPayout') {
@@ -369,4 +367,20 @@ function coverageCells(point, radiusKm) {
   const cells = [];
   for (let dx = -reach; dx <= reach; dx++) for (let dy = -reach; dy <= reach; dy++) cells.push((x + dx) + ':' + (y + dy));
   return cells;
+}
+
+export function nextAdTransition(ad, now) {
+  if (ad.cancelled || ad.approval !== 'approved') return Number.MAX_SAFE_INTEGER;
+  const boundaries = (ad.paidPeriods ?? []).filter(p => !p.refunded)
+    .flatMap(p => [p.start, p.end - 7 * 86400000, p.end]).filter(at => at > now);
+  return boundaries.length ? Math.min(...boundaries) : Number.MAX_SAFE_INTEGER;
+}
+export function writeAd(tx, db, reference, previous, patch, now) {
+  const next = {...previous, ...patch};
+  next.active = eligible(next, now);
+  next.nextTransitionAt = nextAdTransition(next, now);
+  const delta = Number(next.active) - Number(previous?.active === true);
+  if (delta) tx.set(db.doc('advertisers/' + next.advertiserId),
+    {activeAds: FieldValue.increment(delta)}, {merge: true});
+  tx.set(reference, next);
 }

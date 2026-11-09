@@ -18,7 +18,15 @@ class PublicPageCache {
       if (generation != _generation) return null;
       if (raw == null || raw.length > 262144) return null;
       final data = jsonDecode(raw) as Map<String, dynamic>;
-      if (data['records'] is! List || (data['records'] as List).any((r) => r is! Map || r['id'] is! String || r['stops'] is! List || r['stopTimings'] is! Map)) return null;
+      if (data['records'] is! List ||
+          (data['records'] as List).any(
+            (r) =>
+                r is! Map ||
+                r['id'] is! String ||
+                r['stops'] is! List ||
+                r['stopTimings'] is! Map,
+          ))
+        return null;
       final at = DateTime.parse(data['at'] as String);
       final age = DateTime.now().difference(at);
       if (age.isNegative ||
