@@ -422,6 +422,8 @@ class _TripCard extends ConsumerWidget {
             ),
             Text(service.stops.join(' → ')),
             if (updated) Text('Daily delays saved for $date'),
+            if (adjustment != null && adjustment.scheduleRevision == trip.revision)
+              Text('${adjustment.status.label} · Owner reported · $date'),
             if (adjustment != null &&
                 adjustment.scheduleRevision != trip.revision)
               const Text('Schedule changed · review this date’s delays'),

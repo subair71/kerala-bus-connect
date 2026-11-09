@@ -47,7 +47,7 @@ class AppShell extends HookConsumerWidget {
         final wide = constraints.maxWidth >= 1000 && scale <= 1.3;
         final headerHeight = scale > 1.5 ? 92.0 : 68.0;
         return Theme(
-          data: home ? homeTheme : baseTheme,
+          data: homeTheme,
           child: Scaffold(
             appBar: PreferredSize(
               preferredSize: Size.fromHeight(headerHeight),

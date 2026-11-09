@@ -128,6 +128,8 @@ class TripDraftController extends Notifier<TripDraft> {
     return state.plan.copyWith(offDays: days);
   });
 
+  void suggestions(TripPlan plan) => _update(() => plan);
+
   void note(String note) => _update(() => state.plan.copyWith(note: note));
 
   void step(int step) {
@@ -310,4 +312,15 @@ class TripEditorStructure extends Equatable {
     draft.plan.offDays,
     if (draft.step == 2) draft.plan.note,
   ];
+}
+
+final runningStatusDraftProvider = NotifierProvider.autoDispose
+    .family<RunningStatusDraft, RunningStatus, DelayEditorKey>(RunningStatusDraft.new);
+class RunningStatusDraft extends Notifier<RunningStatus> {
+  RunningStatusDraft(this.args);
+  final DelayEditorKey args;
+  @override
+  RunningStatus build() => args.adjustment?.scheduleRevision == args.trip.revision
+      ? args.adjustment!.status : RunningStatus.scheduled;
+  void select(RunningStatus status) => state = status;
 }

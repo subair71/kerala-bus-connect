@@ -185,12 +185,14 @@ String serviceDateKey(DateTime date) =>
 class DailyAdjustment {
   final String tripId, serviceDate, scheduleRevision;
   final Map<String, int> delays;
+  final RunningStatus status;
   DailyAdjustment({
     required this.tripId,
     required this.serviceDate,
     required this.scheduleRevision,
     required Map<String, int> delays,
-  }) : delays = Map.unmodifiable(delays);
+    RunningStatus? status,
+  }) : status = status ?? (delays.values.any((d) => d > 0) ? RunningStatus.delayed : RunningStatus.scheduled), delays = Map.unmodifiable(delays);
 
   ServiceEntity apply(ServiceEntity service) {
     if (service.id != tripId || service.scheduleRevision != scheduleRevision) {
@@ -200,6 +202,6 @@ class DailyAdjustment {
     final times = plan.expectedTimes(delays);
     return service.withExpected({
       for (var i = 0; i < plan.stops.length; i++) plan.stops[i].name: times[i],
-    }, serviceDate);
+    }, serviceDate, status: status);
   }
 }

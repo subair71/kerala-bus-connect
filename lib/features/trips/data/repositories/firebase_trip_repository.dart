@@ -1,3 +1,4 @@
+import '../../../timetables/domain/entities/service_entity.dart';
 import 'dart:convert';
 import '../../../../core/data/combine_complete_lists.dart';
 import '../../../timetables/data/datasources/schedule_cache.dart';
@@ -94,6 +95,7 @@ class FirebaseTripRepository implements TripRepository {
           serviceDate: doc.data()['serviceDate'] as String,
           scheduleRevision: doc.data()['scheduleRevision'] as String,
           delays: Map<String, int>.from(doc.data()['delays'] as Map),
+          status: doc.data().containsKey('status') ? RunningStatus.parse(doc.data()['status']) : null,
         ),
     ];
   });
@@ -306,6 +308,9 @@ class FirebaseTripRepository implements TripRepository {
         'These adjustments belong to another trip or date.',
       );
     }
+    if (adjustment != null && adjustment.status != RunningStatus.delayed && adjustment.delays.values.any((d) => d > 0)) {
+      throw const AppFailure('Clear delays before selecting another status.');
+    }
     await db.runTransaction((tx) async {
       await _bus(tx, ownerId, bus);
       final data = (await tx.get(
@@ -329,6 +334,7 @@ class FirebaseTripRepository implements TripRepository {
           'serviceDate': date,
           'scheduleRevision': trip.revision,
           'delays': adjustment.delays,
+          'status': adjustment.status.name,
           'expectedStopTimings': {
             for (var i = 0; i < trip.stops.length; i++)
               trip.stops[i].name.trim(): expected![i],

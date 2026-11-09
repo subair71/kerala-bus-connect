@@ -1,5 +1,17 @@
 import 'package:equatable/equatable.dart';
 
+enum RunningStatus {
+  scheduled('Scheduled'),
+  onTime('On Time'),
+  delayed('Delayed'),
+  cancelled('Cancelled'),
+  completed('Completed');
+
+  final String label;
+  const RunningStatus(this.label);
+  static RunningStatus parse(Object? value) => values.where((s) => s.name == value).firstOrNull ?? scheduled;
+}
+
 class ServiceEntity extends Equatable {
   final String id;
   final String ownerId;
@@ -23,6 +35,7 @@ class ServiceEntity extends Equatable {
   final List<String> stopIds;
   final Map<String, int> expectedStopTimings;
   final String? serviceDate;
+  final RunningStatus runningStatus;
 
   const ServiceEntity({
     required this.id,
@@ -45,6 +58,7 @@ class ServiceEntity extends Equatable {
     this.expectedStopTimings = const {},
     this.serviceDate,
     this.cachedAt,
+    this.runningStatus = RunningStatus.scheduled,
   });
 
   int? expectedTime(String stop) =>
@@ -53,7 +67,7 @@ class ServiceEntity extends Equatable {
   bool get hasDailyAdjustment =>
       expectedStopTimings.entries.any((e) => e.value != scheduledTime(e.key));
 
-  ServiceEntity withExpected(Map<String, int> times, String date) =>
+  ServiceEntity withExpected(Map<String, int> times, String date, {RunningStatus status = RunningStatus.delayed}) =>
       ServiceEntity(
         id: id,
         ownerId: ownerId,
@@ -74,6 +88,7 @@ class ServiceEntity extends Equatable {
         stopIds: stopIds,
         expectedStopTimings: Map.unmodifiable(times),
         serviceDate: date,
+        runningStatus: status,
         cachedAt: cachedAt,
       );
 
@@ -136,6 +151,7 @@ class ServiceEntity extends Equatable {
     stopIds,
     expectedStopTimings,
     serviceDate,
+    runningStatus,
     cachedAt,
   ];
 }

@@ -1,3 +1,4 @@
+import 'timetable_suggestions.dart';
 import '../../../places/presentation/widgets/place_text_field.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
@@ -133,6 +134,16 @@ class TripEditor extends ConsumerWidget {
             label: const Text('Add stop'),
           ),
         ] else ...[
+          if (state.step == 1)
+            OutlinedButton.icon(
+              onPressed: action.isLoading ? null : () async {
+                final result = await showDialog<TripPlan>(context: context,
+                  builder: (_) => TimetableSuggestions(plan: plan));
+                if (result != null && context.mounted) controller.suggestions(result);
+              },
+              icon: const Icon(Icons.auto_fix_high),
+              label: const Text('Suggest stop timings'),
+            ),
           for (var i = 0; i < plan.stops.length; i++)
             _TimelineStop(
               number: i + 1,

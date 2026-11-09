@@ -1,3 +1,4 @@
+import '../../../timetables/domain/entities/service_entity.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -27,6 +28,7 @@ class DailyDelayEditor extends ConsumerWidget {
     }
     final args = (trip: trip, adjustment: initial, date: date);
     final delays = ref.watch(delayDraftProvider(args));
+    final status = ref.watch(runningStatusDraftProvider(args));
     final controller = ref.read(delayDraftProvider(args).notifier);
     final action = ref.watch(tripActionsProvider);
     List<int> expected;
@@ -55,6 +57,17 @@ class DailyDelayEditor extends ConsumerWidget {
               'Review and enter any delays for this schedule.',
             ),
           ),
+        DropdownButtonFormField<RunningStatus>(
+          initialValue: status,
+          decoration: const InputDecoration(labelText: 'Running status (owner reported)'),
+          items: [for (final value in RunningStatus.values) DropdownMenuItem(value: value, child: Text(value.label))],
+          onChanged: action.isLoading ? null : (value) {
+            if (value == null) return;
+            ref.read(runningStatusDraftProvider(args).notifier).select(value);
+            if (value != RunningStatus.delayed) controller.reset();
+          },
+        ),
+        const SizedBox(height: 12),
         if (action.hasError)
           Text(
             action.error.toString(),
@@ -96,6 +109,7 @@ class DailyDelayEditor extends ConsumerWidget {
                                 );
                                 if (value != null && context.mounted) {
                                   controller.setDelay(trip.stops[i].id, value);
+                                  if (value > 0) ref.read(runningStatusDraftProvider(args).notifier).select(RunningStatus.delayed);
                                 }
                               },
                         icon: const Icon(Icons.more_time),
@@ -136,6 +150,7 @@ class DailyDelayEditor extends ConsumerWidget {
                           serviceDate: date,
                           scheduleRevision: trip.revision,
                           delays: delays,
+                          status: status,
                         ),
                       );
                   if (saved && context.mounted) Navigator.pop(context);

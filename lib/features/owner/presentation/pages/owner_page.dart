@@ -50,13 +50,13 @@ class _OwnerWorkspace extends ConsumerWidget {
     final selected = ref.watch(selectedBusinessProvider);
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 960),
+        constraints: const BoxConstraints(maxWidth: 1200),
         child: CustomScrollView(
           key: const PageStorageKey('owner'),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
             const SliverPadding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
               sliver: SliverToBoxAdapter(child: _OwnerHeader()),
             ),
             businesses.when(
