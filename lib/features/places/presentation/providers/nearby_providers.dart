@@ -115,3 +115,10 @@ class NearbyStops extends AsyncNotifier<NearbyState> {
     }
   }
 }
+
+final selectedNearbyStopProvider = NotifierProvider<SelectedNearbyStop, NearbyStop?>(SelectedNearbyStop.new);
+class SelectedNearbyStop extends Notifier<NearbyStop?> {
+  @override
+  NearbyStop? build() => null;
+  void select(NearbyStop stop) => state = stop;
+}

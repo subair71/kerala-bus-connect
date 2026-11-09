@@ -23,7 +23,7 @@ export const searchTimetables = callable(async r => {
   const started = Date.now();
   const result = await searchDepartures(db, r.data);
   console.info(JSON.stringify({metric: 'departure_search', durationMs: Date.now() - started,
-    scanned: result.scanned, returned: result.records.length}));
+    scanned: result.scanned, returned: result.records.length, cache: result.cache}));
   return result;
 });
 export const findNearbyStops = callable(r => nearbyStops(db, r.data));
@@ -55,19 +55,22 @@ export async function refreshAds(database, now = Date.now()) {
   while (true) {
     const base = database.collection('sponsored_ads').orderBy(FieldPath.documentId());
     const page = await (cursor ? base.startAfter(cursor) : base).limit(100).get();
-    for (const doc of page.docs) await database.runTransaction(async tx => {
+    for (const doc of page.docs) {
+      const summary = await database.runTransaction(async tx => {
       const current = (await tx.get(doc.ref)).data();
       if (!current?.paidPeriods) return;
       const active = current.approval === 'approved' && !current.cancelled &&
         current.paidPeriods.some(p => !p.refunded && p.start <= now && p.end > now);
-      if (active) { activeAds++; activeAdvertisers.add(current.advertiserId); }
       if (current.active !== active) tx.update(doc.ref, {active});
       if (current.paidUntil > now && current.paidUntil - now <= 7 * 86400000) {
         tx.set(database.doc('platform_notifications/' + doc.id + '_' + current.paidUntil),
           {ownerId: current.ownerId, adId: doc.id, expiresAt: current.paidUntil,
             message: 'Your advertisement expires within seven days. Renew to continue advertising.'}, {merge: true});
       }
+      return {active, advertiserId: current.advertiserId};
     });
+      if (summary?.active) { activeAds++; activeAdvertisers.add(summary.advertiserId); }
+    }
     if (page.size < 100) break;
     cursor = page.docs.at(-1);
   }

@@ -85,6 +85,7 @@ class ServiceEntity extends Equatable {
     stops: stops,
     departureMinutes: departureMinutes,
     stopTimings: stopTimings,
+    arrivalStopTimings: arrivalStopTimings,
     offDays: offDays,
     offTimingsNote: offTimingsNote,
     published: published,

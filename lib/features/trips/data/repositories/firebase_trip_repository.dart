@@ -216,12 +216,16 @@ class FirebaseTripRepository implements TripRepository {
       }
       final stops = trip.stops.map((s) => s.name.trim()).toList();
       final timings = {for (final s in trip.stops) s.name.trim(): s.minutes};
-      final arrivals = {for (final s in trip.stops) if (s.arrivalMinutes != null) s.name.trim(): s.arrivalMinutes};
+      final arrivals = {
+        for (final s in trip.stops)
+          if (s.arrivalMinutes != null) s.name.trim(): s.arrivalMinutes,
+      };
       final offDays = trip.offDays.toList()..sort();
       final unchanged =
           current != null &&
           jsonEncode(current['stops']) == jsonEncode(stops) &&
-          jsonEncode(current['arrivalStopTimings'] ?? {}) == jsonEncode(arrivals) &&
+          jsonEncode(current['arrivalStopTimings'] ?? {}) ==
+              jsonEncode(arrivals) &&
           jsonEncode([
                 for (final name in stops)
                   (current['stopTimings'] as Map?)?[name],

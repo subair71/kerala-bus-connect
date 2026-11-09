@@ -1,3 +1,4 @@
+import '../../../places/presentation/providers/nearby_providers.dart';
 import '../../../platform/presentation/providers/usage_providers.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -56,6 +57,7 @@ class PagedDepartures extends AsyncNotifier<DeparturePage> {
   final DepartureQuery query;
   bool _busy = false;
   final String _eventId = operationId();
+  bool _reportedSearch = false;
   String get _key =>
       jsonEncode([query.from, query.to, query.date, query.directory]);
   @override
@@ -100,6 +102,8 @@ class PagedDepartures extends AsyncNotifier<DeparturePage> {
     Object? cursor,
     List<ServiceEntity> previous = const [],
   }) async {
+    final cache = ref.read(publicPageCacheProvider);
+    final tracker = ref.read(usageTrackerProvider);
     final result = await ref
         .read(platformRepositoryProvider)
         .call('searchTimetables', {
@@ -109,7 +113,15 @@ class PagedDepartures extends AsyncNotifier<DeparturePage> {
           'directory': query.directory,
           'cursor': cursor,
         });
+    if (!ref.mounted) return const DeparturePage([]);
     final raw = result['records'] as List;
+    if (ref.mounted && cursor == null && !query.directory && !_reportedSearch) {
+      _reportedSearch = true;
+      final stop = ref.read(selectedNearbyStopProvider);
+      unawaited(tracker.record('search', eventId: _eventId,
+        routeId: raw.isEmpty ? null : raw.first['routeId'] as String?,
+        stopId: stop?.name.toLowerCase() == query.from.toLowerCase() ? stop?.id : null));
+    }
     if (cursor == null &&
         !query.directory &&
         raw.isEmpty &&
@@ -117,11 +129,11 @@ class PagedDepartures extends AsyncNotifier<DeparturePage> {
       unawaited(
         ref
             .read(usageTrackerProvider)
-            .record('search_failure', eventId: _eventId),
+            .record('search_failure', eventId: '${_eventId}failure'),
       );
     }
     if (cursor == null)
-      unawaited(ref.read(publicPageCacheProvider).write(_key, raw));
+      unawaited(cache.write(_key, raw));
     final records = <ServiceEntity>[...previous];
     final seen = records.map((s) => '${s.id}:${s.serviceDate}').toSet();
     for (final row in _decode(raw)) {

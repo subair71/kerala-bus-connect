@@ -5,6 +5,7 @@ class PublicPageCache {
   final SharedPreferencesAsync preferences;
   final String namespace;
   Future<void> _writes = Future.value();
+  int _generation = 0;
   PublicPageCache(this.namespace, {SharedPreferencesAsync? preferences})
     : preferences = preferences ?? SharedPreferencesAsync();
   String _key(String query) =>
@@ -12,9 +13,12 @@ class PublicPageCache {
   Future<Map<String, dynamic>?> read(String query) async {
     try {
       await _writes;
+      final generation = _generation;
       final raw = await preferences.getString(_key(query));
+      if (generation != _generation) return null;
       if (raw == null || raw.length > 262144) return null;
       final data = jsonDecode(raw) as Map<String, dynamic>;
+      if (data['records'] is! List || (data['records'] as List).any((r) => r is! Map || r['id'] is! String || r['stops'] is! List || r['stopTimings'] is! Map)) return null;
       final at = DateTime.parse(data['at'] as String);
       final age = DateTime.now().difference(at);
       if (age.isNegative ||
@@ -28,6 +32,7 @@ class PublicPageCache {
   }
 
   Future<void> invalidate() {
+    _generation++;
     _writes = _writes.then((_) async {
       try {
         final indexKey = 'findmybus.pages.v1.$namespace.index';

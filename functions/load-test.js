@@ -2,7 +2,7 @@
 import {initializeApp, deleteApp} from 'firebase-admin/app';
 import {getFirestore} from 'firebase-admin/firestore';
 import {performance} from 'node:perf_hooks';
-import {indexSource, searchDepartures} from './transit.js';
+import {indexSource, searchDepartures, queryDepartures} from './transit.js';
 if (!/^(127\.0\.0\.1|localhost):\d+$/.test(process.env.FIRESTORE_EMULATOR_HOST ?? '')) {
   throw new Error('Load tests require a local Firestore emulator.');
 }
@@ -17,7 +17,8 @@ for (let i = 0; i < 200; i++) {
     departureMinutes: start, offDays: [], routeName: 'Load test'});
   await indexSource(db, 'services', 'load-' + i);
 }
-for (const concurrency of [10, 25, 50]) {
+for (const scenario of [{mode: 'cold', concurrency: 10}, {mode: 'shared-cache', concurrency: 10}, {mode: 'shared-cache', concurrency: 25}, {mode: 'shared-cache', concurrency: 50}]) {
+  const {mode, concurrency} = scenario;
   const times = [];
   let errors = 0, scanned = 0;
   const started = performance.now();
@@ -25,7 +26,7 @@ for (const concurrency of [10, 25, 50]) {
     for (let i = 0; i < 4; i++) {
       const at = performance.now();
       try {
-        const result = await searchDepartures(db, {from: 'loadorigin', to: 'loaddestination', date: '2026-11-09'},
+        const result = await (mode === 'cold' ? queryDepartures : searchDepartures)(db, {from: 'loadorigin', to: 'loaddestination', date: '2026-11-09'},
           new Date('2026-11-09T04:30:00Z'));
         if (result.records.length !== 4) throw new Error('Incomplete page');
         scanned += result.scanned;
@@ -34,7 +35,7 @@ for (const concurrency of [10, 25, 50]) {
     }
   }));
   times.sort((a,b) => a-b);
-  const report = {concurrency, requests: times.length, errors,
+  const report = {mode, concurrency, requests: times.length, errors,
     durationMs: Math.round(performance.now() - started),
     p50Ms: Math.round(times[Math.floor(times.length * .5)]),
     p95Ms: Math.round(times[Math.floor(times.length * .95)]), scanned};

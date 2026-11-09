@@ -1,3 +1,9 @@
+import {SearchCache} from './search-cache.js';
+const caches = new WeakMap();
+function cacheFor(db) {
+  if (!caches.has(db)) caches.set(db, new SearchCache());
+  return caches.get(db);
+}
 import {createHash} from 'node:crypto';
 import {FieldPath} from 'firebase-admin/firestore';
 import {HttpsError} from 'firebase-functions/v2/https';
@@ -98,6 +104,7 @@ export async function indexSource(db, collection, id) {
     }
     tx.set(marker, {digest, tripId: tripId ?? '', version: 1});
   });
+  cacheFor(db).clear();
 }
 export function rowMatches(row, input) {
   const names = row.service.stops.map(normalize);
@@ -108,7 +115,11 @@ export function rowMatches(row, input) {
   return row.stopIndex === origin && origin >= 0 && destination >= 0 &&
     (!input.to || origin < destination);
 }
-export async function searchDepartures(db, raw, now = new Date()) {
+export function searchDepartures(db, raw, now = new Date()) {
+  const key = JSON.stringify([raw, Math.floor(now.getTime() / 60000)]);
+  return cacheFor(db).get(key, () => queryDepartures(db, raw, now));
+}
+export async function queryDepartures(db, raw, now = new Date()) {
   const ready = await db.doc('platform_config/search').get();
   if (ready.data()?.ready !== true) throw new HttpsError('failed-precondition', 'Search index is not ready.');
   const input = {
@@ -128,8 +139,8 @@ export async function searchDepartures(db, raw, now = new Date()) {
   const token = [...input.from].slice(0, 3).join('');
   const key = input.directory ? '*|directory|' + token :
     input.from ? day + '|stop|' + token : day + '|origin';
-  const positions = cursor?.positions ?? [null, null];
-  const exhausted = cursor?.exhausted ?? [false, input.directory];
+  const positions = cursor?.positions?.map(p => p ? [...p] : null) ?? [null, null];
+  const exhausted = cursor?.exhausted ? [...cursor.exhausted] : [false, input.directory];
   const buffers = [[], []];
   const collections = ['recurring', input.date];
   const rows = [];

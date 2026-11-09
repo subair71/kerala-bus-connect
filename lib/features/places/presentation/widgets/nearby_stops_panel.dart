@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
@@ -5,11 +7,22 @@ import '../../../passenger/presentation/providers/search_providers.dart';
 import '../../../platform/presentation/providers/platform_providers.dart';
 import '../providers/nearby_providers.dart';
 
-class NearbyStopsPanel extends ConsumerWidget {
+class NearbyStopsPanel extends HookConsumerWidget {
   const NearbyStopsPanel({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!ref.watch(platformEnabledProvider)) return const SizedBox.shrink();
+    final enabled = ref.watch(platformEnabledProvider);
+    useEffect(() {
+      if (!enabled) return null;
+      final timer = Timer.periodic(const Duration(minutes: 5), (_) {
+        if (context.mounted && (ModalRoute.of(context)?.isCurrent ?? true) &&
+            WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+          ref.read(nearbyStopsProvider.notifier).refresh();
+        }
+      });
+      return timer.cancel;
+    }, [enabled]);
+    if (!enabled) return const SizedBox.shrink();
     final nearby = ref.watch(nearbyStopsProvider);
     ref.listen(nearbyStopsProvider, (previous, next) {
       final data = next.asData?.value;
@@ -17,6 +30,9 @@ class NearbyStopsPanel extends ConsumerWidget {
         ref
             .read(searchQueryProvider.notifier)
             .autoOrigin(data.stops.first.name);
+        if (ref.read(searchQueryProvider).from == data.stops.first.name) {
+          ref.read(selectedNearbyStopProvider.notifier).select(data.stops.first);
+        }
       }
     });
     return Card(
@@ -67,9 +83,10 @@ class NearbyStopsPanel extends ConsumerWidget {
                                 ? stop.name
                                 : '${stop.name} · ${stop.distanceKm.toStringAsFixed(1)} km',
                           ),
-                          onPressed: () => ref
-                              .read(searchQueryProvider.notifier)
-                              .from(stop.name),
+                          onPressed: () {
+                            ref.read(searchQueryProvider.notifier).from(stop.name);
+                            ref.read(selectedNearbyStopProvider.notifier).select(stop);
+                          },
                         ),
                     ],
                   ),

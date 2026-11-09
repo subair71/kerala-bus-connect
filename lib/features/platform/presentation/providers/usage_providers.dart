@@ -11,7 +11,12 @@ final analyticsConsentProvider = AsyncNotifierProvider<AnalyticsConsent, bool>(
 
 class AnalyticsConsent extends AsyncNotifier<bool> {
   @override
-  Future<bool> build() => ref.watch(usageTrackerProvider).consent();
+  Future<bool> build() async {
+    final tracker = ref.watch(usageTrackerProvider);
+    final consent = await tracker.consent();
+    if (consent) await tracker.record('session');
+    return consent;
+  }
   Future<void> change(bool value) async {
     await ref.read(usageTrackerProvider).setConsent(value);
     if (ref.mounted) state = AsyncData(value);
