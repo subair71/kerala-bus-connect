@@ -18,7 +18,8 @@ class SearchPanel extends HookConsumerWidget {
     void submit() {
       FocusScope.of(context).unfocus();
       ref.read(debouncedSearchProvider.notifier).flush();
-      if (ref.read(platformEnabledProvider)) ref.read(usageTrackerProvider).record('search');
+      if (ref.read(platformEnabledProvider))
+        ref.read(usageTrackerProvider).record('search');
       onSearch?.call();
     }
 

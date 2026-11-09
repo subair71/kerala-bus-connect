@@ -24,6 +24,7 @@ class ServiceEntity extends Equatable {
   final List<String> stops;
   final int departureMinutes;
   final Map<String, int> stopTimings;
+  final Map<String, int> arrivalStopTimings;
   final List<String> offDays;
   final String? offTimingsNote;
   final bool published;
@@ -49,6 +50,7 @@ class ServiceEntity extends Equatable {
     required this.stops,
     required this.departureMinutes,
     required this.stopTimings,
+    this.arrivalStopTimings = const {},
     required this.offDays,
     this.offTimingsNote,
     this.published = true,
@@ -146,6 +148,7 @@ class ServiceEntity extends Equatable {
     stops,
     departureMinutes,
     stopTimings,
+    arrivalStopTimings,
     offDays,
     offTimingsNote,
     published,

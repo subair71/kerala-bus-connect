@@ -15,6 +15,11 @@ class TimetableSuggestions extends HookConsumerWidget {
     final form = useMemoized(() => GlobalKey<FormState>());
     final factor = useTextEditingController(text: '1');
     final dwell = useTextEditingController(text: '0');
+    final major = useMemoized(() => {
+      for (final stop in plan.stops.skip(1).take(plan.stops.length - 2))
+        stop.id: TextEditingController(text: '0'),
+    });
+    useEffect(() => () { for (final controller in major.values) { controller.dispose(); } }, [major]);
     final durations = useMemoized(
       () => [
         for (var i = 1; i < plan.stops.length; i++)
@@ -32,7 +37,7 @@ class TimetableSuggestions extends HookConsumerWidget {
                 );
                 if (start >= 0 && end == start + 1) {
                   final a = service.scheduledTime(service.stops[start]);
-                  final b = service.scheduledTime(service.stops[end]);
+                  final b = service.arrivalStopTimings[service.stops[end]] ?? service.scheduledTime(service.stops[end]);
                   if (a != null && b != null && b > a) return '${b - a}';
                 }
               }
@@ -91,6 +96,10 @@ class TimetableSuggestions extends HookConsumerWidget {
                         'Additional time at intermediate stops (minutes)',
                   ),
                 ),
+                for (final stop in plan.stops.skip(1).take(plan.stops.length - 2))
+                  TextFormField(controller: major[stop.id], decoration: InputDecoration(
+                    labelText: 'Additional major-stop wait at ${stop.name} (minutes)'),
+                    validator: (value) => (int.tryParse(value ?? '') ?? -1) < 0 ? 'Enter zero or more minutes.' : null),
                 if (draft.error != null)
                   Text(
                     draft.error!,
@@ -101,7 +110,7 @@ class TimetableSuggestions extends HookConsumerWidget {
                 if (draft.plan != null) ...[
                   const Divider(),
                   for (final stop in draft.plan!.stops)
-                    Text('${stop.name}: ${tripTimeLabel(stop.minutes)}'),
+                    Text('${stop.name}: arrival ${tripTimeLabel(stop.arrivalMinutes ?? stop.minutes)} · departure ${tripTimeLabel(stop.minutes)}'),
                 ],
               ],
             ),
@@ -120,6 +129,7 @@ class TimetableSuggestions extends HookConsumerWidget {
               durations.map((c) => int.parse(c.text)).toList(),
               double.tryParse(factor.text) ?? double.nan,
               int.tryParse(dwell.text) ?? -1,
+              major: {for (final entry in major.entries) entry.key: int.parse(entry.value.text)},
             );
           },
           child: const Text('Preview'),

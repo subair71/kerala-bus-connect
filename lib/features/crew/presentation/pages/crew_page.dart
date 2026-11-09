@@ -14,7 +14,7 @@ class CrewPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Center(
     child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 860),
+      constraints: const BoxConstraints(maxWidth: 1200),
       child: const CustomScrollView(
         key: PageStorageKey('crew'),
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,

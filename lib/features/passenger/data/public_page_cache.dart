@@ -31,7 +31,8 @@ class PublicPageCache {
     _writes = _writes.then((_) async {
       try {
         final indexKey = 'findmybus.pages.v1.$namespace.index';
-        for (final key in await preferences.getStringList(indexKey) ?? <String>[]) {
+        for (final key
+            in await preferences.getStringList(indexKey) ?? <String>[]) {
           await preferences.remove(key);
         }
         await preferences.remove(indexKey);

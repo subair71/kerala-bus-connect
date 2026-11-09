@@ -33,7 +33,7 @@ service cloud.firestore {
     }
     function scheduleChanged() {
       return request.resource.data.diff(resource.data).affectedKeys().hasAny(
-        ['stops', 'stopIds', 'stopTimings', 'departureMinutes', 'offDays']
+        ['stops', 'stopIds', 'stopTimings', 'departureMinutes', 'offDays', 'arrivalStopTimings']
       );
     }
 

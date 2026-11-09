@@ -2,8 +2,13 @@ import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../data/usage_tracker.dart';
 import 'platform_providers.dart';
 
-final usageTrackerProvider = Provider((ref) => UsageTracker(ref.watch(platformRepositoryProvider)));
-final analyticsConsentProvider = AsyncNotifierProvider<AnalyticsConsent, bool>(AnalyticsConsent.new);
+final usageTrackerProvider = Provider(
+  (ref) => UsageTracker(ref.watch(platformRepositoryProvider)),
+);
+final analyticsConsentProvider = AsyncNotifierProvider<AnalyticsConsent, bool>(
+  AnalyticsConsent.new,
+);
+
 class AnalyticsConsent extends AsyncNotifier<bool> {
   @override
   Future<bool> build() => ref.watch(usageTrackerProvider).consent();
@@ -13,10 +18,14 @@ class AnalyticsConsent extends AsyncNotifier<bool> {
     if (value) await ref.read(usageTrackerProvider).record('session');
   }
 }
-final adExposuresProvider = AsyncNotifierProvider<AdExposures, Map<String, int>>(AdExposures.new);
+
+final adExposuresProvider =
+    AsyncNotifierProvider<AdExposures, Map<String, int>>(AdExposures.new);
+
 class AdExposures extends AsyncNotifier<Map<String, int>> {
   @override
-  Future<Map<String, int>> build() => ref.watch(usageTrackerProvider).exposures();
+  Future<Map<String, int>> build() =>
+      ref.watch(usageTrackerProvider).exposures();
   Future<void> shown(String id) async {
     final counts = {...?state.asData?.value};
     if ((counts[id] ?? 0) >= 3) return;

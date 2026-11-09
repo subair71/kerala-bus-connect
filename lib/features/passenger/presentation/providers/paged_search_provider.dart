@@ -110,8 +110,15 @@ class PagedDepartures extends AsyncNotifier<DeparturePage> {
           'cursor': cursor,
         });
     final raw = result['records'] as List;
-    if (cursor == null && !query.directory && raw.isEmpty && result['cursor'] == null) {
-      unawaited(ref.read(usageTrackerProvider).record('search_failure', eventId: _eventId));
+    if (cursor == null &&
+        !query.directory &&
+        raw.isEmpty &&
+        result['cursor'] == null) {
+      unawaited(
+        ref
+            .read(usageTrackerProvider)
+            .record('search_failure', eventId: _eventId),
+      );
     }
     if (cursor == null)
       unawaited(ref.read(publicPageCacheProvider).write(_key, raw));

@@ -33,9 +33,11 @@ final journeyDatesProvider = Provider.autoDispose<List<DateTime>>((ref) {
 
 class SearchController extends Notifier<SearchQuery> {
   bool _originEdited = false;
+  bool _destinationEdited = false;
   void autoOrigin(String value) {
-    if (!_originEdited) state = state.copyWith(from: value);
+    if (!_originEdited) state = state.copyWith(from: value, to: _destinationEdited ? state.to : '');
   }
+
   @override
   SearchQuery build() {
     ref.listen(journeyTodayProvider, (previous, next) {
@@ -65,9 +67,13 @@ class SearchController extends Notifier<SearchQuery> {
     );
   }
 
-  void from(String value) { _originEdited = true; state = state.copyWith(from: value); }
-  void to(String value) => state = state.copyWith(to: value);
-  void swap() => state = state.copyWith(from: state.to, to: state.from);
+  void from(String value) {
+    _originEdited = true;
+    state = state.copyWith(from: value);
+  }
+
+  void to(String value) { _destinationEdited = true; state = state.copyWith(to: value); }
+  void swap() { _originEdited = true; _destinationEdited = true; state = state.copyWith(from: state.to, to: state.from); }
   void day(String value) {
     final date = ref
         .read(journeyDatesProvider)

@@ -18,7 +18,8 @@ void main() {
       factor: 1.5,
       stopMinutes: 2,
     );
-    expect(result.stops.map((s) => s.minutes), [1430, 1445, 1477]);
+    expect(result.stops.map((s) => s.minutes), [1430, 1447, 1477]);
+    expect(result.stops[1].arrivalMinutes, 1445);
     expect(plan.stops[1].minutes, -1);
     expect(result.shiftDeparture(1400).stops.last.minutes, 1447);
   });

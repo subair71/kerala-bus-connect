@@ -40,8 +40,20 @@ final sponsorsProvider = Provider.autoDispose<AsyncValue<DataSet<SponsoredAd>>>(
   (ref) {
     if (ref.watch(platformEnabledProvider)) {
       final caps = ref.watch(adExposuresProvider).asData?.value ?? {};
-      return ref.watch(targetedSponsorsProvider).whenData((ads) => DataSet(ads.where((ad) =>
-        (caps[ad.id] ?? 0) < 3 && (ad.expiresAt ?? 0) > DateTime.now().millisecondsSinceEpoch).toList()));
+      return ref
+          .watch(targetedSponsorsProvider)
+          .whenData(
+            (ads) => DataSet(
+              ads
+                  .where(
+                    (ad) =>
+                        (caps[ad.id] ?? 0) < 3 &&
+                        (ad.expiresAt ?? 0) >
+                            DateTime.now().millisecondsSinceEpoch,
+                  )
+                  .toList(),
+            ),
+          );
     }
     final location = ref.watch(sponsorLocationProvider);
     final live = ref.watch(liveSponsorsProvider(location));
@@ -78,21 +90,46 @@ final openSponsorProvider = Provider(
     if (isSampleId(ad.id)) return false;
     final uri = Uri.tryParse(ad.website ?? '');
     if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) return false;
-    if (ref.read(platformEnabledProvider)) ref.read(usageTrackerProvider).record('ad_click', adId: ad.id);
+    if (ref.read(platformEnabledProvider))
+      ref.read(usageTrackerProvider).record('ad_click', adId: ad.id);
     return launchUrl(uri, mode: LaunchMode.externalApplication);
   },
 );
 
-final targetedSponsorsProvider = FutureProvider.autoDispose<List<SponsoredAd>>((ref) async {
+final targetedSponsorsProvider = FutureProvider.autoDispose<List<SponsoredAd>>((
+  ref,
+) async {
   retainWhileIdle(ref, const Duration(seconds: 30));
   final query = ref.watch(debouncedSearchProvider);
-  final routes = ref.watch(departureResultsProvider.select((value) =>
-    (value.asData?.value ?? []).map((s) => s.routeId).where((id) => id.isNotEmpty).toSet().take(20).join(',')));
-  final response = await ref.watch(platformRepositoryProvider).call('relevantAdvertisements',
-    {'from': query.from, 'to': query.to, 'routeIds': routes.isEmpty ? <String>[] : routes.split(','), 'stopIds': <String>[]});
-  return [for (final raw in response['ads'] as List) SponsoredAd(
-    id: raw['id'] as String, location: raw['location'] as String,
-    advertiser: raw['advertiser'] as String, title: raw['title'] as String,
-    description: raw['description'] as String, imageUrl: raw['imageUrl'] as String?,
-    website: raw['website'] as String?, expiresAt: (raw['expiresAt'] as num).toInt())];
+  final routes = ref.watch(
+    departureResultsProvider.select(
+      (value) => (value.asData?.value ?? [])
+          .map((s) => s.routeId)
+          .where((id) => id.isNotEmpty)
+          .toSet()
+          .take(20)
+          .join(','),
+    ),
+  );
+  final response = await ref
+      .watch(platformRepositoryProvider)
+      .call('relevantAdvertisements', {
+        'from': query.from,
+        'to': query.to,
+        'routeIds': routes.isEmpty ? <String>[] : routes.split(','),
+        'stopIds': <String>[],
+      });
+  return [
+    for (final raw in response['ads'] as List)
+      SponsoredAd(
+        id: raw['id'] as String,
+        location: raw['location'] as String,
+        advertiser: raw['advertiser'] as String,
+        title: raw['title'] as String,
+        description: raw['description'] as String,
+        imageUrl: raw['imageUrl'] as String?,
+        website: raw['website'] as String?,
+        expiresAt: (raw['expiresAt'] as num).toInt(),
+      ),
+  ];
 }, retry: (_, _) => null);

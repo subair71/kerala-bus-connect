@@ -54,13 +54,16 @@ class _Slides extends HookConsumerWidget {
     useEffect(() {
       if (demo || !platform) return null;
       final timer = Timer(const Duration(seconds: 1), () {
-        if (!context.mounted || !(ModalRoute.of(context)?.isCurrent ?? true)) return;
+        if (!context.mounted || !(ModalRoute.of(context)?.isCurrent ?? true))
+          return;
         final box = context.findRenderObject();
         if (box is! RenderBox || !box.hasSize) return;
         final point = box.localToGlobal(Offset.zero);
         final height = MediaQuery.sizeOf(context).height;
-        if (point.dy + box.size.height > 0 && point.dy < height &&
-            WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {
+        if (point.dy + box.size.height > 0 &&
+            point.dy < height &&
+            WidgetsBinding.instance.lifecycleState ==
+                AppLifecycleState.resumed) {
           ref.read(adExposuresProvider.notifier).shown(ads[page].id);
         }
       });

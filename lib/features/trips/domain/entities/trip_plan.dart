@@ -16,10 +16,14 @@ class TripStop {
 
   /// Minutes since midnight of the service date; -1 means not entered.
   final int minutes;
-  const TripStop(this.id, this.name, this.minutes);
+  final int? arrivalMinutes;
+  const TripStop(this.id, this.name, this.minutes, {this.arrivalMinutes});
 
-  TripStop copyWith({String? name, int? minutes}) =>
-      TripStop(id, name ?? this.name, minutes ?? this.minutes);
+  TripStop copyWith({String? name, int? minutes, int? arrivalMinutes}) => TripStop(
+    id, name ?? this.name, minutes ?? this.minutes,
+    arrivalMinutes: arrivalMinutes ?? (this.arrivalMinutes == null ? null :
+      this.arrivalMinutes! + (minutes == null ? 0 : minutes - this.minutes)),
+  );
 }
 
 class TripPlan {
@@ -50,6 +54,7 @@ class TripPlan {
           i < service.stopIds.length ? service.stopIds[i] : 'legacy-$i',
           service.stops[i],
           service.scheduledTime(service.stops[i]) ?? -1,
+          arrivalMinutes: service.arrivalStopTimings[service.stops[i]],
         ),
     ],
     offDays: service.offDays.toSet(),
@@ -100,6 +105,10 @@ class TripPlan {
           'Times must increase along the route within 24 hours. '
           'Choose Next day explicitly for overnight stops.',
         );
+      }
+      if (stop.arrivalMinutes != null &&
+          (stop.arrivalMinutes! > stop.minutes || stop.arrivalMinutes! <= previous)) {
+        throw const AppFailure('Arrival must follow the previous stop and precede departure.');
       }
       previous = stop.minutes;
     }

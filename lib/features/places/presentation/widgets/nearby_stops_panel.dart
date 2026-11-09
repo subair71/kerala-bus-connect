@@ -13,10 +13,10 @@ class NearbyStopsPanel extends ConsumerWidget {
     final nearby = ref.watch(nearbyStopsProvider);
     ref.listen(nearbyStopsProvider, (previous, next) {
       final data = next.asData?.value;
-      if (data != null &&
-          !data.stale &&
-          data.stops.isNotEmpty) {
-        ref.read(searchQueryProvider.notifier).autoOrigin(data.stops.first.name);
+      if (data != null && !data.stale && data.stops.isNotEmpty) {
+        ref
+            .read(searchQueryProvider.notifier)
+            .autoOrigin(data.stops.first.name);
       }
     });
     return Card(

@@ -15,6 +15,7 @@ class ServiceModel extends ServiceEntity {
     required super.stops,
     required super.departureMinutes,
     required super.stopTimings,
+    super.arrivalStopTimings,
     required super.offDays,
     super.offTimingsNote,
     super.published,
@@ -60,6 +61,11 @@ class ServiceModel extends ServiceEntity {
       stops: stringList(data['stops']),
       departureMinutes: scheduleMinutes(data['departureMinutes']) ?? -1,
       stopTimings: Map.unmodifiable(timings),
+      arrivalStopTimings: {
+        for (final entry in (data['arrivalStopTimings'] as Map? ?? {}).entries)
+          if (entry.key is String && scheduleMinutes(entry.value) != null)
+            entry.key as String: scheduleMinutes(entry.value)!,
+      },
       offDays: stringList(data['offDays']),
       operatingDaysKnown:
           data['offDays'] is List &&
@@ -86,6 +92,7 @@ class ServiceModel extends ServiceEntity {
     'stops': stops,
     'departureMinutes': departureMinutes,
     'stopTimings': stopTimings,
+    'arrivalStopTimings': arrivalStopTimings,
     'offDays': offDays,
     'offTimingsNote': offTimingsNote,
     'published': published,

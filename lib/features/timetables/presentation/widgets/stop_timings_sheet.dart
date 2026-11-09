@@ -30,6 +30,8 @@ Future<void> showStopTimings(
                 child: Text(
                   isSampleId(service.id)
                       ? 'Sample data • not for travel planning'
+                      : service.runningStatus != RunningStatus.scheduled
+                      ? '${service.runningStatus.label} · Owner reported · ${service.serviceDate}'
                       : service.hasDailyAdjustment
                       ? 'Owner-updated expected times • ${service.serviceDate}'
                       : 'Scheduled timings • not live GPS tracking',
@@ -44,10 +46,20 @@ Future<void> showStopTimings(
             ],
           ),
         ),
-        if (!isSampleId(service.id)) Consumer(builder: (context, ref, _) =>
-          ref.watch(platformEnabledProvider) ? TextButton.icon(
-            onPressed: () => showPlatformForm(context, platformForms['reportSchedule']!, initial: {'tripId': service.id}),
-            icon: const Icon(Icons.flag_outlined), label: const Text('Report incorrect timing')) : const SizedBox.shrink()),
+        if (!isSampleId(service.id))
+          Consumer(
+            builder: (context, ref, _) => ref.watch(platformEnabledProvider)
+                ? TextButton.icon(
+                    onPressed: () => showPlatformForm(
+                      context,
+                      platformForms['reportSchedule']!,
+                      initial: {'tripId': service.id},
+                    ),
+                    icon: const Icon(Icons.flag_outlined),
+                    label: const Text('Report incorrect timing'),
+                  )
+                : const SizedBox.shrink(),
+          ),
         Expanded(
           child: TrainRouteView(
             service: service,

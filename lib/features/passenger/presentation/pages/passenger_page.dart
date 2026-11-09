@@ -149,9 +149,12 @@ class _AnalyticsChoice extends ConsumerWidget {
       contentPadding: EdgeInsets.zero,
       dense: true,
       value: ref.watch(analyticsConsentProvider).asData?.value ?? false,
-      onChanged: (value) => ref.read(analyticsConsentProvider.notifier).change(value ?? false),
+      onChanged: (value) =>
+          ref.read(analyticsConsentProvider.notifier).change(value ?? false),
       title: const Text('Share anonymous usage statistics'),
-      subtitle: const Text('Optional. No GPS coordinates, contact details or search text.'),
+      subtitle: const Text(
+        'Optional. No GPS coordinates, contact details or search text.',
+      ),
     );
   }
 }

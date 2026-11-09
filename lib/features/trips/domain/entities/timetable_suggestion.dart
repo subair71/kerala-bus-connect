@@ -25,20 +25,15 @@ TripPlan suggestTimetable(
   }
   final stops = [plan.stops.first];
   for (var i = 1; i < plan.stops.length; i++) {
-    final previous = plan.stops[i - 1];
-    final dwell = i == 1
-        ? 0
-        : stopMinutes + (majorStopMinutes[previous.id] ?? 0);
-    final suggested =
-        stops.last.minutes + (travelMinutes[i - 1] * factor).ceil() + dwell;
     final existing = plan.stops[i];
-    stops.add(
-      existing.copyWith(
-        minutes: preserveEntered && existing.minutes >= 0
-            ? existing.minutes
-            : suggested,
-      ),
-    );
+    final arrival = stops.last.minutes + (travelMinutes[i - 1] * factor).ceil();
+    final dwell = i == plan.stops.length - 1 ? 0 :
+      stopMinutes + (majorStopMinutes[existing.id] ?? 0);
+    if (preserveEntered && existing.minutes >= 0) {
+      stops.add(existing);
+    } else {
+      stops.add(existing.copyWith(minutes: arrival + dwell, arrivalMinutes: arrival));
+    }
   }
   final result = plan.copyWith(stops: stops);
   result.validate();

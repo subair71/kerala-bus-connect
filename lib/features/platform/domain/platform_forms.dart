@@ -37,7 +37,7 @@ const platformForms = <String, PlatformForm>{
     PlatformField('imageUrl', 'Advertisement image (HTTPS URL)'),
     PlatformField('website', 'Business website (optional)'),
     PlatformField('requestedStart', 'Start date (YYYY-MM-DD, optional)'),
-      PlatformField('location', 'Business location'),
+    PlatformField('location', 'Business location'),
     PlatformField('district', 'District'),
     PlatformField('latitude', 'Business latitude', type: 'decimal'),
     PlatformField('longitude', 'Business longitude', type: 'decimal'),

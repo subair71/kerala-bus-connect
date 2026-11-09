@@ -28,7 +28,7 @@ export function tokens(value) {
 export function publicService(id, data) {
   const fields = ['ownerId', 'businessId', 'busId', 'routeId', 'businessName', 'routeName',
     'busName', 'stops', 'stopIds', 'departureMinutes', 'stopTimings', 'offDays',
-    'offTimingsNote', 'published', 'scheduleRevision'];
+    'offTimingsNote', 'published', 'scheduleRevision', 'arrivalStopTimings'];
   return {id, ...Object.fromEntries(fields.filter(k => data[k] !== undefined).map(k => [k, data[k]]))};
 }
 export function projectDepartures(tripId, service, adjustment = null) {
@@ -166,6 +166,22 @@ export async function searchDepartures(db, raw, now = new Date()) {
     positions[i] = [row.minute, doc.id];
     scanned++;
     if (!rowMatches(row, input)) continue;
+    if (!memo.has('services/' + row.tripId)) {
+      const candidates = [row, ...buffers.flat().map(d => d.data())]
+        .filter(candidate => rowMatches(candidate, input))
+        .sort((a, b) => a.minute - b.minute).slice(0, 4);
+      const paths = new Set();
+      for (const candidate of candidates) {
+        paths.add('services/' + candidate.tripId);
+        paths.add('trip_adjustments/' + candidate.tripId + '_' +
+          (candidate.serviceDate ?? shiftDate(input.date, -candidate.dayOffset)));
+      }
+      const missing = [...paths].filter(path => !memo.has(path));
+      if (missing.length) {
+        const snapshots = await db.getAll(...missing.map(path => db.doc(path)));
+        snapshots.forEach((snapshot, index) => memo.set(missing[index], Promise.resolve(snapshot)));
+      }
+    }
     const service = (await read('services/' + row.tripId)).data();
     if (!service?.published || (service.scheduleRevision ?? '') !== row.revision) continue;
     const startDate = row.serviceDate ?? shiftDate(input.date, -row.dayOffset);

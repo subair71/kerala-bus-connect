@@ -37,7 +37,9 @@ class TrainRouteView extends StatelessWidget {
             const SizedBox(height: 12),
             if (isSampleId(service.id)) const DataNotice(demo: true),
             Text(
-              !service.operatingDaysKnown
+              service.runningStatus != RunningStatus.scheduled
+                  ? '${service.runningStatus.label} · Owner reported'
+                  : !service.operatingDaysKnown
                   ? 'Operating days unavailable'
                   : service.offDays.contains(effectiveDay)
                   ? 'Not operating on $effectiveDay'
@@ -119,6 +121,8 @@ class TrainRouteView extends StatelessWidget {
                         Text(
                           'Scheduled ${timeLabel(scheduled)} · +${minutes - scheduled} min',
                         ),
+                      if (service.arrivalStopTimings[stop] != null)
+                        Text('Scheduled arrival ${timeLabel(service.arrivalStopTimings[stop]!)} · departure ${timeLabel(scheduled ?? minutes ?? 0)}'),
                       const SizedBox(height: 4),
                       Text(
                         stop,

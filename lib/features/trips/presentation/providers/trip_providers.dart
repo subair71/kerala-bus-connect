@@ -131,7 +131,14 @@ class TripDraftController extends Notifier<TripDraft> {
     return state.plan.copyWith(offDays: days);
   });
 
-  void active(bool active) => _update(() => state.plan.copyWith(active: active));
+  void arrival(int index, int minutes) => _update(() {
+    final stops = [...state.plan.stops];
+    stops[index] = stops[index].copyWith(arrivalMinutes: minutes);
+    return state.plan.copyWith(stops: stops);
+  });
+
+  void active(bool active) =>
+      _update(() => state.plan.copyWith(active: active));
 
   void suggestions(TripPlan plan) => _update(() => plan);
 
@@ -352,7 +359,7 @@ class SuggestionPreview extends Notifier<SuggestionState> {
   @override
   SuggestionState build() => (plan: null, error: null);
   void clear() => state = (plan: null, error: null);
-  void calculate(List<int> minutes, double factor, int dwell) {
+  void calculate(List<int> minutes, double factor, int dwell, {Map<String, int> major = const {}}) {
     try {
       state = (
         plan: suggestTimetable(
@@ -360,6 +367,7 @@ class SuggestionPreview extends Notifier<SuggestionState> {
           minutes,
           factor: factor,
           stopMinutes: dwell,
+          majorStopMinutes: major,
         ),
         error: null,
       );
