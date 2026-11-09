@@ -131,3 +131,35 @@ test('analytics deduplicates concurrent impressions and anonymous measured users
   const results = await Promise.all([recordEvent(db, event, now), recordEvent(db, event, now)]);
   assert.equal(results.filter(r => r.counted).length, 1);
 });
+
+test('overnight boarding uses the starting service date and includes delayed crossings', {skip: !enabled}, async () => {
+  await db.doc('platform_config/search').set({ready: true});
+  await db.doc('services/overnight').set({published: true, scheduleRevision: 'night',
+    stops: ['Night origin', 'Night middle', 'Night end'], stopIds: ['a','b','c'],
+    stopTimings: {'Night origin': 1430, 'Night middle': 1450, 'Night end': 1470},
+    departureMinutes: 1430, offDays: ['Sunday']});
+  await indexSource(db, 'services', 'overnight');
+  const time = new Date('2026-11-09T18:35:00Z');
+  const input = {from: 'Night middle', to: 'Night end', date: '2026-11-10'};
+  const first = await searchDepartures(db, input, time);
+  assert.equal(first.records[0].serviceDate, '2026-11-09');
+  assert.equal(first.records[0].boardingMinute, 10);
+  await db.doc('trip_adjustments/overnight_2026-11-09').set({
+    tripId: 'overnight', serviceDate: '2026-11-09', scheduleRevision: 'night',
+    delays: {a: 30}, status: 'delayed'});
+  await indexSource(db, 'trip_adjustments', 'overnight_2026-11-09');
+  const delayed = await searchDepartures(db, input, time);
+  assert.equal(delayed.records.length, 1);
+  assert.equal(delayed.records[0].boardingMinute, 40);
+  assert.equal(delayed.records[0].runningStatus, 'delayed');
+});
+test('advertiser edits preserve attribution and reject another owner', {skip: !enabled}, async () => {
+  const {advertiser} = await fixture('direct');
+  const changes = {id: advertiser.id, name: 'Updated shop', category: 'Retail',
+    contact: 'New contact', latitude: 10.5, longitude: 76.2, district: 'Thrissur'};
+  await assert.rejects(call({uid: 'outsider', token: {}}, 'updateAdvertiser', changes), {code: 'permission-denied'});
+  await call(owner, 'updateAdvertiser', {...changes, ownerId: 'forged'});
+  const saved = (await db.doc('advertisers/' + advertiser.id).get()).data();
+  assert.equal(saved.ownerId, owner.uid);
+  assert.equal(saved.name, 'Updated shop');
+});

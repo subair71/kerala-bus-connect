@@ -20,3 +20,10 @@ test('errors are never cached and bounded entries are evicted', async () => {
   assert.equal(cache.values.size, 1);
   assert.equal(cache.values.has('a'), false);
 });
+
+test('concurrently resolved entries keep the byte budget bounded', async () => {
+  const cache = new SearchCache({maximum: 10, maxBytes: 100});
+  await Promise.all(Array.from({length: 10}, (_, i) =>
+    cache.get(String(i), async () => ({value: 'x'.repeat(50)}))));
+  assert.ok(cache.bytes <= 100);
+});

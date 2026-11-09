@@ -187,7 +187,7 @@ class PlatformConsole extends ConsumerWidget {
                         sliver: SliverList.builder(
                           itemCount: rows.length,
                           itemBuilder: (context, i) =>
-                              _RecordCard(record: rows[i]),
+                              _RecordCard(record: rows[i], collection: selection.collection, admin: admin),
                         ),
                       ),
                       if (data['cursor'] != null)
@@ -237,7 +237,23 @@ String displayPlatformValue(String key, dynamic value) {
 
 class _RecordCard extends StatelessWidget {
   final Map<String, dynamic> record;
-  const _RecordCard({required this.record});
+  final String collection;
+  final bool admin;
+  const _RecordCard({required this.record, required this.collection, required this.admin});
+  String? get editAction => switch (collection) {
+    'advertisers' => 'updateAdvertiser',
+    'sponsored_ads' => 'submitAd',
+    'advertising_packages' when admin => 'savePackage',
+    'stops' when admin => 'saveStop',
+    _ => null,
+  };
+  Map<String, Object?> get editValues => {
+    ...record,
+    if (collection == 'advertisers' && record['location'] is Map)
+      ...Map<String, Object?>.from(record['location'] as Map),
+    if (collection == 'sponsored_ads' && record['requestedStart'] is num)
+      'requestedStart': DateTime.fromMillisecondsSinceEpoch((record['requestedStart'] as num).toInt()).toUtc().toIso8601String().substring(0, 10),
+  };
   @override
   Widget build(BuildContext context) => Card(
     child: Padding(
@@ -254,6 +270,15 @@ class _RecordCard extends StatelessWidget {
                 .toString(),
             style: Theme.of(context).textTheme.titleMedium,
           ),
+          if (editAction != null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => showPlatformForm(context, platformForms[editAction]!, initial: editValues),
+                icon: const Icon(Icons.edit_outlined),
+                label: Text(collection == 'sponsored_ads' ? 'Edit and submit for review' : 'Edit'),
+              ),
+            ),
           if (record['imageUrl'] is String)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -301,7 +326,11 @@ class _PlatformFormDialog extends HookConsumerWidget {
         for (final field in form.fields)
           field.name: TextEditingController(
             text:
-                initial[field.name]?.toString() ??
+                (initial[field.name] is List
+                    ? (initial[field.name] as List).join(',')
+                    : field.type == 'money' && initial[field.name] is num
+                    ? ((initial[field.name] as num) / 100).toStringAsFixed(2)
+                    : initial[field.name]?.toString()) ??
                 (field.type == 'boolean'
                     ? 'true'
                     : field.type == 'workflow'

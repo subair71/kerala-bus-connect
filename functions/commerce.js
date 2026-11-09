@@ -60,7 +60,7 @@ function owner(data, actor) {
 }
 function admin(actor) { if (!actor.admin) fail('Administrator access required.', 'permission-denied'); }
 function financialStats(tx, db, ownerId, now, values) {
-  const month = new Date(now).toISOString().slice(0, 7);
+  const month = new Date(now + 330 * 60000).toISOString().slice(0, 7);
   for (const key of [ownerId, 'platform']) {
     tx.set(db.doc('owner_earnings/' + key), {ownerId: key,
       ...Object.fromEntries(Object.entries(values).map(([k, v]) => [k, FieldValue.increment(v)]))}, {merge: true});
@@ -107,6 +107,15 @@ export async function platformAction(db, auth, input, now = Date.now()) {
         location: validatePoint(data), district: normalize(text(data.district, 'district', 80)),
         activeAds: 0, createdAt: now,
       });
+      result.id = target.id;
+    } else if (action === 'updateAdvertiser') {
+      const target = db.doc('advertisers/' + id(data.id));
+      const current = (await tx.get(target)).data(); owner(current, actor);
+      tx.update(target, {name: text(data.name, 'business name', 120),
+        category: text(data.category, 'business category', 80),
+        contact: text(data.contact, 'contact details', 200),
+        location: validatePoint(data), district: normalize(text(data.district, 'district', 80)),
+        updatedAt: now});
       result.id = target.id;
     } else if (action === 'submitAd') {
       const advertiser = (await tx.get(db.doc('advertisers/' + id(data.advertiserId)))).data();

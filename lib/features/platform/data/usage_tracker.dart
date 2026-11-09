@@ -9,7 +9,9 @@ class UsageTracker {
   UsageTracker(this.repository);
   Future<String>? _installation;
   Future<String> _installationId() => _installation ??= () async {
-    final saved = await preferences.getString('findmybus.analytics.installation');
+    final saved = await preferences.getString(
+      'findmybus.analytics.installation',
+    );
     if (saved != null) return saved;
     final created = _random();
     await preferences.setString('findmybus.analytics.installation', created);

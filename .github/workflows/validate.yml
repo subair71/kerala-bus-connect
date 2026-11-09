@@ -25,7 +25,6 @@ jobs:
         run: |
           dart format lib test tool/capture_screenshots.dart
           python3 tool/ci_format_export.py
-          git diff --exit-code -- lib test tool/capture_screenshots.dart pubspec.lock
       - name: Analyze
         run: flutter analyze
       - name: Tests
@@ -54,6 +53,8 @@ jobs:
           name: stitch-browser-screenshots
           path: browser-screenshots
           retention-days: 14
+      - name: Verify formatting and dependency lock are committed
+        run: git diff --exit-code -- lib test tool/capture_screenshots.dart pubspec.lock
       - name: Save review build
         uses: actions/upload-artifact@v4
         with:

@@ -25,6 +25,14 @@ const platformForms = <String, PlatformForm>{
         PlatformField('latitude', 'Business latitude', type: 'decimal'),
         PlatformField('longitude', 'Business longitude', type: 'decimal'),
       ]),
+  'updateAdvertiser': PlatformForm('updateAdvertiser', 'Edit advertiser', [
+    PlatformField('name', 'Business name'),
+    PlatformField('category', 'Business category'),
+    PlatformField('contact', 'Contact details'),
+    PlatformField('district', 'District'),
+    PlatformField('latitude', 'Business latitude', type: 'decimal'),
+    PlatformField('longitude', 'Business longitude', type: 'decimal'),
+  ]),
   'submitAd': PlatformForm('submitAd', 'Submit advertisement for approval', [
     PlatformField('advertiserId', 'Advertiser', collection: 'advertisers'),
     PlatformField(
