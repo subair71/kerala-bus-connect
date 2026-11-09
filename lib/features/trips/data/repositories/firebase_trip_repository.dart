@@ -95,7 +95,9 @@ class FirebaseTripRepository implements TripRepository {
           serviceDate: doc.data()['serviceDate'] as String,
           scheduleRevision: doc.data()['scheduleRevision'] as String,
           delays: Map<String, int>.from(doc.data()['delays'] as Map),
-          status: doc.data().containsKey('status') ? RunningStatus.parse(doc.data()['status']) : null,
+          status: doc.data().containsKey('status')
+              ? RunningStatus.parse(doc.data()['status'])
+              : null,
         ),
     ];
   });
@@ -308,7 +310,9 @@ class FirebaseTripRepository implements TripRepository {
         'These adjustments belong to another trip or date.',
       );
     }
-    if (adjustment != null && adjustment.status != RunningStatus.delayed && adjustment.delays.values.any((d) => d > 0)) {
+    if (adjustment != null &&
+        adjustment.status != RunningStatus.delayed &&
+        adjustment.delays.values.any((d) => d > 0)) {
       throw const AppFailure('Clear delays before selecting another status.');
     }
     await db.runTransaction((tx) async {

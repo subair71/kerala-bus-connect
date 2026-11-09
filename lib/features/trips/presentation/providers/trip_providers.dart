@@ -316,19 +316,27 @@ class TripEditorStructure extends Equatable {
 }
 
 final runningStatusDraftProvider = NotifierProvider.autoDispose
-    .family<RunningStatusDraft, RunningStatus, DelayEditorKey>(RunningStatusDraft.new);
+    .family<RunningStatusDraft, RunningStatus, DelayEditorKey>(
+      RunningStatusDraft.new,
+    );
+
 class RunningStatusDraft extends Notifier<RunningStatus> {
   RunningStatusDraft(this.args);
   final DelayEditorKey args;
   @override
-  RunningStatus build() => args.adjustment?.scheduleRevision == args.trip.revision
-      ? args.adjustment!.status : RunningStatus.scheduled;
+  RunningStatus build() =>
+      args.adjustment?.scheduleRevision == args.trip.revision
+      ? args.adjustment!.status
+      : RunningStatus.scheduled;
   void select(RunningStatus status) => state = status;
 }
 
 typedef SuggestionState = ({TripPlan? plan, String? error});
 final suggestionPreviewProvider = NotifierProvider.autoDispose
-    .family<SuggestionPreview, SuggestionState, TripPlan>(SuggestionPreview.new);
+    .family<SuggestionPreview, SuggestionState, TripPlan>(
+      SuggestionPreview.new,
+    );
+
 class SuggestionPreview extends Notifier<SuggestionState> {
   SuggestionPreview(this.plan);
   final TripPlan plan;
@@ -336,7 +344,17 @@ class SuggestionPreview extends Notifier<SuggestionState> {
   SuggestionState build() => (plan: null, error: null);
   void calculate(List<int> minutes, double factor, int dwell) {
     try {
-      state = (plan: suggestTimetable(plan, minutes, factor: factor, stopMinutes: dwell), error: null);
-    } catch (e) { state = (plan: null, error: e.toString()); }
+      state = (
+        plan: suggestTimetable(
+          plan,
+          minutes,
+          factor: factor,
+          stopMinutes: dwell,
+        ),
+        error: null,
+      );
+    } catch (e) {
+      state = (plan: null, error: e.toString());
+    }
   }
 }

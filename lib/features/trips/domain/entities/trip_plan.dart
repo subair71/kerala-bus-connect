@@ -192,7 +192,12 @@ class DailyAdjustment {
     required this.scheduleRevision,
     required Map<String, int> delays,
     RunningStatus? status,
-  }) : status = status ?? (delays.values.any((d) => d > 0) ? RunningStatus.delayed : RunningStatus.scheduled), delays = Map.unmodifiable(delays);
+  }) : status =
+           status ??
+           (delays.values.any((d) => d > 0)
+               ? RunningStatus.delayed
+               : RunningStatus.scheduled),
+       delays = Map.unmodifiable(delays);
 
   ServiceEntity apply(ServiceEntity service) {
     if (service.id != tripId || service.scheduleRevision != scheduleRevision) {
@@ -200,8 +205,13 @@ class DailyAdjustment {
     }
     final plan = TripPlan.fromService(service);
     final times = plan.expectedTimes(delays);
-    return service.withExpected({
-      for (var i = 0; i < plan.stops.length; i++) plan.stops[i].name: times[i],
-    }, serviceDate, status: status);
+    return service.withExpected(
+      {
+        for (var i = 0; i < plan.stops.length; i++)
+          plan.stops[i].name: times[i],
+      },
+      serviceDate,
+      status: status,
+    );
   }
 }

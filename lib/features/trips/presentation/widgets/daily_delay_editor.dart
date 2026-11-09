@@ -59,13 +59,22 @@ class DailyDelayEditor extends ConsumerWidget {
           ),
         DropdownButtonFormField<RunningStatus>(
           initialValue: status,
-          decoration: const InputDecoration(labelText: 'Running status (owner reported)'),
-          items: [for (final value in RunningStatus.values) DropdownMenuItem(value: value, child: Text(value.label))],
-          onChanged: action.isLoading ? null : (value) {
-            if (value == null) return;
-            ref.read(runningStatusDraftProvider(args).notifier).select(value);
-            if (value != RunningStatus.delayed) controller.reset();
-          },
+          decoration: const InputDecoration(
+            labelText: 'Running status (owner reported)',
+          ),
+          items: [
+            for (final value in RunningStatus.values)
+              DropdownMenuItem(value: value, child: Text(value.label)),
+          ],
+          onChanged: action.isLoading
+              ? null
+              : (value) {
+                  if (value == null) return;
+                  ref
+                      .read(runningStatusDraftProvider(args).notifier)
+                      .select(value);
+                  if (value != RunningStatus.delayed) controller.reset();
+                },
         ),
         const SizedBox(height: 12),
         if (action.hasError)
@@ -109,7 +118,14 @@ class DailyDelayEditor extends ConsumerWidget {
                                 );
                                 if (value != null && context.mounted) {
                                   controller.setDelay(trip.stops[i].id, value);
-                                  if (value > 0) ref.read(runningStatusDraftProvider(args).notifier).select(RunningStatus.delayed);
+                                  if (value > 0)
+                                    ref
+                                        .read(
+                                          runningStatusDraftProvider(
+                                            args,
+                                          ).notifier,
+                                        )
+                                        .select(RunningStatus.delayed);
                                 }
                               },
                         icon: const Icon(Icons.more_time),

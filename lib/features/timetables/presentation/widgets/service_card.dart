@@ -46,7 +46,10 @@ class ServiceCard extends ConsumerWidget {
         ? arrival - departure
         : null;
     final effectiveDay = day == 'All Days' ? todayName() : day;
-    final running = !service.offDays.contains(effectiveDay) && service.runningStatus != RunningStatus.cancelled && service.runningStatus != RunningStatus.completed;
+    final running =
+        !service.offDays.contains(effectiveDay) &&
+        service.runningStatus != RunningStatus.cancelled &&
+        service.runningStatus != RunningStatus.completed;
     final remaining = departure == null
         ? null
         : departure - now.hour * 60 - now.minute;

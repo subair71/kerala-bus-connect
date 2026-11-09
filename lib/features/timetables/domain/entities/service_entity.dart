@@ -9,7 +9,8 @@ enum RunningStatus {
 
   final String label;
   const RunningStatus(this.label);
-  static RunningStatus parse(Object? value) => values.where((s) => s.name == value).firstOrNull ?? scheduled;
+  static RunningStatus parse(Object? value) =>
+      values.where((s) => s.name == value).firstOrNull ?? scheduled;
 }
 
 class ServiceEntity extends Equatable {
@@ -67,30 +68,33 @@ class ServiceEntity extends Equatable {
   bool get hasDailyAdjustment =>
       expectedStopTimings.entries.any((e) => e.value != scheduledTime(e.key));
 
-  ServiceEntity withExpected(Map<String, int> times, String date, {RunningStatus status = RunningStatus.delayed}) =>
-      ServiceEntity(
-        id: id,
-        ownerId: ownerId,
-        businessId: businessId,
-        routeId: routeId,
-        businessName: businessName,
-        routeName: routeName,
-        busName: busName,
-        stops: stops,
-        departureMinutes: departureMinutes,
-        stopTimings: stopTimings,
-        offDays: offDays,
-        offTimingsNote: offTimingsNote,
-        published: published,
-        operatingDaysKnown: operatingDaysKnown,
-        busId: busId,
-        scheduleRevision: scheduleRevision,
-        stopIds: stopIds,
-        expectedStopTimings: Map.unmodifiable(times),
-        serviceDate: date,
-        runningStatus: status,
-        cachedAt: cachedAt,
-      );
+  ServiceEntity withExpected(
+    Map<String, int> times,
+    String date, {
+    RunningStatus status = RunningStatus.delayed,
+  }) => ServiceEntity(
+    id: id,
+    ownerId: ownerId,
+    businessId: businessId,
+    routeId: routeId,
+    businessName: businessName,
+    routeName: routeName,
+    busName: busName,
+    stops: stops,
+    departureMinutes: departureMinutes,
+    stopTimings: stopTimings,
+    offDays: offDays,
+    offTimingsNote: offTimingsNote,
+    published: published,
+    operatingDaysKnown: operatingDaysKnown,
+    busId: busId,
+    scheduleRevision: scheduleRevision,
+    stopIds: stopIds,
+    expectedStopTimings: Map.unmodifiable(times),
+    serviceDate: date,
+    runningStatus: status,
+    cachedAt: cachedAt,
+  );
 
   /// Returns only supplied times; an unknown stop never inherits a departure.
   int? scheduledTime(String stop) {

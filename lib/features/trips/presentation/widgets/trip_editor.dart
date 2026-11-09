@@ -136,11 +136,16 @@ class TripEditor extends ConsumerWidget {
         ] else ...[
           if (state.step == 1)
             OutlinedButton.icon(
-              onPressed: action.isLoading ? null : () async {
-                final result = await showDialog<TripPlan>(context: context,
-                  builder: (_) => TimetableSuggestions(plan: plan));
-                if (result != null && context.mounted) controller.suggestions(result);
-              },
+              onPressed: action.isLoading
+                  ? null
+                  : () async {
+                      final result = await showDialog<TripPlan>(
+                        context: context,
+                        builder: (_) => TimetableSuggestions(plan: plan),
+                      );
+                      if (result != null && context.mounted)
+                        controller.suggestions(result);
+                    },
               icon: const Icon(Icons.auto_fix_high),
               label: const Text('Suggest stop timings'),
             ),
