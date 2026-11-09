@@ -359,7 +359,12 @@ class SuggestionPreview extends Notifier<SuggestionState> {
   @override
   SuggestionState build() => (plan: null, error: null);
   void clear() => state = (plan: null, error: null);
-  void calculate(List<int> minutes, double factor, int dwell, {Map<String, int> major = const {}}) {
+  void calculate(
+    List<int> minutes,
+    double factor,
+    int dwell, {
+    Map<String, int> major = const {},
+  }) {
     try {
       state = (
         plan: suggestTimetable(

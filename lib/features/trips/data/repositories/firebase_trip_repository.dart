@@ -245,6 +245,7 @@ class FirebaseTripRepository implements TripRepository {
         });
       }
       tx.set(target, {
+        ...?current,
         'ownerId': ownerId,
         'businessId': business.id,
         'busId': bus.id,

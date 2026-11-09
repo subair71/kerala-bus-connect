@@ -19,7 +19,13 @@ function callable(handler) {
     return handler(request);
   });
 }
-export const searchTimetables = callable(r => searchDepartures(db, r.data));
+export const searchTimetables = callable(async r => {
+  const started = Date.now();
+  const result = await searchDepartures(db, r.data);
+  console.info(JSON.stringify({metric: 'departure_search', durationMs: Date.now() - started,
+    scanned: result.scanned, returned: result.records.length}));
+  return result;
+});
 export const findNearbyStops = callable(r => nearbyStops(db, r.data));
 export const managePlatform = callable(r => platformAction(db, r.auth, r.data));
 export const listPlatformRecords = callable(r => platformList(db, r.auth, r.data));
@@ -44,6 +50,8 @@ export const syncServiceDepartures = onDocumentWritten({
 });
 export async function refreshAds(database, now = Date.now()) {
   let cursor;
+  let activeAds = 0;
+  const activeAdvertisers = new Set();
   while (true) {
     const base = database.collection('sponsored_ads').orderBy(FieldPath.documentId());
     const page = await (cursor ? base.startAfter(cursor) : base).limit(100).get();
@@ -52,6 +60,7 @@ export async function refreshAds(database, now = Date.now()) {
       if (!current?.paidPeriods) return;
       const active = current.approval === 'approved' && !current.cancelled &&
         current.paidPeriods.some(p => !p.refunded && p.start <= now && p.end > now);
+      if (active) { activeAds++; activeAdvertisers.add(current.advertiserId); }
       if (current.active !== active) tx.update(doc.ref, {active});
       if (current.paidUntil > now && current.paidUntil - now <= 7 * 86400000) {
         tx.set(database.doc('platform_notifications/' + doc.id + '_' + current.paidUntil),
@@ -62,6 +71,7 @@ export async function refreshAds(database, now = Date.now()) {
     if (page.size < 100) break;
     cursor = page.docs.at(-1);
   }
+  await database.doc('platform_metrics/advertising').set({activeAds, activeAdvertisers: activeAdvertisers.size, measuredAt: now});
 }
 export const refreshAdvertisements = onSchedule({
   schedule: 'every 60 minutes', region: 'asia-south1', timeoutSeconds: 540,

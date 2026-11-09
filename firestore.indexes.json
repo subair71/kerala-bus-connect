@@ -101,7 +101,38 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "sponsored_ads",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "active",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "coverageCells",
+          "arrayConfig": "CONTAINS"
+        }
+      ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "usage_dedup",
+      "fieldPath": "expiresAt",
+      "ttl": true,
+      "indexes": []
+    },
+    {
+      "collectionGroup": "stop_departures",
+      "fieldPath": "service",
+      "indexes": []
+    },
+    {
+      "collectionGroup": "stop_departures",
+      "fieldPath": "expectedStopTimings",
+      "indexes": []
+    }
+  ]
 }

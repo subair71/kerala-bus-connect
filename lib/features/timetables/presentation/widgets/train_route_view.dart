@@ -122,7 +122,9 @@ class TrainRouteView extends StatelessWidget {
                           'Scheduled ${timeLabel(scheduled)} · +${minutes - scheduled} min',
                         ),
                       if (service.arrivalStopTimings[stop] != null)
-                        Text('Scheduled arrival ${timeLabel(service.arrivalStopTimings[stop]!)} · departure ${timeLabel(scheduled ?? minutes ?? 0)}'),
+                        Text(
+                          'Scheduled arrival ${timeLabel(service.arrivalStopTimings[stop]!)} · departure ${timeLabel(scheduled ?? minutes ?? 0)}',
+                        ),
                       const SizedBox(height: 4),
                       Text(
                         stop,

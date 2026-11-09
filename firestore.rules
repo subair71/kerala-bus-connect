@@ -31,6 +31,7 @@ service cloud.firestore {
       return getAfter(/databases/$(database)/documents/buses/$(busId)).data.tripCount ==
         get(/databases/$(database)/documents/buses/$(busId)).data.tripCount + difference;
     }
+    function reviewFields() { return ['verification', 'reviewedBy', 'reviewedAt', 'reviewedRevision', 'reviewNote']; }
     function scheduleChanged() {
       return request.resource.data.diff(resource.data).affectedKeys().hasAny(
         ['stops', 'stopIds', 'stopTimings', 'departureMinutes', 'offDays', 'arrivalStopTimings']
@@ -64,10 +65,11 @@ service cloud.firestore {
     }
     match /services/{id} {
       allow read: if true;
-      allow create: if owns(request.resource.data) &&
+      allow create: if !request.resource.data.keys().hasAny(reviewFields()) && owns(request.resource.data) &&
         ownsBusiness(request.resource.data) && validTrip(request.resource.data) &&
         (!managed(request.resource.data) || countChange(request.resource.data.busId, 1));
       allow update: if sameOwner() &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(reviewFields()) &&
         request.resource.data.businessId == resource.data.businessId &&
         validTrip(request.resource.data) &&
         (!managed(resource.data) ||

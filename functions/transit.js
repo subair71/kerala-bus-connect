@@ -65,7 +65,7 @@ export function projectDepartures(tripId, service, adjustment = null) {
       tripId, stopIndex: i, stopName: stop, minute: minutes % 1440, dayOffset,
       scope, keys, status, serviceDate: adjustment?.serviceDate ?? null,
       revision: service.scheduleRevision ?? '',
-      service: publicService(tripId, service),
+      service: {stops: service.stops, routeName: service.routeName ?? ''},
       expectedStopTimings: adjustment ? Object.fromEntries(service.stops.map((name, n) => [
         name, service.stopTimings?.[name] + (status === 'delayed' ?
           service.stops.slice(0, n + 1).reduce((sum, _, j) => sum + (adjustment.delays?.[service.stopIds?.[j]] ?? 0), 0) : 0),

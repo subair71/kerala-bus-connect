@@ -35,7 +35,11 @@ class SearchController extends Notifier<SearchQuery> {
   bool _originEdited = false;
   bool _destinationEdited = false;
   void autoOrigin(String value) {
-    if (!_originEdited) state = state.copyWith(from: value, to: _destinationEdited ? state.to : '');
+    if (!_originEdited)
+      state = state.copyWith(
+        from: value,
+        to: _destinationEdited ? state.to : '',
+      );
   }
 
   @override
@@ -72,8 +76,17 @@ class SearchController extends Notifier<SearchQuery> {
     state = state.copyWith(from: value);
   }
 
-  void to(String value) { _destinationEdited = true; state = state.copyWith(to: value); }
-  void swap() { _originEdited = true; _destinationEdited = true; state = state.copyWith(from: state.to, to: state.from); }
+  void to(String value) {
+    _destinationEdited = true;
+    state = state.copyWith(to: value);
+  }
+
+  void swap() {
+    _originEdited = true;
+    _destinationEdited = true;
+    state = state.copyWith(from: state.to, to: state.from);
+  }
+
   void day(String value) {
     final date = ref
         .read(journeyDatesProvider)

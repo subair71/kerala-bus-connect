@@ -62,6 +62,8 @@ function admin(actor) { if (!actor.admin) fail('Administrator access required.',
 function financialStats(tx, db, ownerId, now, values) {
   const month = new Date(now).toISOString().slice(0, 7);
   for (const key of [ownerId, 'platform']) {
+    tx.set(db.doc('owner_earnings/' + key), {ownerId: key,
+      ...Object.fromEntries(Object.entries(values).map(([k, v]) => [k, FieldValue.increment(v)]))}, {merge: true});
     tx.set(db.doc('financial_stats/' + key + '_' + month),
       {ownerId: key, month, ...Object.fromEntries(Object.entries(values).map(([k, v]) => [k, FieldValue.increment(v)]))},
       {merge: true});
@@ -113,6 +115,7 @@ export async function platformAction(db, auth, input, now = Date.now()) {
       const existing = (await tx.get(target)).data();
       if (existing) owner(existing, actor);
       if (existing && existing.advertiserId !== data.advertiserId) fail('Keep the original advertiser.');
+      if (existing && existing.packageId !== data.packageId && (existing.paidUntil > now || existing.pendingOrderId)) fail('Finish the paid period and pending order before changing packages.');
       const pack = (await tx.get(db.doc('advertising_packages/' + id(data.packageId)))).data();
       if (!pack?.enabled) fail('Choose an available package.');
       const routes = list(data.routeIds ?? [], 'routes');
@@ -133,7 +136,7 @@ export async function platformAction(db, auth, input, now = Date.now()) {
         imageUrl: url(data.imageUrl, true), website: url(data.website),
         location: text(data.location, 'location name', 120),
         district: normalize(text(data.district, 'district', 80)), ...point,
-        routeIds: routes, stopIds: stops, coverage, radiusKm, packageId: data.packageId,
+        routeIds: routes, stopIds: stops, coverage, radiusKm, coverageCells: coverageCells(point, radiusKm), packageId: data.packageId,
         requestedStart: data.requestedStart ? Date.parse(data.requestedStart) : now,
         approval: 'pending', active: false, cancelled: existing?.cancelled ?? false,
         createdAt: existing?.createdAt ?? now, updatedAt: now,
@@ -154,6 +157,7 @@ export async function platformAction(db, auth, input, now = Date.now()) {
       if (ad.pendingOrderId) {
         const pending = (await tx.get(db.doc('advertising_orders/' + ad.pendingOrderId))).data();
         if (pending && ['pending', 'submitted'].includes(pending.status)) {
+          if (pending.ownerId !== actor.uid && !actor.admin) fail('An administrator must resolve the former owner’s pending order.');
           result = {ok: true, id: ad.pendingOrderId};
         }
       }
@@ -296,8 +300,9 @@ export async function platformAction(db, auth, input, now = Date.now()) {
       admin(actor);
       const collection = action === 'reviewSchedule' ? 'services' : 'schedule_reports';
       const target = db.doc(collection + '/' + id(data.id));
-      if (!(await tx.get(target)).exists) fail('Record not found.');
-      tx.update(target, {verification: text(data.verification, 'verification result', 80),
+      const reviewed = await tx.get(target);
+      if (!reviewed.exists) fail('Record not found.');
+      tx.update(target, {reviewedRevision: reviewed.data().scheduleRevision ?? '', verification: text(data.verification, 'verification result', 80),
         reviewNote: text(data.note, 'review note', 1000), reviewedBy: actor.uid, reviewedAt: now});
     } else fail('Unknown action.');
     tx.create(db.doc('platform_audit/' + deterministicId), {actorId: actor.uid, action,
@@ -308,7 +313,7 @@ export async function platformAction(db, auth, input, now = Date.now()) {
   });
 }
 const allowedLists = new Set(['advertisers', 'sponsored_ads', 'advertising_orders', 'commissions', 'payouts',
-  'advertising_packages', 'financial_stats', 'schedule_reports', 'platform_notifications', 'businesses', 'services', 'routes', 'stops', 'owner_access']);
+  'advertising_packages', 'financial_stats', 'owner_earnings', 'schedule_reports', 'platform_notifications', 'businesses', 'services', 'routes', 'stops', 'owner_access']);
 export async function platformList(db, auth, data) {
   const actor = authorized(auth);
   const collection = text(data?.collection, 'collection', 80);
@@ -342,9 +347,11 @@ export async function targetedAds(db, data, now = Date.now()) {
   const points = stops.filter(s => s.exists).map(s => s.data());
   const district = points[0]?.district ?? '';
   const queries = [];
+  const cells = [...new Set(points.map(cellFor))];
+  if (cells.length) queries.push(db.collection('sponsored_ads').where('active', '==', true).where('coverageCells', 'array-contains-any', cells));
   if (routeIds.length) queries.push(db.collection('sponsored_ads').where('active', '==', true).where('routeIds', 'array-contains-any', routeIds));
   if (stopIds.length) queries.push(db.collection('sponsored_ads').where('active', '==', true).where('stopIds', 'array-contains-any', stopIds));
-  // District bounds nearby candidates; exact radius is checked after retrieval.
+  // Geographic candidates include district boundaries; district-wide coverage is queried separately.
   for (const region of new Set(points.map(p => p.district))) queries.push(db.collection('sponsored_ads').where('active', '==', true).where('district', '==', region));
   const matches = new Map();
   for (const query of queries) {
@@ -354,4 +361,12 @@ export async function targetedAds(db, data, now = Date.now()) {
   return {ads: [...matches].slice(0, 5).map(([id, ad]) => ({id, advertiser: ad.advertiser,
     title: ad.title, description: ad.description, imageUrl: ad.imageUrl, website: ad.website,
     location: ad.location, active: true, expiresAt: Math.min(...ad.paidPeriods.filter(p => !p.refunded && p.start <= now && p.end > now).map(p => p.end))}))};
+}
+
+function coverageCells(point, radiusKm) {
+  const x = Math.floor(point.latitude * 20), y = Math.floor(point.longitude * 20);
+  const reach = Math.ceil(radiusKm / 5.4) + 1;
+  const cells = [];
+  for (let dx = -reach; dx <= reach; dx++) for (let dy = -reach; dy <= reach; dy++) cells.push((x + dx) + ':' + (y + dy));
+  return cells;
 }

@@ -19,11 +19,18 @@ class TripStop {
   final int? arrivalMinutes;
   const TripStop(this.id, this.name, this.minutes, {this.arrivalMinutes});
 
-  TripStop copyWith({String? name, int? minutes, int? arrivalMinutes}) => TripStop(
-    id, name ?? this.name, minutes ?? this.minutes,
-    arrivalMinutes: arrivalMinutes ?? (this.arrivalMinutes == null ? null :
-      this.arrivalMinutes! + (minutes == null ? 0 : minutes - this.minutes)),
-  );
+  TripStop copyWith({String? name, int? minutes, int? arrivalMinutes}) =>
+      TripStop(
+        id,
+        name ?? this.name,
+        minutes ?? this.minutes,
+        arrivalMinutes:
+            arrivalMinutes ??
+            (this.arrivalMinutes == null
+                ? null
+                : this.arrivalMinutes! +
+                      (minutes == null ? 0 : minutes - this.minutes)),
+      );
 }
 
 class TripPlan {
@@ -107,8 +114,11 @@ class TripPlan {
         );
       }
       if (stop.arrivalMinutes != null &&
-          (stop.arrivalMinutes! > stop.minutes || stop.arrivalMinutes! <= previous)) {
-        throw const AppFailure('Arrival must follow the previous stop and precede departure.');
+          (stop.arrivalMinutes! > stop.minutes ||
+              stop.arrivalMinutes! <= previous)) {
+        throw const AppFailure(
+          'Arrival must follow the previous stop and precede departure.',
+        );
       }
       previous = stop.minutes;
     }

@@ -100,3 +100,9 @@ test('invalid running statuses are rejected; cancellation retains owner checks',
   await assertSucceeds(setDoc(doc(owner, 'trip_adjustments/trip_2026-11-06'), {...adjustment, status: 'cancelled', delays: {}}));
   await assertFails(setDoc(doc(owner, 'trip_adjustments/trip_2026-11-06'), {...adjustment, status: 'gpsTracked'}));
 });
+
+test('owners cannot claim administrator schedule verification', async () => {
+  const owner = env.authenticatedContext('owner').firestore();
+  await createTrip(owner);
+  await assertFails(updateDoc(doc(owner, 'services/trip'), {verification: 'approved', reviewedBy: 'admin'}));
+});

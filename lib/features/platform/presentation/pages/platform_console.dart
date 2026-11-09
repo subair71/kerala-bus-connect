@@ -25,6 +25,7 @@ const _ownerSections = {
   'commissions': 'Commissions',
   'payouts': 'Payouts',
   'financial_stats': 'Monthly earnings',
+  'owner_earnings': 'Earnings balance',
   'platform_notifications': 'Renewal notices',
   'advertising_packages': 'Packages',
 };

@@ -171,12 +171,25 @@ class TripEditor extends ConsumerWidget {
                   ),
                   if (plan.stops[i].arrivalMinutes != null)
                     OutlinedButton(
-                      onPressed: state.step != 1 || action.isLoading ? null : () async {
-                        final value = await pickTripTime(context, plan.stops[i].arrivalMinutes!, helpText: 'Edit arrival time');
-                        if (value != null && context.mounted) controller.arrival(i,
-                          value + (plan.stops[i].arrivalMinutes! ~/ 1440) * 1440);
-                      },
-                      child: Text('Arrival: ${tripTimeLabel(plan.stops[i].arrivalMinutes!)}'),
+                      onPressed: state.step != 1 || action.isLoading
+                          ? null
+                          : () async {
+                              final value = await pickTripTime(
+                                context,
+                                plan.stops[i].arrivalMinutes!,
+                                helpText: 'Edit arrival time',
+                              );
+                              if (value != null && context.mounted)
+                                controller.arrival(
+                                  i,
+                                  value +
+                                      (plan.stops[i].arrivalMinutes! ~/ 1440) *
+                                          1440,
+                                );
+                            },
+                      child: Text(
+                        'Arrival: ${tripTimeLabel(plan.stops[i].arrivalMinutes!)}',
+                      ),
                     ),
                   if (state.step == 1) ...[
                     OutlinedButton.icon(
