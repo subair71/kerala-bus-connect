@@ -1,3 +1,5 @@
+import '../../../platform/presentation/pages/platform_console.dart';
+import '../../../platform/presentation/providers/platform_providers.dart';
 import '../../../../core/widgets/loading_skeletons.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
@@ -173,6 +175,10 @@ class _OwnerHeader extends ConsumerWidget {
           spacing: 12,
           runSpacing: 8,
           children: [
+            if (ref.watch(platformEnabledProvider)) OutlinedButton(
+              onPressed: () => openPlatformConsole(context), child: const Text('Advertising & earnings')),
+            if (ref.watch(administratorProvider).asData?.value == true) OutlinedButton(
+              onPressed: () => openPlatformConsole(context, admin: true), child: const Text('Administration')),
             FilledButton.icon(
               onPressed: action.isLoading
                   ? null

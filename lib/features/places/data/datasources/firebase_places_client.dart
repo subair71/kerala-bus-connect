@@ -19,7 +19,9 @@ class FirebasePlacesClient {
     );
   }
 
-  Future<Object?> suggest(String input) async {
+  Future<Object?> suggest(String input) => call('placeSuggestions', {'input': input});
+
+  Future<Object?> call(String name, Map<String, Object?> data) async {
     try {
       await (_activation ??= _activate());
     } catch (_) {
@@ -28,10 +30,10 @@ class FirebasePlacesClient {
     }
     final result = await FirebaseFunctions.instanceFor(region: region)
         .httpsCallable(
-          'placeSuggestions',
-          options: HttpsCallableOptions(timeout: const Duration(seconds: 7)),
+          name,
+          options: HttpsCallableOptions(timeout: const Duration(seconds: 25)),
         )
-        .call<Object?>({'input': input});
+        .call<Object?>(data);
     return result.data;
   }
 }

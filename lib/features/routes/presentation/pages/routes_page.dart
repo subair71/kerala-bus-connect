@@ -1,3 +1,8 @@
+import '../../../platform/presentation/providers/platform_providers.dart';
+import '../../../passenger/presentation/providers/paged_search_provider.dart';
+import '../../../passenger/presentation/providers/search_providers.dart';
+import '../../../passenger/presentation/widgets/paged_departures.dart';
+import '../../../trips/domain/entities/trip_plan.dart';
 import '../../../places/presentation/widgets/place_text_field.dart';
 import '../../../../core/widgets/loading_skeletons.dart';
 import '../../../../core/widgets/data_notice.dart';
@@ -19,7 +24,7 @@ class RoutesPage extends HookConsumerWidget {
     );
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 860),
+        constraints: const BoxConstraints(maxWidth: 1200),
         child: CustomScrollView(
           key: const PageStorageKey('routes'),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -35,7 +40,7 @@ class RoutesPage extends HookConsumerWidget {
                       subtitle:
                           'Browse published services by route name or stop.',
                     ),
-                    DataNotice(
+                    if (!ref.watch(platformEnabledProvider)) DataNotice(
                       cached: ref.watch(
                         serviceCatalogProvider.select(
                           (data) => data.asData?.value.cached ?? false,
@@ -75,7 +80,7 @@ class RoutesPage extends HookConsumerWidget {
             ),
             const SliverPadding(
               padding: EdgeInsets.fromLTRB(16, 0, 16, 40),
-              sliver: _RoutesList(),
+              sliver: _DirectoryResults(),
             ),
           ],
         ),
@@ -114,4 +119,15 @@ class _RoutesList extends ConsumerWidget {
                 ),
               ),
       );
+}
+
+class _DirectoryResults extends ConsumerWidget {
+  const _DirectoryResults();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(platformEnabledProvider)) return const _RoutesList();
+    return PagedDeparturesSliver(query: (
+      from: ref.watch(debouncedRouteQueryProvider), to: '',
+      date: serviceDateKey(ref.watch(journeyTodayProvider)), directory: true));
+  }
 }

@@ -1,3 +1,5 @@
+import '../../../platform/presentation/providers/platform_providers.dart';
+import 'paged_search_provider.dart';
 import '../../../trips/domain/entities/trip_plan.dart';
 import '../../../trips/presentation/providers/trip_providers.dart';
 import 'dart:async';
@@ -156,6 +158,9 @@ final passengerDailyUpdatesUnavailableProvider = Provider.autoDispose<bool>((
 
 final departureResultsProvider =
     Provider.autoDispose<AsyncValue<List<ServiceEntity>>>((ref) {
+      if (ref.watch(platformEnabledProvider)) {
+        return ref.watch(pagedDeparturesProvider(ref.watch(currentDepartureQueryProvider))).whenData((page) => page.records);
+      }
       final query = ref.watch(debouncedSearchProvider);
       return ref.watch(matchingServicesProvider).whenData((matching) {
         var services = matching;
