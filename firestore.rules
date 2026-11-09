@@ -2,7 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function owns(data) { return signedIn() && data.ownerId == request.auth.uid; }
+    function owns(data) { return signedIn() && data.ownerId == request.auth.uid &&
+      (!exists(/databases/$(database)/documents/owner_access/$(request.auth.uid)) ||
+       get(/databases/$(database)/documents/owner_access/$(request.auth.uid)).data.disabled != true); }
     function sameOwner() {
       return owns(resource.data) && request.resource.data.ownerId == resource.data.ownerId;
     }

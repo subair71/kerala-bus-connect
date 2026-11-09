@@ -23,3 +23,7 @@ export const placeSuggestions = onCall({
     throw new HttpsError('unavailable', 'Place suggestions are temporarily unavailable.');
   }
 });
+
+export {searchTimetables, findNearbyStops, managePlatform, listPlatformRecords,
+  relevantAdvertisements, recordUsage, syncServiceDepartures,
+  syncDailyDepartures, refreshAdvertisements} from './platform.js';
