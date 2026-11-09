@@ -14,7 +14,10 @@ import '../../domain/entities/trip_plan.dart';
 import '../../domain/repositories/trip_repository.dart';
 
 final tripRepositoryProvider = Provider<TripRepository>(
-  (ref) => FirebaseTripRepository(ref.watch(firestoreProvider)),
+  (ref) => FirebaseTripRepository(
+    ref.watch(firestoreProvider),
+    cache: ref.watch(scheduleCacheProvider),
+  ),
 );
 
 final ownerBusesProvider = StreamProvider.autoDispose
@@ -29,7 +32,12 @@ final ownerBusesProvider = StreamProvider.autoDispose
 final dailyAdjustmentsProvider = StreamProvider.autoDispose
     .family<List<DailyAdjustment>, String>((ref, date) {
       retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
-      return ref.watch(tripRepositoryProvider).watchAdjustments(date);
+      final owner = ref.watch(ownerIdProvider);
+      return owner == null
+          ? Stream.value(const <DailyAdjustment>[])
+          : ref
+                .watch(tripRepositoryProvider)
+                .watchAdjustments(date, ownerId: owner);
     }, retry: (_, _) => null);
 
 final selectedBusProvider = NotifierProvider.autoDispose

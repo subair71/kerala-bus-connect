@@ -1,4 +1,7 @@
 import '../../../../core/data/data_set.dart';
+import '../../../../core/config/firebase_config.dart';
+import '../../data/datasources/schedule_cache.dart';
+import '../../data/datasources/preferences_schedule_store.dart';
 import '../../../../core/providers/sample_fallback.dart';
 import '../../data/fixtures/transit_samples.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -13,9 +16,16 @@ import '../../domain/entities/service_entity.dart';
 import '../../domain/repositories/transit_repository.dart';
 import '../../domain/usecases/watch_timetables.dart';
 
+final scheduleCacheProvider = Provider<ScheduleCache>(
+  (ref) => ScheduleCache(PreferencesScheduleStore(firebaseOptions.projectId)),
+);
+
 final transitRepositoryProvider = Provider<TransitRepository>(
   (ref) => TransitRepositoryImpl(
-    TransitRemoteDataSourceImpl(ref.watch(firestoreProvider)),
+    TransitRemoteDataSourceImpl(
+      ref.watch(firestoreProvider),
+      cache: ref.watch(scheduleCacheProvider),
+    ),
   ),
 );
 final watchTimetablesProvider = Provider<WatchTimetables>(
@@ -57,12 +67,14 @@ final ownerServicesProvider = StreamProvider.autoDispose<List<ServiceEntity>>((
 });
 
 final serviceCatalogProvider =
-    Provider.autoDispose<AsyncValue<DataSet<ServiceEntity>>>(
-      (ref) => sampleFallback(
-        ref.watch(publishedServicesProvider),
-        TransitSamples.services,
-      ),
-    );
+    Provider.autoDispose<AsyncValue<DataSet<ServiceEntity>>>((ref) {
+      final live = ref.watch(publishedServicesProvider);
+      final records = live.asData?.value;
+      if (records != null && records.any((row) => row.cachedAt != null)) {
+        return AsyncData(DataSet(records, cached: true, unavailable: true));
+      }
+      return sampleFallback(live, TransitSamples.services);
+    });
 final sampleBusinessesProvider = Provider((ref) => TransitSamples.businesses);
 final sampleRoutesProvider = Provider((ref) => TransitSamples.routes);
 final sampleServicesProvider = Provider((ref) => TransitSamples.services);

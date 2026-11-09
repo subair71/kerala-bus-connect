@@ -15,7 +15,8 @@ class CatalogNotice extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final data = ref.watch(serviceCatalogProvider).asData?.value;
-    if (ref.watch(passengerDailyUpdatesUnavailableProvider)) {
+    if (!(data?.cached ?? false) &&
+        ref.watch(passengerDailyUpdatesUnavailableProvider)) {
       return const Padding(
         padding: EdgeInsets.all(12),
         child: Text(
@@ -26,6 +27,7 @@ class CatalogNotice extends ConsumerWidget {
     if (!(data?.unavailable ?? false)) return const SizedBox.shrink();
     return DataNotice(
       demo: data?.isDemo ?? false,
+      cached: data?.cached ?? false,
       unavailable: data?.unavailable ?? false,
       retry: () => ref.invalidate(publishedServicesProvider),
     );

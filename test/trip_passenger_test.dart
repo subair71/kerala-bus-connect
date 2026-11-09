@@ -6,7 +6,6 @@ import 'package:kerala_bus_connect/features/passenger/presentation/providers/sea
 import 'package:kerala_bus_connect/features/timetables/data/models/service_model.dart';
 import 'package:kerala_bus_connect/features/timetables/presentation/providers/timetable_providers.dart';
 import 'package:kerala_bus_connect/features/trips/domain/entities/trip_plan.dart';
-import 'package:kerala_bus_connect/features/trips/presentation/providers/trip_providers.dart';
 
 ServiceModel managed(String id, int departure) => ServiceModel.fromMap(id, {
   'ownerId': 'owner',
@@ -42,7 +41,7 @@ void main() {
             (ref) =>
                 Stream.value([managed('first', 480), managed('second', 490)]),
           ),
-          dailyAdjustmentsProvider.overrideWith(
+          passengerAdjustmentsProvider.overrideWith(
             (ref, date) => Stream.value(
               date == '2026-11-06' ? [delay] : <DailyAdjustment>[],
             ),
@@ -58,7 +57,7 @@ void main() {
       search.journeyDate(today);
       container.read(debouncedSearchProvider.notifier).flush();
       await container.read(publishedServicesProvider.future);
-      await container.read(dailyAdjustmentsProvider('2026-11-06').future);
+      await container.read(passengerAdjustmentsProvider('2026-11-06').future);
       await Future<void>.delayed(Duration.zero);
       var results = container.read(departureResultsProvider).requireValue;
       expect(results.map((s) => s.id), ['second', 'first']);
@@ -66,7 +65,7 @@ void main() {
       expect(results.last.scheduledTime('B'), 495);
       search.journeyDate(DateTime(2026, 11, 7));
       container.read(debouncedSearchProvider.notifier).flush();
-      await container.read(dailyAdjustmentsProvider('2026-11-07').future);
+      await container.read(passengerAdjustmentsProvider('2026-11-07').future);
       await Future<void>.delayed(Duration.zero);
       results = container.read(departureResultsProvider).requireValue;
       expect(results.map((s) => s.id), ['first', 'second']);
@@ -85,7 +84,7 @@ void main() {
           publishedServicesProvider.overrideWith(
             (ref) => Stream.value([managed('one', 480)]),
           ),
-          dailyAdjustmentsProvider.overrideWith(
+          passengerAdjustmentsProvider.overrideWith(
             (ref, date) => Stream.error(StateError('offline')),
           ),
         ],
@@ -103,7 +102,7 @@ void main() {
       container.read(debouncedSearchProvider.notifier).flush();
       await container.read(publishedServicesProvider.future);
       await expectLater(
-        container.read(dailyAdjustmentsProvider('2026-11-06').future),
+        container.read(passengerAdjustmentsProvider('2026-11-06').future),
         throwsStateError,
       );
       await Future<void>.delayed(Duration.zero);

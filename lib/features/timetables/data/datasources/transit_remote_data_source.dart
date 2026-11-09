@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../../core/data/distinct_records.dart';
+import 'schedule_cache.dart';
 import '../models/business_model.dart';
 import '../models/route_model.dart';
 import '../models/service_model.dart';
@@ -24,22 +26,29 @@ abstract class TransitRemoteDataSource {
 class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
   final FirebaseFirestore _firestore;
 
-  TransitRemoteDataSourceImpl(this._firestore);
+  final ScheduleCache? cache;
+
+  TransitRemoteDataSourceImpl(this._firestore, {this.cache});
 
   @override
   Stream<List<ServiceModel>> getPublishedServices() {
-    return _firestore
+    final server = _firestore
         .collection('services')
         .where('published', isEqualTo: true)
         .snapshots(includeMetadataChanges: true)
+        .where((snap) => cache == null || !snap.metadata.hasPendingWrites)
         .map((snap) {
-          if (snap.docs.isEmpty && snap.metadata.isFromCache)
+          if (snap.metadata.isFromCache &&
+              (cache != null || snap.docs.isEmpty)) {
             throw StateError('Live timetable data is unavailable.');
+          }
           final list = snap.docs
               .map((d) => ServiceModel.fromSnapshot(d))
               .toList();
           return List<ServiceModel>.unmodifiable(list);
-        });
+        })
+        .transform(const DistinctRecords<ServiceModel>());
+    return cache?.watch(server) ?? server;
   }
 
   @override
@@ -52,7 +61,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
           if (snap.docs.isEmpty && snap.metadata.isFromCache)
             throw StateError('Live data is unavailable.');
           return snap.docs.map((d) => BusinessModel.fromSnapshot(d)).toList();
-        });
+        })
+        .transform(const DistinctRecords<BusinessModel>());
   }
 
   @override
@@ -65,7 +75,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
           if (snap.docs.isEmpty && snap.metadata.isFromCache)
             throw StateError('Live data is unavailable.');
           return snap.docs.map((d) => RouteModel.fromSnapshot(d)).toList();
-        });
+        })
+        .transform(const DistinctRecords<RouteModel>());
   }
 
   @override
@@ -78,7 +89,8 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
           if (snap.docs.isEmpty && snap.metadata.isFromCache)
             throw StateError('Live data is unavailable.');
           return snap.docs.map((d) => ServiceModel.fromSnapshot(d)).toList();
-        });
+        })
+        .transform(const DistinctRecords<ServiceModel>());
   }
 
   @override
@@ -122,16 +134,22 @@ class TransitRemoteDataSourceImpl implements TransitRemoteDataSource {
       ...data,
       'createdAt': FieldValue.serverTimestamp(),
     });
+    cache?.invalidate();
     return ref.id;
   }
 
   @override
-  Future<void> updateService(String serviceId, Map<String, dynamic> data) {
-    return _firestore.collection('services').doc(serviceId).update(data);
+  Future<void> updateService(
+    String serviceId,
+    Map<String, dynamic> data,
+  ) async {
+    await _firestore.collection('services').doc(serviceId).update(data);
+    cache?.invalidate();
   }
 
   @override
-  Future<void> deleteService(String serviceId) {
-    return _firestore.collection('services').doc(serviceId).delete();
+  Future<void> deleteService(String serviceId) async {
+    await _firestore.collection('services').doc(serviceId).delete();
+    cache?.invalidate();
   }
 }

@@ -1,4 +1,6 @@
 import 'dart:convert';
+import '../../../../core/data/combine_complete_lists.dart';
+import '../../../timetables/data/datasources/schedule_cache.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/errors/app_failure.dart';
 import '../../../../core/utils/sample_ids.dart';
@@ -8,7 +10,8 @@ import '../../domain/repositories/trip_repository.dart';
 
 class FirebaseTripRepository implements TripRepository {
   final FirebaseFirestore db;
-  FirebaseTripRepository(this.db);
+  final ScheduleCache? cache;
+  FirebaseTripRepository(this.db, {this.cache});
 
   void _owned(String owner, Map<String, dynamic>? data) {
     if (owner.isEmpty || data == null || data['ownerId'] != owner) {
@@ -34,6 +37,7 @@ class FirebaseTripRepository implements TripRepository {
   Stream<List<BusEntity>> watchBuses(String ownerId, String businessId) => db
       .collection('buses')
       .where('ownerId', isEqualTo: ownerId)
+      .where('businessId', isEqualTo: businessId)
       .snapshots(includeMetadataChanges: true)
       .map((snapshot) {
         if (snapshot.docs.isEmpty && snapshot.metadata.isFromCache) {
@@ -54,26 +58,45 @@ class FirebaseTripRepository implements TripRepository {
       });
 
   @override
-  Stream<List<DailyAdjustment>> watchAdjustments(String date) => db
-      .collection('trip_adjustments')
-      .where('serviceDate', isEqualTo: date)
-      .snapshots(includeMetadataChanges: true)
-      .map((snapshot) {
-        if (snapshot.metadata.isFromCache) {
-          throw const AppFailure(
-            'Daily updates are unavailable while offline.',
-          );
-        }
-        return [
-          for (final doc in snapshot.docs)
-            DailyAdjustment(
-              tripId: doc.data()['tripId'] as String,
-              serviceDate: doc.data()['serviceDate'] as String,
-              scheduleRevision: doc.data()['scheduleRevision'] as String,
-              delays: Map<String, int>.from(doc.data()['delays'] as Map),
-            ),
-        ];
-      });
+  Stream<List<DailyAdjustment>> watchAdjustments(
+    String date, {
+    String? ownerId,
+    List<String>? tripIds,
+  }) {
+    Query<Map<String, dynamic>> query = db
+        .collection('trip_adjustments')
+        .where('serviceDate', isEqualTo: date);
+    if (ownerId != null) query = query.where('ownerId', isEqualTo: ownerId);
+    if (tripIds == null) return _watchAdjustments(query);
+    final ids = tripIds.toSet().toList()..sort();
+    final sources = <Stream<List<DailyAdjustment>>>[];
+    for (var start = 0; start < ids.length; start += 30) {
+      final end = start + 30 < ids.length ? start + 30 : ids.length;
+      sources.add(
+        _watchAdjustments(
+          query.where('tripId', whereIn: ids.sublist(start, end)),
+        ),
+      );
+    }
+    return combineCompleteLists(sources);
+  }
+
+  Stream<List<DailyAdjustment>> _watchAdjustments(
+    Query<Map<String, dynamic>> query,
+  ) => query.snapshots(includeMetadataChanges: true).map((snapshot) {
+    if (snapshot.metadata.isFromCache) {
+      throw const AppFailure('Daily updates are unavailable while offline.');
+    }
+    return [
+      for (final doc in snapshot.docs)
+        DailyAdjustment(
+          tripId: doc.data()['tripId'] as String,
+          serviceDate: doc.data()['serviceDate'] as String,
+          scheduleRevision: doc.data()['scheduleRevision'] as String,
+          delays: Map<String, int>.from(doc.data()['delays'] as Map),
+        ),
+    ];
+  });
 
   @override
   Future<void> saveBus(
@@ -94,6 +117,7 @@ class FirebaseTripRepository implements TripRepository {
         : await db
               .collection('services')
               .where('busId', isEqualTo: bus.id)
+              .limit(401)
               .get();
     if ((related?.docs.length ?? 0) > 400) {
       throw const AppFailure('This bus has too many trips to rename together.');
@@ -127,6 +151,7 @@ class FirebaseTripRepository implements TripRepository {
         tx.update(trip.reference, {'busName': name.trim()});
       }
     });
+    cache?.invalidate();
   }
 
   @override
@@ -237,6 +262,7 @@ class FirebaseTripRepository implements TripRepository {
         });
       }
     });
+    cache?.invalidate();
     return target.id;
   }
 
@@ -255,6 +281,7 @@ class FirebaseTripRepository implements TripRepository {
         'tripCount': (busData['tripCount'] as int) - 1,
       });
     });
+    cache?.invalidate();
   }
 
   Future<void> _adjust(

@@ -3,6 +3,11 @@ class DataSet<T> {
   final List<T> records;
   final bool isDemo;
   final bool unavailable;
-  DataSet(Iterable<T> records, {this.isDemo = false, this.unavailable = false})
-    : records = List.unmodifiable(records);
+  final bool cached;
+  DataSet(
+    Iterable<T> records, {
+    this.isDemo = false,
+    this.unavailable = false,
+    this.cached = false,
+  }) : records = List.unmodifiable(records);
 }
