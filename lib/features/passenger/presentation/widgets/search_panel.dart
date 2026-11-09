@@ -1,3 +1,5 @@
+import '../../../platform/presentation/providers/usage_providers.dart';
+import '../../../platform/presentation/providers/platform_providers.dart';
 import '../../../places/presentation/widgets/nearby_stops_panel.dart';
 import '../../../places/presentation/widgets/place_text_field.dart';
 import 'package:flutter/material.dart';
@@ -16,6 +18,7 @@ class SearchPanel extends HookConsumerWidget {
     void submit() {
       FocusScope.of(context).unfocus();
       ref.read(debouncedSearchProvider.notifier).flush();
+      if (ref.read(platformEnabledProvider)) ref.read(usageTrackerProvider).record('search');
       onSearch?.call();
     }
 

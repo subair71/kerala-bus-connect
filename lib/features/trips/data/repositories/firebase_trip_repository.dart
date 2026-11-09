@@ -256,7 +256,7 @@ class FirebaseTripRepository implements TripRepository {
         'stopTimings': timings,
         'offDays': offDays,
         'offTimingsNote': trip.note.trim(),
-        'published': true,
+        'published': trip.active,
         'scheduleRevision': unchanged ? trip.revision : revision,
         'updatedAt': FieldValue.serverTimestamp(),
       });

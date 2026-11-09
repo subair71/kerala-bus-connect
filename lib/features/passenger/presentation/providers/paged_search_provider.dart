@@ -1,3 +1,4 @@
+import '../../../platform/presentation/providers/usage_providers.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -54,11 +55,16 @@ class PagedDepartures extends AsyncNotifier<DeparturePage> {
   PagedDepartures(this.query);
   final DepartureQuery query;
   bool _busy = false;
+  final String _eventId = operationId();
   String get _key =>
       jsonEncode([query.from, query.to, query.date, query.directory]);
   @override
   Future<DeparturePage> build() async {
     retainWhileIdle(ref, const Duration(seconds: 60));
+    final timer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (state.asData?.value.records.length == 4) unawaited(refresh());
+    });
+    ref.onDispose(timer.cancel);
     final cached = await ref.watch(publicPageCacheProvider).read(_key);
     if (cached != null) {
       unawaited(Future(() => refresh()));
@@ -104,6 +110,9 @@ class PagedDepartures extends AsyncNotifier<DeparturePage> {
           'cursor': cursor,
         });
     final raw = result['records'] as List;
+    if (cursor == null && !query.directory && raw.isEmpty && result['cursor'] == null) {
+      unawaited(ref.read(usageTrackerProvider).record('search_failure', eventId: _eventId));
+    }
     if (cursor == null)
       unawaited(ref.read(publicPageCacheProvider).write(_key, raw));
     final records = <ServiceEntity>[...previous];

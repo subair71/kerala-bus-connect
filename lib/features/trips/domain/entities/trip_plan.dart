@@ -27,6 +27,7 @@ class TripPlan {
   final List<TripStop> stops;
   final Set<String> offDays;
   final String note;
+  final bool active;
 
   TripPlan({
     this.id = '',
@@ -35,6 +36,7 @@ class TripPlan {
     required List<TripStop> stops,
     Set<String> offDays = const {},
     this.note = '',
+    this.active = true,
   }) : stops = List.unmodifiable(stops),
        offDays = Set.unmodifiable(offDays);
 
@@ -52,12 +54,14 @@ class TripPlan {
     ],
     offDays: service.offDays.toSet(),
     note: service.offTimingsNote ?? '',
+    active: service.published,
   );
 
   TripPlan copyWith({
     List<TripStop>? stops,
     Set<String>? offDays,
     String? note,
+    bool? active,
   }) => TripPlan(
     id: id,
     revision: revision,
@@ -65,6 +69,7 @@ class TripPlan {
     stops: stops ?? this.stops,
     offDays: offDays ?? this.offDays,
     note: note ?? this.note,
+    active: active ?? this.active,
   );
 
   void validate() {

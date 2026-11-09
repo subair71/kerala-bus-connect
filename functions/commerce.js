@@ -1,3 +1,4 @@
+import {analyticsDashboard} from './analytics.js';
 import {FieldValue, FieldPath} from 'firebase-admin/firestore';
 import {HttpsError} from 'firebase-functions/v2/https';
 import {hash, validatePoint, cellFor, distanceKm, normalize} from './transit.js';
@@ -101,7 +102,7 @@ export async function platformAction(db, auth, input, now = Date.now()) {
         ownerId: actor.uid, name: text(data.name, 'business name', 120),
         category: text(data.category, 'business category', 80),
         contact: text(data.contact, 'contact details', 200),
-        location: validatePoint(data), district: text(data.district, 'district', 80),
+        location: validatePoint(data), district: normalize(text(data.district, 'district', 80)),
         createdAt: now,
       });
       result.id = target.id;
@@ -131,12 +132,14 @@ export async function platformAction(db, auth, input, now = Date.now()) {
         description: text(data.description, 'description', 1000),
         imageUrl: url(data.imageUrl, true), website: url(data.website),
         location: text(data.location, 'location name', 120),
-        district: text(data.district, 'district', 80), ...point,
+        district: normalize(text(data.district, 'district', 80)), ...point,
         routeIds: routes, stopIds: stops, coverage, radiusKm, packageId: data.packageId,
+        requestedStart: data.requestedStart ? Date.parse(data.requestedStart) : now,
         approval: 'pending', active: false, cancelled: existing?.cancelled ?? false,
         createdAt: existing?.createdAt ?? now, updatedAt: now,
         paidPeriods: existing?.paidPeriods ?? [], paidUntil: existing?.paidUntil ?? 0,
       };
+      if (!Number.isFinite(ad.requestedStart) || ad.requestedStart > now + 366 * 86400000) fail('Choose a start date within one year.');
       tx.set(target, ad); result.id = target.id;
     } else if (action === 'createOrder') {
       const adRef = db.doc('sponsored_ads/' + id(data.adId));
@@ -191,7 +194,7 @@ export async function platformAction(db, auth, input, now = Date.now()) {
       if (!ad || ad.cancelled || ad.pendingOrderId !== target.id) fail('This advertisement cannot be renewed.');
       const commissionRef = db.doc('commissions/' + target.id);
       if ((await tx.get(commissionRef)).exists) fail('Commission already exists.', 'already-exists');
-      const start = Math.max(now, ad.paidUntil ?? 0);
+      const start = Math.max(now, ad.paidUntil ?? 0, ad.requestedStart ?? 0);
       const end = start + order.packageSnapshot.durationDays * 86400000;
       const periods = [...(ad.paidPeriods ?? []), {orderId: target.id, start, end, refunded: false}];
       tx.update(target, {status: 'paid', verifiedBy: actor.uid, verifiedAt: now, transactionReference: reference,
@@ -271,12 +274,15 @@ export async function platformAction(db, auth, input, now = Date.now()) {
       admin(actor);
       const target = db.doc('advertisers/' + id(data.advertiserId));
       if (!(await tx.get(target)).exists) fail('Advertiser not found.');
+      const related = await tx.get(db.collection('sponsored_ads').where('advertiserId', '==', data.advertiserId).limit(101));
+      if (related.size > 100) fail('Archive older advertisements before changing attribution.');
+      for (const ad of related.docs) tx.update(ad.ref, {ownerId: id(data.ownerId)});
       tx.update(target, {ownerId: id(data.ownerId), attributionReason: text(data.note, 'reason', 1000)});
     } else if (action === 'saveStop') {
       admin(actor);
       const point = validatePoint(data);
       tx.set(db.doc('stops/' + id(data.id)), {...point, cell: cellFor(point),
-        name: text(data.name, 'stop name', 120), district: text(data.district, 'district', 80),
+        name: text(data.name, 'stop name', 120), nameLower: normalize(data.name), district: normalize(text(data.district, 'district', 80)),
         routeIds: list(data.routeIds ?? [], 'routes'), active: data.active !== false, verifiedBy: actor.uid});
     } else if (action === 'ownerAccess') {
       admin(actor);
@@ -306,10 +312,11 @@ const allowedLists = new Set(['advertisers', 'sponsored_ads', 'advertising_order
 export async function platformList(db, auth, data) {
   const actor = authorized(auth);
   const collection = text(data?.collection, 'collection', 80);
+  if (collection === 'analytics') { admin(actor); return analyticsDashboard(db); }
   if (!allowedLists.has(collection)) fail('Unknown list.');
-  if (['stops', 'owner_access', 'services', 'routes', 'businesses'].includes(collection)) admin(actor);
+  if (['owner_access', 'services', 'businesses'].includes(collection)) admin(actor);
   let query = db.collection(collection);
-  if (!actor.admin && collection !== 'advertising_packages') query = query.where('ownerId', '==', actor.uid);
+  if (!actor.admin && !['advertising_packages', 'stops', 'routes'].includes(collection)) query = query.where('ownerId', '==', actor.uid);
   query = query.orderBy(FieldPath.documentId()).limit(21);
   if (data.cursor) query = query.startAfter(id(data.cursor));
   const result = await query.get();
@@ -328,6 +335,10 @@ export async function targetedAds(db, data, now = Date.now()) {
   const stopIds = list(data?.stopIds ?? [], 'stops');
   // Coordinates come from verified stop records, never an untrusted district claim.
   const stops = await Promise.all(stopIds.map(value => db.doc('stops/' + value).get()));
+  for (const label of [data?.from, data?.to].filter(v => typeof v === 'string' && v.length <= 120 && v.trim())) {
+    const matches = await db.collection('stops').where('nameLower', '==', normalize(label)).where('active', '==', true).limit(5).get();
+    for (const stop of matches.docs) { stops.push(stop); if (!stopIds.includes(stop.id)) stopIds.push(stop.id); }
+  }
   const points = stops.filter(s => s.exists).map(s => s.data());
   const district = points[0]?.district ?? '';
   const queries = [];

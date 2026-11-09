@@ -77,6 +77,13 @@ class TripEditor extends ConsumerWidget {
           'Regular timetable · changes apply to future service dates. '
           'Use Daily delays for one day’s operational changes.',
         ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Service active'),
+          subtitle: const Text('Turn off to temporarily suspend this recurring service. Save to confirm.'),
+          value: plan.active,
+          onChanged: action.isLoading ? null : controller.active,
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,

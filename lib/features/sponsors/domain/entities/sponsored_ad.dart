@@ -2,6 +2,7 @@ class SponsoredAd {
   final String id, location, advertiser, title, description;
   final String? imageUrl, website;
   final bool active;
+  final int? expiresAt;
   const SponsoredAd({
     required this.id,
     required this.location,
@@ -11,6 +12,7 @@ class SponsoredAd {
     this.imageUrl,
     this.website,
     this.active = true,
+    this.expiresAt,
   });
 }
 

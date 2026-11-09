@@ -27,6 +27,19 @@ class PublicPageCache {
     }
   }
 
+  Future<void> invalidate() {
+    _writes = _writes.then((_) async {
+      try {
+        final indexKey = 'findmybus.pages.v1.$namespace.index';
+        for (final key in await preferences.getStringList(indexKey) ?? <String>[]) {
+          await preferences.remove(key);
+        }
+        await preferences.remove(indexKey);
+      } catch (_) {}
+    });
+    return _writes;
+  }
+
   Future<void> write(String query, List<dynamic> records) {
     _writes = _writes.then((_) async {
       try {

@@ -1,3 +1,4 @@
+import {rollupDimensions} from './analytics.js';
 import {getApps, initializeApp} from 'firebase-admin/app';
 import {getFirestore, FieldPath} from 'firebase-admin/firestore';
 import {onCall, HttpsError} from 'firebase-functions/v2/https';
@@ -64,4 +65,7 @@ export async function refreshAds(database, now = Date.now()) {
 }
 export const refreshAdvertisements = onSchedule({
   schedule: 'every 60 minutes', region: 'asia-south1', timeoutSeconds: 540,
-}, () => refreshAds(db));
+}, async () => {
+  await refreshAds(db);
+  await rollupDimensions(db, new Date(Date.now() + 330 * 60000).toISOString().slice(0, 10));
+});

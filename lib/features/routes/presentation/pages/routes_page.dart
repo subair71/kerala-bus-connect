@@ -1,5 +1,4 @@
 import '../../../platform/presentation/providers/platform_providers.dart';
-import '../../../passenger/presentation/providers/paged_search_provider.dart';
 import '../../../passenger/presentation/providers/search_providers.dart';
 import '../../../passenger/presentation/widgets/paged_departures.dart';
 import '../../../trips/domain/entities/trip_plan.dart';

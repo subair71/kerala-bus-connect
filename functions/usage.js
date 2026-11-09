@@ -26,6 +26,14 @@ export async function recordEvent(db, data, now = Date.now()) {
       if (!ad?.active || ad.approval !== 'approved' || ad.paidUntil <= now) return {counted: false};
     }
     const expiresAt = Timestamp.fromMillis(now + 40 * 86400000);
+    const dimensions = [];
+    for (const type of ['route', 'stop']) {
+      const value = data[type + 'Id'];
+      if (data.event === 'search' && typeof value === 'string' && /^[a-zA-Z0-9_-]{1,128}$/.test(value)) {
+        const reference = db.doc((type === 'route' ? 'routes/' : 'stops/') + value);
+        if ((await tx.get(reference)).exists) dimensions.push({type, id: value});
+      }
+    }
     tx.create(eventRef, {expiresAt});
     if (!daily.exists) tx.create(dailyRef, {expiresAt});
     if (!monthly.exists) tx.create(monthlyRef, {expiresAt});
@@ -38,6 +46,8 @@ export async function recordEvent(db, data, now = Date.now()) {
     }, {merge: true});
     if (adId) tx.set(db.doc('ad_metrics/' + adId + '_' + month + '_' + shard),
       {adId, month, [data.event]: FieldValue.increment(1)}, {merge: true});
+    for (const dimension of dimensions) tx.set(db.doc('usage_dimensions/' + day + '_' + dimension.type + '_' + hash(dimension.id) + '_' + shard),
+      {day, type: dimension.type, dimensionId: dimension.id, count: FieldValue.increment(1)}, {merge: true});
     return {counted: true};
   });
 }

@@ -1,3 +1,5 @@
+import '../../../platform/presentation/providers/usage_providers.dart';
+import '../../../platform/presentation/providers/platform_providers.dart';
 import '../../../../core/widgets/loading_skeletons.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +31,7 @@ class PassengerPage extends StatelessWidget {
               SearchPanel(onSearch: mobile ? openResults : null),
               const SizedBox(height: 12),
               const SponsoredCarousel(),
+              const _AnalyticsChoice(),
             ],
           );
           if (mobile) {
@@ -133,6 +136,22 @@ class _TimelinePreview extends ConsumerWidget {
         queryTo: query.to,
         effectiveDay: query.filterDay,
       ),
+    );
+  }
+}
+
+class _AnalyticsChoice extends ConsumerWidget {
+  const _AnalyticsChoice();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(platformEnabledProvider)) return const SizedBox.shrink();
+    return CheckboxListTile(
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      value: ref.watch(analyticsConsentProvider).asData?.value ?? false,
+      onChanged: (value) => ref.read(analyticsConsentProvider.notifier).change(value ?? false),
+      title: const Text('Share anonymous usage statistics'),
+      subtitle: const Text('Optional. No GPS coordinates, contact details or search text.'),
     );
   }
 }

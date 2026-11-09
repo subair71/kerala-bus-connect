@@ -58,6 +58,7 @@ class TimetableSuggestions extends HookConsumerWidget {
         child: SingleChildScrollView(
           child: Form(
             key: form,
+            onChanged: preview.clear,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
