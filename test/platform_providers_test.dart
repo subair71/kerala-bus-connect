@@ -35,9 +35,12 @@ class StubPlatform implements PlatformRepository {
 }
 
 class DeniedLocation implements LocationGateway {
+  int calls = 0;
   @override
-  Future<StopPosition> locate({bool requestPermission = true}) async =>
-      throw StateError('denied');
+  Future<StopPosition> locate({bool requestPermission = true}) async {
+    calls++;
+    throw StateError('denied');
+  }
 }
 
 Map<String, dynamic> row(String id) => {
@@ -123,11 +126,12 @@ void main() {
     'permission denial does not call nearby API and manual search remains usable',
     () async {
       final remote = StubPlatform((_, _) async => {'stops': []});
+      final location = DeniedLocation();
       final container = ProviderContainer(
         overrides: [
           platformEnabledProvider.overrideWithValue(true),
           platformRepositoryProvider.overrideWithValue(remote),
-          locationGatewayProvider.overrideWithValue(DeniedLocation()),
+          locationGatewayProvider.overrideWithValue(location),
         ],
       );
       addTearDown(container.dispose);
@@ -138,6 +142,7 @@ void main() {
         throwsStateError,
       );
       expect(remote.calls, 0);
+      expect(location.calls, 1);
       container.read(searchQueryProvider.notifier).from('Manual stop');
       container.read(searchQueryProvider.notifier).autoOrigin('Nearest stop');
       expect(container.read(searchQueryProvider).from, 'Manual stop');

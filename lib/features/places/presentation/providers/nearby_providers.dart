@@ -27,7 +27,7 @@ class NearbyStops extends AsyncNotifier<NearbyState> {
   StopPosition? _position;
   DateTime? _fetchedAt;
   bool _busy = false;
-  final _preferences = SharedPreferencesAsync();
+  late final _preferences = SharedPreferencesAsync();
   String get _key => 'findmybus.nearby.v1.${firebaseOptions.projectId}';
   @override
   Future<NearbyState> build() async {
@@ -61,7 +61,9 @@ class NearbyStops extends AsyncNotifier<NearbyState> {
       ),
   ];
   Future<NearbyState> _fetch() async {
+    final repository = ref.read(platformRepositoryProvider);
     final point = await ref.read(locationGatewayProvider).locate();
+    if (!ref.mounted) return const NearbyState([]);
     if (_position != null &&
         _fetchedAt != null &&
         DateTime.now().difference(_fetchedAt!) < const Duration(minutes: 15)) {
@@ -73,7 +75,7 @@ class NearbyStops extends AsyncNotifier<NearbyState> {
       if (sqrt(dx * dx + dy * dy) < 250 && state.hasValue)
         return state.requireValue;
     }
-    final data = await ref.read(platformRepositoryProvider).call(
+    final data = await repository.call(
       'findNearbyStops',
       {'latitude': point.latitude, 'longitude': point.longitude},
     );

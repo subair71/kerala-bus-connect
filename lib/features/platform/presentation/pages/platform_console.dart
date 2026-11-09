@@ -186,8 +186,11 @@ class PlatformConsole extends ConsumerWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         sliver: SliverList.builder(
                           itemCount: rows.length,
-                          itemBuilder: (context, i) =>
-                              _RecordCard(record: rows[i], collection: selection.collection, admin: admin),
+                          itemBuilder: (context, i) => _RecordCard(
+                            record: rows[i],
+                            collection: selection.collection,
+                            admin: admin,
+                          ),
                         ),
                       ),
                       if (data['cursor'] != null)
@@ -220,11 +223,13 @@ String displayPlatformValue(String key, dynamic value) {
   if (key.endsWith('Paise') && value is num)
     return '₹${(value / 100).toStringAsFixed(2)}';
   if (key.endsWith('BasisPoints') && value is num) return '${value / 100}%';
+  if (value is num && value >= 8640000000000000) return '—';
   if ((key.endsWith('At') ||
           key == 'paidUntil' ||
           key == 'periodStart' ||
           key == 'periodEnd' ||
-          key == 'expiresAt') &&
+          key == 'expiresAt' ||
+          key == 'requestedStart') &&
       value is num &&
       value > 1000000000000) {
     return DateTime.fromMillisecondsSinceEpoch(
@@ -239,7 +244,11 @@ class _RecordCard extends StatelessWidget {
   final Map<String, dynamic> record;
   final String collection;
   final bool admin;
-  const _RecordCard({required this.record, required this.collection, required this.admin});
+  const _RecordCard({
+    required this.record,
+    required this.collection,
+    required this.admin,
+  });
   String? get editAction => switch (collection) {
     'advertisers' => 'updateAdvertiser',
     'sponsored_ads' => 'submitAd',
@@ -252,7 +261,9 @@ class _RecordCard extends StatelessWidget {
     if (collection == 'advertisers' && record['location'] is Map)
       ...Map<String, Object?>.from(record['location'] as Map),
     if (collection == 'sponsored_ads' && record['requestedStart'] is num)
-      'requestedStart': DateTime.fromMillisecondsSinceEpoch((record['requestedStart'] as num).toInt()).toUtc().toIso8601String().substring(0, 10),
+      'requestedStart': DateTime.fromMillisecondsSinceEpoch(
+        (record['requestedStart'] as num).toInt(),
+      ).toUtc().toIso8601String().substring(0, 10),
   };
   @override
   Widget build(BuildContext context) => Card(
@@ -274,9 +285,17 @@ class _RecordCard extends StatelessWidget {
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
-                onPressed: () => showPlatformForm(context, platformForms[editAction]!, initial: editValues),
+                onPressed: () => showPlatformForm(
+                  context,
+                  platformForms[editAction]!,
+                  initial: editValues,
+                ),
                 icon: const Icon(Icons.edit_outlined),
-                label: Text(collection == 'sponsored_ads' ? 'Edit and submit for review' : 'Edit'),
+                label: Text(
+                  collection == 'sponsored_ads'
+                      ? 'Edit and submit for review'
+                      : 'Edit',
+                ),
               ),
             ),
           if (record['imageUrl'] is String)
@@ -292,6 +311,8 @@ class _RecordCard extends StatelessWidget {
           for (final entry in record.entries)
             if (entry.value is! Map &&
                 entry.key != 'imageUrl' &&
+                entry.key != 'nextTransitionAt' &&
+                entry.key != 'coverageCells' &&
                 entry.key != 'paidPeriods' &&
                 entry.key != 'stopTimings')
               Padding(
