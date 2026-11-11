@@ -1,3 +1,5 @@
+import '../../../platform/presentation/pages/platform_console.dart';
+import '../../../platform/presentation/providers/platform_providers.dart';
 import '../../../../core/widgets/loading_skeletons.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
@@ -50,13 +52,13 @@ class _OwnerWorkspace extends ConsumerWidget {
     final selected = ref.watch(selectedBusinessProvider);
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 960),
+        constraints: const BoxConstraints(maxWidth: 1200),
         child: CustomScrollView(
           key: const PageStorageKey('owner'),
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
             const SliverPadding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
               sliver: SliverToBoxAdapter(child: _OwnerHeader()),
             ),
             businesses.when(
@@ -173,6 +175,16 @@ class _OwnerHeader extends ConsumerWidget {
           spacing: 12,
           runSpacing: 8,
           children: [
+            if (ref.watch(platformEnabledProvider))
+              OutlinedButton(
+                onPressed: () => openPlatformConsole(context),
+                child: const Text('Advertising & earnings'),
+              ),
+            if (ref.watch(administratorProvider).asData?.value == true)
+              OutlinedButton(
+                onPressed: () => openPlatformConsole(context, admin: true),
+                child: const Text('Administration'),
+              ),
             FilledButton.icon(
               onPressed: action.isLoading
                   ? null

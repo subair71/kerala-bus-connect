@@ -1,3 +1,4 @@
+import '../../../platform/presentation/providers/platform_providers.dart';
 import '../../../../core/providers/cache_lifetime.dart';
 import 'dart:async';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -25,6 +26,7 @@ final placeDebounceProvider = Provider<Duration>(
 );
 final stopLabelsProvider = Provider.autoDispose<StopLabels>((ref) {
   retainWhileIdle(ref, ref.watch(catalogCacheDurationProvider));
+  if (ref.watch(platformEnabledProvider)) return StopLabels(const []);
   final services = ref.watch(serviceCatalogProvider).asData?.value.records;
   return StopLabels(services?.expand((s) => s.stops) ?? const []);
 });

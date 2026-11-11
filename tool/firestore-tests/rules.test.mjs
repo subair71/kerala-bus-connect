@@ -84,3 +84,25 @@ test('managed trips cannot detach from ownership or change schedule without revi
   await assertSucceeds(batch.commit());
   await assertSucceeds(deleteDoc(doc(owner, 'buses/bus')));
 });
+
+test('clients including admin claims cannot forge money or public departure projections', async () => {
+  for (const context of [env.unauthenticatedContext(), env.authenticatedContext('owner'),
+    env.authenticatedContext('admin', {admin: true})]) {
+    for (const collection of ['commissions', 'advertising_orders', 'payouts', 'verified_payments',
+      'sponsored_ads', 'platform_config', 'stop_departures', 'departure_projections']) {
+      await assertFails(setDoc(doc(context.firestore(), collection + '/injected'), {ownerId: 'owner', active: true, amountPaise: 999999}));
+    }
+  }
+});
+test('invalid running statuses are rejected; cancellation retains owner checks', async () => {
+  const owner = env.authenticatedContext('owner').firestore();
+  await createTrip(owner);
+  await assertSucceeds(setDoc(doc(owner, 'trip_adjustments/trip_2026-11-06'), {...adjustment, status: 'cancelled', delays: {}}));
+  await assertFails(setDoc(doc(owner, 'trip_adjustments/trip_2026-11-06'), {...adjustment, status: 'gpsTracked'}));
+});
+
+test('owners cannot claim administrator schedule verification', async () => {
+  const owner = env.authenticatedContext('owner').firestore();
+  await createTrip(owner);
+  await assertFails(updateDoc(doc(owner, 'services/trip'), {verification: 'approved', reviewedBy: 'admin'}));
+});

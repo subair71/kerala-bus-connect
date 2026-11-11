@@ -1,3 +1,5 @@
+import '../../../platform/presentation/providers/platform_providers.dart';
+import 'paged_search_provider.dart';
 import '../../../trips/domain/entities/trip_plan.dart';
 import '../../../trips/presentation/providers/trip_providers.dart';
 import 'dart:async';
@@ -30,6 +32,16 @@ final journeyDatesProvider = Provider.autoDispose<List<DateTime>>((ref) {
 });
 
 class SearchController extends Notifier<SearchQuery> {
+  bool _originEdited = false;
+  bool _destinationEdited = false;
+  void autoOrigin(String value) {
+    if (!_originEdited)
+      state = state.copyWith(
+        from: value,
+        to: _destinationEdited ? state.to : '',
+      );
+  }
+
   @override
   SearchQuery build() {
     ref.listen(journeyTodayProvider, (previous, next) {
@@ -59,9 +71,22 @@ class SearchController extends Notifier<SearchQuery> {
     );
   }
 
-  void from(String value) => state = state.copyWith(from: value);
-  void to(String value) => state = state.copyWith(to: value);
-  void swap() => state = state.copyWith(from: state.to, to: state.from);
+  void from(String value) {
+    _originEdited = true;
+    state = state.copyWith(from: value);
+  }
+
+  void to(String value) {
+    _destinationEdited = true;
+    state = state.copyWith(to: value);
+  }
+
+  void swap() {
+    _originEdited = true;
+    _destinationEdited = true;
+    state = state.copyWith(from: state.to, to: state.from);
+  }
+
   void day(String value) {
     final date = ref
         .read(journeyDatesProvider)
@@ -156,6 +181,13 @@ final passengerDailyUpdatesUnavailableProvider = Provider.autoDispose<bool>((
 
 final departureResultsProvider =
     Provider.autoDispose<AsyncValue<List<ServiceEntity>>>((ref) {
+      if (ref.watch(platformEnabledProvider)) {
+        return ref
+            .watch(
+              pagedDeparturesProvider(ref.watch(currentDepartureQueryProvider)),
+            )
+            .whenData((page) => page.records);
+      }
       final query = ref.watch(debouncedSearchProvider);
       return ref.watch(matchingServicesProvider).whenData((matching) {
         var services = matching;

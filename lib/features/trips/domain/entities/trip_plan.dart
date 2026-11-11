@@ -16,10 +16,21 @@ class TripStop {
 
   /// Minutes since midnight of the service date; -1 means not entered.
   final int minutes;
-  const TripStop(this.id, this.name, this.minutes);
+  final int? arrivalMinutes;
+  const TripStop(this.id, this.name, this.minutes, {this.arrivalMinutes});
 
-  TripStop copyWith({String? name, int? minutes}) =>
-      TripStop(id, name ?? this.name, minutes ?? this.minutes);
+  TripStop copyWith({String? name, int? minutes, int? arrivalMinutes}) =>
+      TripStop(
+        id,
+        name ?? this.name,
+        minutes ?? this.minutes,
+        arrivalMinutes:
+            arrivalMinutes ??
+            (this.arrivalMinutes == null
+                ? null
+                : this.arrivalMinutes! +
+                      (minutes == null ? 0 : minutes - this.minutes)),
+      );
 }
 
 class TripPlan {
@@ -27,6 +38,7 @@ class TripPlan {
   final List<TripStop> stops;
   final Set<String> offDays;
   final String note;
+  final bool active;
 
   TripPlan({
     this.id = '',
@@ -35,6 +47,7 @@ class TripPlan {
     required List<TripStop> stops,
     Set<String> offDays = const {},
     this.note = '',
+    this.active = true,
   }) : stops = List.unmodifiable(stops),
        offDays = Set.unmodifiable(offDays);
 
@@ -48,16 +61,19 @@ class TripPlan {
           i < service.stopIds.length ? service.stopIds[i] : 'legacy-$i',
           service.stops[i],
           service.scheduledTime(service.stops[i]) ?? -1,
+          arrivalMinutes: service.arrivalStopTimings[service.stops[i]],
         ),
     ],
     offDays: service.offDays.toSet(),
     note: service.offTimingsNote ?? '',
+    active: service.published,
   );
 
   TripPlan copyWith({
     List<TripStop>? stops,
     Set<String>? offDays,
     String? note,
+    bool? active,
   }) => TripPlan(
     id: id,
     revision: revision,
@@ -65,6 +81,7 @@ class TripPlan {
     stops: stops ?? this.stops,
     offDays: offDays ?? this.offDays,
     note: note ?? this.note,
+    active: active ?? this.active,
   );
 
   void validate() {
@@ -94,6 +111,13 @@ class TripPlan {
         throw const AppFailure(
           'Times must increase along the route within 24 hours. '
           'Choose Next day explicitly for overnight stops.',
+        );
+      }
+      if (stop.arrivalMinutes != null &&
+          (stop.arrivalMinutes! > stop.minutes ||
+              stop.arrivalMinutes! <= previous)) {
+        throw const AppFailure(
+          'Arrival must follow the previous stop and precede departure.',
         );
       }
       previous = stop.minutes;
@@ -185,12 +209,19 @@ String serviceDateKey(DateTime date) =>
 class DailyAdjustment {
   final String tripId, serviceDate, scheduleRevision;
   final Map<String, int> delays;
+  final RunningStatus status;
   DailyAdjustment({
     required this.tripId,
     required this.serviceDate,
     required this.scheduleRevision,
     required Map<String, int> delays,
-  }) : delays = Map.unmodifiable(delays);
+    RunningStatus? status,
+  }) : status =
+           status ??
+           (delays.values.any((d) => d > 0)
+               ? RunningStatus.delayed
+               : RunningStatus.scheduled),
+       delays = Map.unmodifiable(delays);
 
   ServiceEntity apply(ServiceEntity service) {
     if (service.id != tripId || service.scheduleRevision != scheduleRevision) {
@@ -198,8 +229,13 @@ class DailyAdjustment {
     }
     final plan = TripPlan.fromService(service);
     final times = plan.expectedTimes(delays);
-    return service.withExpected({
-      for (var i = 0; i < plan.stops.length; i++) plan.stops[i].name: times[i],
-    }, serviceDate);
+    return service.withExpected(
+      {
+        for (var i = 0; i < plan.stops.length; i++)
+          plan.stops[i].name: times[i],
+      },
+      serviceDate,
+      status: status,
+    );
   }
 }

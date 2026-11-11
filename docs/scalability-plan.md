@@ -1,3 +1,5 @@
+> Updated implementation: see [Platform expansion](platform-expansion.md) for PR #22, deployment order and current limitations. The analysis below records the earlier baseline.
+
 # FindMyBus scalability audit and incremental plan
 
 This describes the first increment. See [current implementation status](platform-implementation-status.md)

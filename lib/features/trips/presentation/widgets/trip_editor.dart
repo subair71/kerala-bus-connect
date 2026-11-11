@@ -1,3 +1,4 @@
+import 'timetable_suggestions.dart';
 import '../../../places/presentation/widgets/place_text_field.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import 'package:flutter/material.dart';
@@ -76,6 +77,15 @@ class TripEditor extends ConsumerWidget {
           'Regular timetable · changes apply to future service dates. '
           'Use Daily delays for one day’s operational changes.',
         ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Service active'),
+          subtitle: const Text(
+            'Turn off to temporarily suspend this recurring service. Save to confirm.',
+          ),
+          value: plan.active,
+          onChanged: action.isLoading ? null : controller.active,
+        ),
         const SizedBox(height: 12),
         Wrap(
           spacing: 8,
@@ -133,6 +143,21 @@ class TripEditor extends ConsumerWidget {
             label: const Text('Add stop'),
           ),
         ] else ...[
+          if (state.step == 1)
+            OutlinedButton.icon(
+              onPressed: action.isLoading
+                  ? null
+                  : () async {
+                      final result = await showDialog<TripPlan>(
+                        context: context,
+                        builder: (_) => TimetableSuggestions(plan: plan),
+                      );
+                      if (result != null && context.mounted)
+                        controller.suggestions(result);
+                    },
+              icon: const Icon(Icons.auto_fix_high),
+              label: const Text('Suggest stop timings'),
+            ),
           for (var i = 0; i < plan.stops.length; i++)
             _TimelineStop(
               number: i + 1,
@@ -144,6 +169,28 @@ class TripEditor extends ConsumerWidget {
                     plan.stops[i].name,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
+                  if (plan.stops[i].arrivalMinutes != null)
+                    OutlinedButton(
+                      onPressed: state.step != 1 || action.isLoading
+                          ? null
+                          : () async {
+                              final value = await pickTripTime(
+                                context,
+                                plan.stops[i].arrivalMinutes!,
+                                helpText: 'Edit arrival time',
+                              );
+                              if (value != null && context.mounted)
+                                controller.arrival(
+                                  i,
+                                  value +
+                                      (plan.stops[i].arrivalMinutes! ~/ 1440) *
+                                          1440,
+                                );
+                            },
+                      child: Text(
+                        'Arrival: ${tripTimeLabel(plan.stops[i].arrivalMinutes!)}',
+                      ),
+                    ),
                   if (state.step == 1) ...[
                     OutlinedButton.icon(
                       key: ValueKey('time-${plan.stops[i].id}'),

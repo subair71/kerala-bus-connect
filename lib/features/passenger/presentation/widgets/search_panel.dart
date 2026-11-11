@@ -1,3 +1,4 @@
+import '../../../places/presentation/widgets/nearby_stops_panel.dart';
 import '../../../places/presentation/widgets/place_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
@@ -131,6 +132,7 @@ class SearchPanel extends HookConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const NearbyStopsPanel(),
             Card(
               margin: EdgeInsets.zero,
               elevation: 0,

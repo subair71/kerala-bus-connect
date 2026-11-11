@@ -2,7 +2,9 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function owns(data) { return signedIn() && data.ownerId == request.auth.uid; }
+    function owns(data) { return signedIn() && data.ownerId == request.auth.uid &&
+      (!exists(/databases/$(database)/documents/owner_access/$(request.auth.uid)) ||
+       get(/databases/$(database)/documents/owner_access/$(request.auth.uid)).data.disabled != true); }
     function sameOwner() {
       return owns(resource.data) && request.resource.data.ownerId == resource.data.ownerId;
     }
@@ -29,9 +31,10 @@ service cloud.firestore {
       return getAfter(/databases/$(database)/documents/buses/$(busId)).data.tripCount ==
         get(/databases/$(database)/documents/buses/$(busId)).data.tripCount + difference;
     }
+    function reviewFields() { return ['verification', 'reviewedBy', 'reviewedAt', 'reviewedRevision', 'reviewNote']; }
     function scheduleChanged() {
       return request.resource.data.diff(resource.data).affectedKeys().hasAny(
-        ['stops', 'stopIds', 'stopTimings', 'departureMinutes', 'offDays']
+        ['stops', 'stopIds', 'stopTimings', 'departureMinutes', 'offDays', 'arrivalStopTimings']
       );
     }
 
@@ -62,10 +65,11 @@ service cloud.firestore {
     }
     match /services/{id} {
       allow read: if true;
-      allow create: if owns(request.resource.data) &&
+      allow create: if !request.resource.data.keys().hasAny(reviewFields()) && owns(request.resource.data) &&
         ownsBusiness(request.resource.data) && validTrip(request.resource.data) &&
         (!managed(request.resource.data) || countChange(request.resource.data.busId, 1));
       allow update: if sameOwner() &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(reviewFields()) &&
         request.resource.data.businessId == resource.data.businessId &&
         validTrip(request.resource.data) &&
         (!managed(resource.data) ||
@@ -91,6 +95,7 @@ service cloud.firestore {
           data.serviceDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$') &&
           id == data.tripId + '_' + data.serviceDate &&
           data.scheduleRevision == trip.scheduleRevision &&
+          data.get('status', 'delayed') in ['scheduled', 'onTime', 'delayed', 'cancelled', 'completed'] &&
           data.delays is map && data.delays.keys().hasOnly(trip.stopIds) &&
           data.expectedStopTimings is map &&
           data.expectedStopTimings.keys().hasOnly(trip.stops) &&

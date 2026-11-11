@@ -1,3 +1,5 @@
+import '../../../passenger/presentation/providers/paged_search_provider.dart';
+import '../../../platform/presentation/providers/platform_providers.dart';
 import '../../../../core/data/data_set.dart';
 import '../../../../core/providers/sample_fallback.dart';
 import 'dart:async';
@@ -60,6 +62,10 @@ class OwnerActions extends AsyncNotifier<void> {
     final result = await AsyncValue.guard(() => action(owner));
     if (!ref.mounted || ref.read(ownerIdProvider) != owner) return false;
     state = result;
+    if (!result.hasError && ref.read(platformEnabledProvider)) {
+      await ref.read(publicPageCacheProvider).invalidate();
+      if (ref.mounted) ref.invalidate(pagedDeparturesProvider);
+    }
     return !result.hasError;
   }
 

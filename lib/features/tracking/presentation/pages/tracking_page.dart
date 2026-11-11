@@ -29,7 +29,7 @@ class TrackingPage extends ConsumerWidget {
         .clamp(0, vehicles.length - 1);
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 860),
+        constraints: const BoxConstraints(maxWidth: 1200),
         child: ListView.builder(
           key: PageStorageKey(
             'tracking-${preview.id.isEmpty ? preview.vehicle : preview.id}',

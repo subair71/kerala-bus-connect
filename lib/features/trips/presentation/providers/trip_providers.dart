@@ -1,3 +1,6 @@
+import '../../../passenger/presentation/providers/paged_search_provider.dart';
+import '../../../platform/presentation/providers/platform_providers.dart';
+import '../../domain/entities/timetable_suggestion.dart';
 import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -128,6 +131,17 @@ class TripDraftController extends Notifier<TripDraft> {
     return state.plan.copyWith(offDays: days);
   });
 
+  void arrival(int index, int minutes) => _update(() {
+    final stops = [...state.plan.stops];
+    stops[index] = stops[index].copyWith(arrivalMinutes: minutes);
+    return state.plan.copyWith(stops: stops);
+  });
+
+  void active(bool active) =>
+      _update(() => state.plan.copyWith(active: active));
+
+  void suggestions(TripPlan plan) => _update(() => plan);
+
   void note(String note) => _update(() => state.plan.copyWith(note: note));
 
   void step(int step) {
@@ -198,6 +212,10 @@ class TripActions extends AsyncNotifier<void> {
     final result = await AsyncValue.guard(() => action(owner, repository));
     if (!ref.mounted || ref.read(ownerIdProvider) != owner) return false;
     state = result;
+    if (!result.hasError && ref.read(platformEnabledProvider)) {
+      await ref.read(publicPageCacheProvider).invalidate();
+      if (ref.mounted) ref.invalidate(pagedDeparturesProvider);
+    }
     return !result.hasError;
   }
 
@@ -308,6 +326,58 @@ class TripEditorStructure extends Equatable {
         ? draft.plan.stops.map((stop) => stop.id).toList()
         : draft.plan.stops,
     draft.plan.offDays,
+    draft.plan.active,
     if (draft.step == 2) draft.plan.note,
   ];
+}
+
+final runningStatusDraftProvider = NotifierProvider.autoDispose
+    .family<RunningStatusDraft, RunningStatus, DelayEditorKey>(
+      RunningStatusDraft.new,
+    );
+
+class RunningStatusDraft extends Notifier<RunningStatus> {
+  RunningStatusDraft(this.args);
+  final DelayEditorKey args;
+  @override
+  RunningStatus build() =>
+      args.adjustment?.scheduleRevision == args.trip.revision
+      ? args.adjustment!.status
+      : RunningStatus.scheduled;
+  void select(RunningStatus status) => state = status;
+}
+
+typedef SuggestionState = ({TripPlan? plan, String? error});
+final suggestionPreviewProvider = NotifierProvider.autoDispose
+    .family<SuggestionPreview, SuggestionState, TripPlan>(
+      SuggestionPreview.new,
+    );
+
+class SuggestionPreview extends Notifier<SuggestionState> {
+  SuggestionPreview(this.plan);
+  final TripPlan plan;
+  @override
+  SuggestionState build() => (plan: null, error: null);
+  void clear() => state = (plan: null, error: null);
+  void calculate(
+    List<int> minutes,
+    double factor,
+    int dwell, {
+    Map<String, int> major = const {},
+  }) {
+    try {
+      state = (
+        plan: suggestTimetable(
+          plan,
+          minutes,
+          factor: factor,
+          stopMinutes: dwell,
+          majorStopMinutes: major,
+        ),
+        error: null,
+      );
+    } catch (e) {
+      state = (plan: null, error: e.toString());
+    }
+  }
 }

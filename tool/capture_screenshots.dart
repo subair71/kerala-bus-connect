@@ -1,3 +1,4 @@
+import '../test/platform_layout_test.dart' show consoleHarness;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:kerala_bus_connect/features/places/domain/services/stop_labels.dart';
 import 'package:kerala_bus_connect/features/places/presentation/providers/places_providers.dart';
@@ -27,6 +28,29 @@ void main() {
       ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
     await icons.load();
   });
+  for (final width in [320.0, 390.0, 1200.0]) {
+    for (final admin in [false, true]) {
+      testWidgets('capture platform $width $admin', (tester) async {
+        tester.view.physicalSize = Size(width, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.reset);
+        await tester.pumpWidget(
+          RepaintBoundary(
+            key: const ValueKey('capture'),
+            child: consoleHarness(admin: admin, scale: width == 320 ? 1.5 : 1),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        await expectLater(
+          find.byKey(const ValueKey('capture')),
+          matchesGoldenFile(
+            'screenshots/platform-${admin ? "admin" : "owner"}-${width.toInt()}.png',
+          ),
+        );
+      });
+    }
+  }
   for (final width in [320.0, 390.0, 1440.0]) {
     testWidgets('capture places $width', (tester) async {
       tester.view.physicalSize = Size(width, 844);

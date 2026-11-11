@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/constants/colors.dart';
+import '../../../../core/constants/transit_constants.dart';
 import '../../../../core/providers/clock_provider.dart';
 import '../../../../core/utils/sample_ids.dart';
 import '../../../../core/utils/time_utils.dart';
@@ -45,19 +46,33 @@ class ServiceCard extends ConsumerWidget {
         departure != null && arrival != null && arrival >= departure
         ? arrival - departure
         : null;
-    final effectiveDay = day == 'All Days' ? todayName() : day;
-    final running = !service.offDays.contains(effectiveDay);
-    final remaining = departure == null
-        ? null
-        : departure - now.hour * 60 - now.minute;
+    final serviceDay = DateTime.tryParse(service.serviceDate ?? '');
+    final today = weekDays[now.weekday - 1];
+    final effectiveDay = serviceDay == null
+        ? (day == 'All Days' ? today : day)
+        : weekDays[serviceDay.weekday - 1];
+    final elapsed = serviceDay == null
+        ? now.hour * 60 + now.minute
+        : DateTime.utc(now.year, now.month, now.day, now.hour, now.minute)
+              .difference(
+                DateTime.utc(serviceDay.year, serviceDay.month, serviceDay.day),
+              )
+              .inMinutes;
+    final running =
+        !service.offDays.contains(effectiveDay) &&
+        service.runningStatus != RunningStatus.cancelled &&
+        service.runningStatus != RunningStatus.completed;
+    final remaining = departure == null ? null : departure - elapsed;
     final demo = isSampleId(service.id);
-    final status = service.hasDailyAdjustment
+    final status = service.runningStatus != RunningStatus.scheduled
+        ? '${service.runningStatus.label} · Owner reported · ${service.serviceDate ?? ""}'
+        : service.hasDailyAdjustment
         ? 'Updated expected times · ${service.serviceDate}'
         : !service.operatingDaysKnown
         ? 'Operating days unavailable'
         : !running
         ? 'Not operating on $effectiveDay'
-        : effectiveDay == todayName() &&
+        : (serviceDay != null || effectiveDay == today) &&
               remaining != null &&
               remaining >= 0 &&
               remaining < 120

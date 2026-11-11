@@ -421,7 +421,11 @@ class _TripCard extends ConsumerWidget {
               '${tripTimeLabel(service.departureMinutes)} · ${service.stops.length} stops',
             ),
             Text(service.stops.join(' → ')),
+            if (!service.published) const Text('Temporarily suspended'),
             if (updated) Text('Daily delays saved for $date'),
+            if (adjustment != null &&
+                adjustment.scheduleRevision == trip.revision)
+              Text('${adjustment.status.label} · Owner reported · $date'),
             if (adjustment != null &&
                 adjustment.scheduleRevision != trip.revision)
               const Text('Schedule changed · review this date’s delays'),

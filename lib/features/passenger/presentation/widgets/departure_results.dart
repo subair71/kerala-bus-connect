@@ -1,3 +1,6 @@
+import '../../../platform/presentation/providers/platform_providers.dart';
+import '../providers/paged_search_provider.dart';
+import 'paged_departures.dart';
 import '../../../../core/widgets/loading_skeletons.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -14,6 +17,7 @@ class CatalogNotice extends ConsumerWidget {
   const CatalogNotice();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(platformEnabledProvider)) return const SizedBox.shrink();
     final data = ref.watch(serviceCatalogProvider).asData?.value;
     if (!(data?.cached ?? false) &&
         ref.watch(passengerDailyUpdatesUnavailableProvider)) {
@@ -38,6 +42,11 @@ class DeparturesSliver extends ConsumerWidget {
   const DeparturesSliver({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(platformEnabledProvider)) {
+      return PagedDeparturesSliver(
+        query: ref.watch(currentDepartureQueryProvider),
+      );
+    }
     final result = ref.watch(departureResultsProvider);
     final query = ref.watch(debouncedSearchProvider);
     return result.when(

@@ -1,3 +1,5 @@
+import '../../../platform/presentation/providers/platform_providers.dart';
+import '../../../platform/presentation/providers/usage_providers.dart';
 import '../../../../core/widgets/loading_skeletons.dart';
 import '../../../../core/widgets/shimmer_loading.dart';
 import 'dart:async';
@@ -48,6 +50,25 @@ class _Slides extends HookConsumerWidget {
         .watch(sponsorPageProvider(location))
         .clamp(0, ads.length - 1);
     final controller = usePageController(initialPage: page);
+    final platform = ref.watch(platformEnabledProvider);
+    useEffect(() {
+      if (demo || !platform) return null;
+      final timer = Timer(const Duration(seconds: 1), () {
+        if (!context.mounted || !(ModalRoute.of(context)?.isCurrent ?? true))
+          return;
+        final box = context.findRenderObject();
+        if (box is! RenderBox || !box.hasSize) return;
+        final point = box.localToGlobal(Offset.zero);
+        final height = MediaQuery.sizeOf(context).height;
+        if (point.dy + box.size.height > 0 &&
+            point.dy < height &&
+            WidgetsBinding.instance.lifecycleState ==
+                AppLifecycleState.resumed) {
+          ref.read(adExposuresProvider.notifier).shown(ads[page].id);
+        }
+      });
+      return timer.cancel;
+    }, [ads[page].id, page, demo, platform]);
     final rotationTimer = useRef<Timer?>(null);
     final hovering = useRef(false);
     final touching = useRef(false);

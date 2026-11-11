@@ -1,3 +1,4 @@
+import '../../../timetables/domain/entities/service_entity.dart';
 import 'dart:convert';
 import '../../../../core/data/combine_complete_lists.dart';
 import '../../../timetables/data/datasources/schedule_cache.dart';
@@ -94,6 +95,9 @@ class FirebaseTripRepository implements TripRepository {
           serviceDate: doc.data()['serviceDate'] as String,
           scheduleRevision: doc.data()['scheduleRevision'] as String,
           delays: Map<String, int>.from(doc.data()['delays'] as Map),
+          status: doc.data().containsKey('status')
+              ? RunningStatus.parse(doc.data()['status'])
+              : null,
         ),
     ];
   });
@@ -212,10 +216,16 @@ class FirebaseTripRepository implements TripRepository {
       }
       final stops = trip.stops.map((s) => s.name.trim()).toList();
       final timings = {for (final s in trip.stops) s.name.trim(): s.minutes};
+      final arrivals = {
+        for (final s in trip.stops)
+          if (s.arrivalMinutes != null) s.name.trim(): s.arrivalMinutes,
+      };
       final offDays = trip.offDays.toList()..sort();
       final unchanged =
           current != null &&
           jsonEncode(current['stops']) == jsonEncode(stops) &&
+          jsonEncode(current['arrivalStopTimings'] ?? {}) ==
+              jsonEncode(arrivals) &&
           jsonEncode([
                 for (final name in stops)
                   (current['stopTimings'] as Map?)?[name],
@@ -239,6 +249,7 @@ class FirebaseTripRepository implements TripRepository {
         });
       }
       tx.set(target, {
+        ...?current,
         'ownerId': ownerId,
         'businessId': business.id,
         'busId': bus.id,
@@ -250,9 +261,10 @@ class FirebaseTripRepository implements TripRepository {
         'stopIds': trip.stops.map((s) => s.id).toList(),
         'departureMinutes': trip.stops.first.minutes,
         'stopTimings': timings,
+        'arrivalStopTimings': arrivals,
         'offDays': offDays,
         'offTimingsNote': trip.note.trim(),
-        'published': true,
+        'published': trip.active,
         'scheduleRevision': unchanged ? trip.revision : revision,
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -306,6 +318,11 @@ class FirebaseTripRepository implements TripRepository {
         'These adjustments belong to another trip or date.',
       );
     }
+    if (adjustment != null &&
+        adjustment.status != RunningStatus.delayed &&
+        adjustment.delays.values.any((d) => d > 0)) {
+      throw const AppFailure('Clear delays before selecting another status.');
+    }
     await db.runTransaction((tx) async {
       await _bus(tx, ownerId, bus);
       final data = (await tx.get(
@@ -329,6 +346,7 @@ class FirebaseTripRepository implements TripRepository {
           'serviceDate': date,
           'scheduleRevision': trip.revision,
           'delays': adjustment.delays,
+          'status': adjustment.status.name,
           'expectedStopTimings': {
             for (var i = 0; i < trip.stops.length; i++)
               trip.stops[i].name.trim(): expected![i],
