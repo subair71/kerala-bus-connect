@@ -1,3 +1,4 @@
+import '../../domain/repositories/tracking_repository.dart';
 import '../../../journeys/presentation/widgets/stop_map.dart';
 import '../../../../core/widgets/loading_skeletons.dart';
 import '../../../../core/widgets/data_notice.dart';
@@ -16,6 +17,20 @@ class TrackingPage extends ConsumerWidget {
     final preview = ref.watch(trackingPreviewProvider);
     final data = ref.watch(trackingDataProvider);
     if (data.isLoading && !data.hasValue) return const TrackingSkeleton();
+    final cursors = ref.watch(trackingCursorsProvider);
+    void previous() {
+      ref.read(trackingSelectionProvider.notifier).select(0);
+      ref.read(trackingCursorsProvider.notifier).previous();
+    }
+
+    if (cursors.isNotEmpty && (data.hasError || preview == null)) {
+      return Center(
+        child: OutlinedButton(
+          onPressed: previous,
+          child: const Text('Return to previous vehicles'),
+        ),
+      );
+    }
     if (data.hasError) {
       return AsyncStatus(
         message: 'Unable to load tracking details.',
@@ -25,6 +40,9 @@ class TrackingPage extends ConsumerWidget {
     if (preview == null)
       return const AsyncStatus(message: 'No tracking details available.');
     final vehicles = data.asData!.value.records;
+    final hasMore =
+        (ref.watch(liveTrackingProvider).asData?.value.length ?? 0) >
+        trackingPageSize;
     final selected = ref
         .watch(trackingSelectionProvider)
         .clamp(0, vehicles.length - 1);
@@ -91,6 +109,28 @@ class TrackingPage extends ConsumerWidget {
                             .read(trackingSelectionProvider.notifier)
                             .select(value);
                     },
+                  ),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      if (cursors.isNotEmpty)
+                        TextButton(
+                          onPressed: previous,
+                          child: const Text('Previous vehicles'),
+                        ),
+                      if (hasMore)
+                        TextButton(
+                          onPressed: () {
+                            ref
+                                .read(trackingSelectionProvider.notifier)
+                                .select(0);
+                            ref
+                                .read(trackingCursorsProvider.notifier)
+                                .next(vehicles.last.id);
+                          },
+                          child: const Text('More vehicles'),
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 20),
                 ],

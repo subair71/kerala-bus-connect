@@ -5,7 +5,8 @@ import '../../domain/repositories/tracking_repository.dart';
 class DemoTrackingRepository implements TrackingRepository {
   const DemoTrackingRepository();
   @override
-  Stream<List<TrackingPreview>> watch() => Stream.value(previews());
+  Stream<List<TrackingPreview>> watch({String? after}) =>
+      Stream.value(after == null ? previews() : []);
   List<TrackingPreview> previews() => const [
     TrackingPreview(
       'St. Antony Express',

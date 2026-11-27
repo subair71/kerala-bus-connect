@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { before, after, beforeEach, test } from 'node:test';
 import { initializeTestEnvironment, assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { doc, setDoc, updateDoc, deleteDoc, getDoc, writeBatch } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, deleteDoc, getDoc, writeBatch, collection, query, where, orderBy, documentId, limit, startAfter, getDocs } from 'firebase/firestore';
 let env;
 const bus = { ownerId: 'owner', businessId: 'operator', name: 'Bus', tripCount: 0 };
 const trip = {
@@ -131,4 +131,20 @@ test('only the assigned owner can read crew and only published previews are visi
   await assertFails(getDoc(doc(passenger, 'crew_assignments/morning')));
   await assertSucceeds(getDoc(doc(passenger, 'tracking_previews/listed')));
   await assertFails(getDoc(doc(passenger, 'tracking_previews/unlisted')));
+});
+
+test('public vehicle pages use a document cursor and exclude private records', async () => {
+  await env.withSecurityRulesDisabled(async ctx => {
+    const db = ctx.firestore();
+    const batch = writeBatch(db);
+    for (let i = 0; i < 23; i++) batch.set(doc(db, 'tracking_previews/' + String(i).padStart(2, '0')), {published:i !== 5});
+    await batch.commit();
+  });
+  const db = env.unauthenticatedContext().firestore();
+  const base = query(collection(db, 'tracking_previews'), where('published','==',true), orderBy(documentId()));
+  const first = await getDocs(query(base,limit(21)));
+  const visible = first.docs.slice(0,20);
+  const more = await getDocs(query(base,startAfter(visible.at(-1).id),limit(21)));
+  const ids = [...visible,...more.docs].map(d => d.id);
+  if (first.size !== 21 || more.size !== 2 || new Set(ids).size !== 22 || ids.includes('05')) throw new Error('Invalid vehicle pages');
 });

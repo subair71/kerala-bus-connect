@@ -58,7 +58,7 @@ class CountingTrackingRepository implements TrackingRepository {
     onCancel: () => cancellations++,
   );
   @override
-  Stream<List<TrackingPreview>> watch() {
+  Stream<List<TrackingPreview>> watch({String? after}) {
     requests++;
     return changes.stream;
   }
