@@ -9,6 +9,7 @@ class FirebaseTrackingRepository implements TrackingRepository {
   @override
   Stream<List<TrackingPreview>> watch() => firestore
       .collection('tracking_previews')
+      .where('published', isEqualTo: true)
       .snapshots()
       .map(
         (snapshot) => snapshot.docs.map((doc) {

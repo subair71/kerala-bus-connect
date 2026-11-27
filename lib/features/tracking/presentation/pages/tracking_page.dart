@@ -1,3 +1,4 @@
+import '../../../journeys/presentation/widgets/stop_map.dart';
 import '../../../../core/widgets/loading_skeletons.dart';
 import '../../../../core/widgets/data_notice.dart';
 import '../../../../core/widgets/async_status.dart';
@@ -44,6 +45,22 @@ class TrackingPage extends ConsumerWidget {
                   const PageHeading(
                     title: 'Bus tracking preview',
                     subtitle: 'Route position preview • not live GPS tracking.',
+                  ),
+                  StopMap(
+                    stops: preview.stops
+                        .skip(
+                          (preview.currentStop - 1).clamp(
+                            0,
+                            preview.stops.length,
+                          ),
+                        )
+                        .take(3)
+                        .toList(),
+                    reportedStop:
+                        preview.currentStop >= 0 &&
+                            preview.currentStop < preview.stops.length
+                        ? preview.stops[preview.currentStop]
+                        : null,
                   ),
                   DataNotice(
                     demo: data.asData!.value.isDemo,

@@ -1,3 +1,4 @@
+import 'support/open_section.dart';
 import 'package:kerala_bus_connect/features/trips/presentation/providers/trip_providers.dart';
 import 'package:kerala_bus_connect/core/data/data_set.dart';
 import 'package:kerala_bus_connect/features/sponsors/data/fixtures/sponsor_samples.dart';
@@ -151,12 +152,7 @@ void main() {
     );
     await tester.pumpAndSettle();
     for (final label in ['Routes', 'Owner', 'Tracking', 'Crew', 'Find bus']) {
-      await tester.tap(
-        find.descendant(
-          of: find.byType(NavigationBar),
-          matching: find.text(label),
-        ),
-      );
+      await openSection(tester, label);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       if (label == 'Owner') expect(find.text('Owner sign in'), findsOneWidget);

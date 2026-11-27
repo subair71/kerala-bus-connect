@@ -40,127 +40,46 @@ class CompactServiceCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 44),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Wrap(
-                        spacing: 8,
-                        runSpacing: 6,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: running && service.operatingDaysKnown
-                                  ? HomeTheme.positiveSurface
-                                  : HomeTheme.field,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  running ? Icons.circle : Icons.schedule,
-                                  size: running ? 6 : 12,
-                                  color: statusColor,
-                                ),
-                                const SizedBox(width: 5),
-                                Flexible(
-                                  child: Text(
-                                    status,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      height: 1.2,
-                                      color: statusColor,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          if (demo)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: HomeTheme.field,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: const Text(
-                                'Demo',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: HomeTheme.muted,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                Text(
+                  service.busName,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                    color: HomeTheme.text,
+                  ),
+                ),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: running && service.operatingDaysKnown
+                        ? HomeTheme.positiveSurface
+                        : HomeTheme.field,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      status,
+                      style: TextStyle(fontSize: 11, color: statusColor),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          demo && demoFare != null ? '₹$demoFare' : '—',
-                          style: const TextStyle(
-                            fontSize: 22,
-                            height: 1.2,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: -.5,
-                            color: HomeTheme.primary,
-                          ),
-                        ),
-                        Text(
-                          demo && demoFare != null
-                              ? demoFareLabel ?? 'Sample fare'
-                              : 'Fare unavailable',
-                          textAlign: TextAlign.right,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            height: 1.4,
-                            color: HomeTheme.muted,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            Text(
-              service.busName,
-              style: const TextStyle(
-                fontSize: 17,
-                height: 1.4,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -.4,
-                color: HomeTheme.text,
-              ),
-            ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               service.routeName,
-              style: const TextStyle(
-                fontSize: 12,
-                height: 1.5,
-                color: HomeTheme.muted,
-              ),
+              style: const TextStyle(fontSize: 12, color: HomeTheme.muted),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             _Timings(
               boarding: boarding,
               destination: destination,
@@ -169,7 +88,10 @@ class CompactServiceCard extends StatelessWidget {
               duration: duration,
               updated: service.hasDailyAdjustment,
             ),
-            if (service.hasDailyAdjustment)
+            if (service.hasDailyAdjustment &&
+                arrival != null &&
+                service.scheduledTime(boarding) != null &&
+                service.scheduledTime(destination) != null)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
@@ -178,6 +100,24 @@ class CompactServiceCard extends StatelessWidget {
                   '+${arrival! - service.scheduledTime(destination)!} min at destination',
                 ),
               ),
+            Wrap(
+              spacing: 5,
+              children: [
+                if (demo)
+                  const Text(
+                    'Demo',
+                    style: TextStyle(fontSize: 11, color: HomeTheme.muted),
+                  ),
+                if (demo && demoFare != null)
+                  Text('₹$demoFare', style: const TextStyle(fontSize: 11)),
+                Text(
+                  demo && demoFare != null
+                      ? demoFareLabel ?? 'Sample fare'
+                      : 'Fare unavailable',
+                  style: const TextStyle(fontSize: 11, color: HomeTheme.muted),
+                ),
+              ],
+            ),
             const SizedBox(height: 4),
             LayoutBuilder(
               builder: (context, constraints) {

@@ -1,3 +1,5 @@
+import '../../../journeys/presentation/providers/journey_providers.dart';
+import '../../../journeys/presentation/widgets/journey_controls.dart';
 import '../../../platform/presentation/providers/platform_providers.dart';
 import '../providers/paged_search_provider.dart';
 import 'paged_departures.dart';
@@ -28,7 +30,8 @@ class CatalogNotice extends ConsumerWidget {
         ),
       );
     }
-    if (!(data?.unavailable ?? false)) return const SizedBox.shrink();
+    if (!(data?.unavailable ?? false) && !(data?.isDemo ?? false))
+      return const SizedBox.shrink();
     return DataNotice(
       demo: data?.isDemo ?? false,
       cached: data?.cached ?? false,
@@ -47,7 +50,17 @@ class DeparturesSliver extends ConsumerWidget {
         query: ref.watch(currentDepartureQueryProvider),
       );
     }
-    final result = ref.watch(departureResultsProvider);
+    final filters = ref.watch(journeyFiltersProvider);
+    final result = ref
+        .watch(departureResultsProvider)
+        .whenData(
+          (rows) => rows
+              .where(
+                (s) =>
+                    filters.accepts(s, ref.read(debouncedSearchProvider).from),
+              )
+              .toList(),
+        );
     final query = ref.watch(debouncedSearchProvider);
     return result.when(
       loading: () => const LoadingSliver(
@@ -129,9 +142,24 @@ class DeparturesSliver extends ConsumerWidget {
               ),
             );
           if (services.isEmpty)
-            return const AsyncStatus(
-              message:
-                  'No published buses match these stops and operating days.',
+            return Column(
+              children: [
+                const AsyncStatus(
+                  message:
+                      'No published buses match these stops and operating days.',
+                ),
+                TextButton(
+                  onPressed: () => openJourneyTime(context, ref),
+                  child: const Text('Change journey date'),
+                ),
+                TextButton(
+                  onPressed: () => showModalBottomSheet<void>(
+                    context: context,
+                    builder: (_) => const FilterSheet(),
+                  ),
+                  child: const Text('Edit filters'),
+                ),
+              ],
             );
           final service = services[index - 1];
           return _HomeDepartureCard(

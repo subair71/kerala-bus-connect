@@ -1,3 +1,4 @@
+import '../../../journeys/presentation/providers/journey_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/widgets/loading_skeletons.dart';
@@ -10,7 +11,22 @@ class PagedDeparturesSliver extends ConsumerWidget {
   const PagedDeparturesSliver({super.key, required this.query});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final result = ref.watch(pagedDeparturesProvider(query));
+    final filter = ref.watch(journeyFiltersProvider);
+    final result = ref
+        .watch(pagedDeparturesProvider(query))
+        .whenData(
+          (p) => query.directory
+              ? p
+              : DeparturePage(
+                  p.records
+                      .where((s) => filter.accepts(s, query.from))
+                      .toList(),
+                  cursor: p.cursor,
+                  loadingMore: p.loadingMore,
+                  cached: p.cached,
+                  error: p.error,
+                ),
+        );
     return result.when(
       loading: () => const LoadingSliver(
         layout: SkeletonLayout.departures,

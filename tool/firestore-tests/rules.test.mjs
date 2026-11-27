@@ -106,3 +106,29 @@ test('owners cannot claim administrator schedule verification', async () => {
   await createTrip(owner);
   await assertFails(updateDoc(doc(owner, 'services/trip'), {verification: 'approved', reviewedBy: 'admin'}));
 });
+test('passengers can read sample services and cannot write sample documents', async () => {
+  const passenger = env.unauthenticatedContext().firestore();
+  const owner = env.authenticatedContext('owner').firestore();
+  await env.withSecurityRulesDisabled(async context => {
+    await setDoc(doc(context.firestore(), 'sample_services/demo:rules'), { sample: true });
+  });
+  await assertSucceeds(getDoc(doc(passenger, 'sample_services/demo:rules')));
+  await assertFails(setDoc(doc(owner, 'sample_services/demo:rules'), { sample: false }));
+  await assertFails(setDoc(doc(passenger, 'sample_fruits/mango'), { name: 'Mango' }));
+});
+test('only the assigned owner can read crew and only published previews are visible', async () => {
+  const passenger = env.unauthenticatedContext().firestore();
+  const owner = env.authenticatedContext('owner').firestore();
+  const other = env.authenticatedContext('other').firestore();
+  await env.withSecurityRulesDisabled(async ctx => {
+    const db = ctx.firestore();
+    await setDoc(doc(db, 'crew_assignments/morning'), { ownerId: 'owner' });
+    await setDoc(doc(db, 'tracking_previews/unlisted'), { published: false });
+    await setDoc(doc(db, 'tracking_previews/listed'), { published: true });
+  });
+  await assertSucceeds(getDoc(doc(owner, 'crew_assignments/morning')));
+  await assertFails(getDoc(doc(other, 'crew_assignments/morning')));
+  await assertFails(getDoc(doc(passenger, 'crew_assignments/morning')));
+  await assertSucceeds(getDoc(doc(passenger, 'tracking_previews/listed')));
+  await assertFails(getDoc(doc(passenger, 'tracking_previews/unlisted')));
+});

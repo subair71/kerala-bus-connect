@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/home_theme.dart';
+import '../../../journeys/presentation/pages/discovery_pages.dart';
 
 class TransitAdvisory extends StatelessWidget {
   const TransitAdvisory({super.key});
@@ -70,6 +71,14 @@ Future<void> showTransitAdvisory(BuildContext context) =>
               ),
             ),
             const TransitAdvisory(),
+            TextButton.icon(
+              onPressed: () {
+                Navigator.pop(sheetContext);
+                openScreen(context, 'Service updates', const UpdatesPage());
+              },
+              icon: const Icon(Icons.notifications_active_outlined),
+              label: const Text('View service updates'),
+            ),
           ],
         ),
       ),

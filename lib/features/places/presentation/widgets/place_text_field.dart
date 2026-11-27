@@ -12,7 +12,7 @@ class PlaceTextField extends HookConsumerWidget {
   final Key? fieldKey;
   final Widget Function(Widget field)? fieldBuilder;
   final TextEditingController controller;
-  final ValueChanged<String>? onChanged, onSubmitted;
+  final ValueChanged<String>? onChanged, onSubmitted, onSelected;
   final InputDecoration decoration;
   final TextStyle? style;
   final TextInputAction? textInputAction;
@@ -27,6 +27,7 @@ class PlaceTextField extends HookConsumerWidget {
     required this.controller,
     this.onChanged,
     this.onSubmitted,
+    this.onSelected,
     this.decoration = const InputDecoration(),
     this.style,
     this.textInputAction,
@@ -78,6 +79,7 @@ class PlaceTextField extends HookConsumerWidget {
           onSelected: (option) {
             onChanged?.call(option.value);
             notifier.dismiss();
+            onSelected?.call(option.value);
           },
           fieldViewBuilder: (context, text, node, submit) {
             final field = TextField(
