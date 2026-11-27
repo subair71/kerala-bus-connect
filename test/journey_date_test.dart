@@ -1,12 +1,8 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:kerala_bus_connect/core/providers/clock_provider.dart';
 import 'package:kerala_bus_connect/features/passenger/presentation/providers/search_providers.dart';
-import 'package:kerala_bus_connect/features/passenger/presentation/widgets/search_panel.dart';
-import 'support/fakes.dart';
-import 'widgets_test.dart' show harness;
 
 void main() {
   test(
@@ -56,61 +52,4 @@ void main() {
       expect(container.read(searchQueryProvider).from, 'Thrissur');
     },
   );
-
-  testWidgets('mobile divider swap, date selection and search stay connected', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(320, 740);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final auth = FakeAuthRepository();
-    addTearDown(auth.changes.close);
-    var searches = 0;
-    await tester.pumpWidget(
-      harness(
-        Scaffold(
-          body: SingleChildScrollView(
-            child: SearchPanel(onSearch: () => searches++),
-          ),
-        ),
-        FakeTransitRepository(),
-        auth,
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.enterText(
-      find.byKey(const ValueKey('search-from')),
-      'Thrissur',
-    );
-    await tester.tap(find.byTooltip('Swap stops'));
-    await tester.pumpAndSettle();
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const ValueKey('search-to')))
-          .controller!
-          .text,
-      'Thrissur',
-    );
-    expect(
-      tester
-          .widget<TextField>(find.byKey(const ValueKey('search-from')))
-          .controller!
-          .text,
-      'Kaloor',
-    );
-    await tester.ensureVisible(find.byKey(const ValueKey('journey-date-1')));
-    await tester.tap(find.byKey(const ValueKey('journey-date-1')));
-    await tester.pumpAndSettle();
-    final container = ProviderScope.containerOf(
-      tester.element(find.byType(SearchPanel)),
-    );
-    expect(container.read(searchQueryProvider).filterDay, 'Saturday');
-    await tester.ensureVisible(find.byKey(const ValueKey('show-bus-results')));
-    await tester.tap(find.byKey(const ValueKey('show-bus-results')));
-    await tester.pumpAndSettle();
-    expect(searches, 1);
-    expect(container.read(debouncedSearchProvider).filterDay, 'Saturday');
-    expect(tester.takeException(), isNull);
-  });
 }

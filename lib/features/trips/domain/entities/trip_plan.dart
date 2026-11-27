@@ -34,7 +34,7 @@ class TripStop {
 }
 
 class TripPlan {
-  final String id, revision, routeId;
+  final String id, revision, routeId, routeName;
   final List<TripStop> stops;
   final Set<String> offDays;
   final String note;
@@ -44,6 +44,7 @@ class TripPlan {
     this.id = '',
     this.revision = '',
     this.routeId = '',
+    this.routeName = '',
     required List<TripStop> stops,
     Set<String> offDays = const {},
     this.note = '',
@@ -55,6 +56,7 @@ class TripPlan {
     id: service.id,
     revision: service.scheduleRevision,
     routeId: service.routeId,
+    routeName: service.routeName,
     stops: [
       for (var i = 0; i < service.stops.length; i++)
         TripStop(
@@ -73,11 +75,13 @@ class TripPlan {
     List<TripStop>? stops,
     Set<String>? offDays,
     String? note,
+    String? routeName,
     bool? active,
   }) => TripPlan(
     id: id,
     revision: revision,
     routeId: routeId,
+    routeName: routeName ?? this.routeName,
     stops: stops ?? this.stops,
     offDays: offDays ?? this.offDays,
     note: note ?? this.note,

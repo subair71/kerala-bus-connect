@@ -1,24 +1,10 @@
 # FindMyBus
 
-Native Flutter web and mobile interface, based on the supplied Stitch references.
-Owner trip and daily-delay changes are delivered on `feature/owner-trip-dashboard`.
+The Flutter app follows the 25 mobile screens in the FindMyBus design guide. Find bus, Departures, Routes, Saved and More share the passenger navigation. More opens owner access and the crew roster. The owner workspace uses a three-step trip editor and a separate service-date adjustment form.
 
-## Features
+Passenger journeys and operator views live under `lib/features/journeys/presentation/screens`. Data comes from the existing Riverpod repositories. Maps are schematic, boarding and arrival times use Kerala time, and sample timetables and assignments carry labels.
 
-| Feature | Behavior |
-| --- | --- |
-| Find bus | Debounced boarding/destination search, direction and operating-day filters, stop timings |
-| Routes | Searchable published timetable directory |
-| Owner | Firebase sign-in; businesses and buses; trip route/timing editor; independent return trips; service-date delays |
-| Tracking | Route position preview; never presented as live GPS |
-| Crew | Searchable duty roster and shift filters |
-| Sponsors | Home-only carousel selected by boarding location; no placements in results, directory or stop details |
-
-## Design
-
-The archive `stitch_findmybus_minimal_redesign.zip` contains Aluva mobile/desktop and Thrissur mobile references. The implementation uses their light canvas, deep teal accents, Plus Jakarta Sans typography, white cards, pale input wells, timetable bands and stop timeline. Desktop uses top navigation and a timetable sidebar; mobile uses five bottom tabs and scrolling cards.
-
-The reference's unverified fares, registration numbers, platforms, GPS indicators and ratings are omitted unless supported by the existing feature/data model. Broken remote reference images are replaced with native placeholders. The supplied hotel image is bundled as a compressed JPEG. Plus Jakarta Sans is bundled locally under the SIL Open Font License in `assets/fonts/OFL.txt`.
+Run `flutter test test/pdf_screens_test.dart` to exercise the 25 screens from the app entry point. Run `flutter test tool/capture_screenshots.dart --update-goldens` to capture the same paths using deterministic test records.
 
 ## Firebase and sample selection
 
@@ -26,7 +12,7 @@ Existing Firebase configuration and authentication are retained. `services` rema
 
 Providers select an entire live result or an explicitly labelled sample result. They never append fictional buses to a real catalogue. A no-match search in a populated live catalogue stays empty. Failed reads show “Live data unavailable” before sample content; streams replace the fallback when valid data arrives. Empty cache-only snapshots are reported as unavailable until the server responds.
 
-Sample fixtures have stable `demo:` identifiers and consistent businesses/routes/buses/crew/tracking references. Owner previews are read-only. Both domain commands and the Firebase repository reject sample IDs on write paths. Nothing seeds Firebase automatically.
+Sample fixtures have stable `demo:` identifiers and consistent businesses/routes/buses/crew/tracking references. Both domain commands and the Firebase repository reject sample IDs on write paths. Nothing seeds Firebase automatically.
 
 Missing display text uses neutral placeholders. Missing schedule times stay unavailable; valid midnight `0` and boolean `false` remain intact. Unknown operating days cannot satisfy a running-today filter. Publishing requires explicit times for every stop. Managed trips have stable stop IDs and schedule revisions; regular timetable edits invalidate stale daily adjustments.
 
@@ -38,7 +24,7 @@ Optional, read-only integrations use these collections:
 | `crew_assignments` | `ownerId` (signed-in owner query), `name`, `role`, `vehicle`, `shift`, `duty` |
 | `tracking_previews` | `published` (true for a public position), `vehicle`, `stops` (string list), `currentStop` (zero-based index) |
 
-The existing rules do not grant access to these optional collections. Missing or denied optional data produces labelled previews. Enabling production records requires separately reviewed permissions and data. No location permission or GPS tracking was added. Sample sponsor actions explain the preview instead of contacting an invented advertiser.
+The existing rules do not grant access to these optional collections. Missing or denied optional data produces labelled previews. Enabling production records requires separately reviewed permissions and data. Nearby searches can request the device location. Sample advertisements do not open an external website.
 
 ## Architecture and performance
 
@@ -53,7 +39,7 @@ Riverpod owns application state. No application `setState`, StatefulWidget, BLoC
 - Auth-scoped owner and crew reads reset when accounts change.
 - Bundled font and compressed image; bounded thumbnail decoding; no blur or animation packages.
 
-The current schema still downloads the published catalogue. Statewide-scale server queries/pagination and device FPS profiling remain outside this visual redesign.
+The indexed passenger reader uses bounded cursor pages. See [passenger capacity](docs/passenger-capacity.md) for rollout flags, measurements and staging checks.
 
 ## Validation
 

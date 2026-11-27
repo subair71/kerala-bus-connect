@@ -1,5 +1,4 @@
 import 'package:kerala_bus_connect/core/providers/clock_provider.dart';
-import 'package:kerala_bus_connect/features/passenger/presentation/widgets/search_panel.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -88,10 +87,8 @@ void main() {
       final unused = TextEditingController();
       addTearDown(unused.dispose);
       final repo = PendingPlaces();
-      await tester.pumpWidget(
-        placesHarness(unused, repo, child: const SearchPanel()),
-      );
-      await tester.enterText(find.byKey(const ValueKey('search-from')), 'Eda');
+      await tester.pumpWidget(placesHarness(unused, repo));
+      await tester.enterText(find.byKey(const ValueKey('place-input')), 'Eda');
       await tester.pump(const Duration(milliseconds: 400));
       expect(tester.takeException(), isNull);
       repo.requests['Eda']!.complete(const [
@@ -106,7 +103,7 @@ void main() {
       await tester.pump();
       expect(
         tester
-            .widget<TextField>(find.byKey(const ValueKey('search-from')))
+            .widget<TextField>(find.byKey(const ValueKey('place-input')))
             .controller!
             .text,
         'Edappally',
