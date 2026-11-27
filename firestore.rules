@@ -38,6 +38,16 @@ service cloud.firestore {
       );
     }
 
+    // Sample timetables live outside the published passenger catalogue.
+    match /sample_services/{id} {
+      allow read: if true;
+    }
+    match /crew_assignments/{id} {
+      allow read: if owns(resource.data);
+    }
+    match /tracking_previews/{id} {
+      allow read: if resource.data.published == true;
+    }
     match /businesses/{id} {
       allow read: if true;
       allow create: if owns(request.resource.data);

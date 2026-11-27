@@ -1,3 +1,5 @@
+import '../../../journeys/presentation/widgets/stop_map.dart';
+import '../../../journeys/presentation/pages/discovery_pages.dart';
 import '../../../platform/presentation/providers/usage_providers.dart';
 import '../../../platform/presentation/providers/platform_providers.dart';
 import '../../../../core/widgets/loading_skeletons.dart';
@@ -28,7 +30,21 @@ class PassengerPage extends StatelessWidget {
           void openResults() => showMobileBusResults(context);
           final top = Column(
             children: [
-              SearchPanel(onSearch: mobile ? openResults : null),
+              if (mobile) const _HomeMap(),
+              SearchPanel(
+                onSearch: mobile ? openResults : null,
+                compact: mobile,
+              ),
+              if (mobile)
+                ListTile(
+                  leading: const Icon(Icons.outlined_flag),
+                  title: const Text('Stops near me'),
+                  subtitle: const Text('Choose a stop for departures'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () =>
+                      openScreen(context, 'Nearby stops', const NearbyPage()),
+                ),
+
               const SizedBox(height: 12),
               const SponsoredCarousel(),
               const _AnalyticsChoice(),
@@ -40,7 +56,7 @@ class PassengerPage extends StatelessWidget {
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
               slivers: [
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
                   sliver: SliverToBoxAdapter(child: top),
                 ),
                 const SliverPadding(
@@ -159,6 +175,20 @@ class _AnalyticsChoice extends ConsumerWidget {
       subtitle: const Text(
         'Optional. No GPS coordinates, contact details or search text.',
       ),
+    );
+  }
+}
+
+class _HomeMap extends ConsumerWidget {
+  const _HomeMap();
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final query = ref.watch(searchQueryProvider);
+    return StopMap(
+      stops: [query.from, query.to],
+      height: MediaQuery.sizeOf(context).height < 650 ? 94 : 154,
+      onStop: (s) => showBoard(context, ref, s),
+      onLocate: () => openScreen(context, 'Nearby stops', const NearbyPage()),
     );
   }
 }

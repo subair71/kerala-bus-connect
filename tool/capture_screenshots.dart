@@ -1,3 +1,4 @@
+import '../test/support/open_section.dart';
 import '../test/platform_layout_test.dart' show consoleHarness;
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:kerala_bus_connect/features/places/domain/services/stop_labels.dart';
@@ -189,14 +190,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        await tester.tap(
-          width < 1000
-              ? find.descendant(
-                  of: find.byType(NavigationBar),
-                  matching: find.text(tab),
-                )
-              : find.widgetWithText(TextButton, tab),
-        );
+        await openSection(tester, tab);
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
         await expectLater(
@@ -248,7 +242,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.byTooltip('Owner account'));
+      await openSection(tester, 'Owner');
       await tester.pumpAndSettle();
       final context = tester.element(find.byType(OwnerPage));
       switch (scenario) {

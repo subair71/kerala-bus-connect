@@ -36,7 +36,7 @@ Optional, read-only integrations use these collections:
 | --- | --- |
 | `sponsored_ads` | `location` (canonical display name, e.g. Aluva or Thrissur), `active` (boolean), `advertiser`, `title`, `description`, optional HTTPS `imageUrl`, `website` |
 | `crew_assignments` | `ownerId` (signed-in owner query), `name`, `role`, `vehicle`, `shift`, `duty` |
-| `tracking_previews` | `vehicle`, `stops` (string list), `currentStop` (zero-based index) |
+| `tracking_previews` | `published` (true for a public position), `vehicle`, `stops` (string list), `currentStop` (zero-based index) |
 
 The existing rules do not grant access to these optional collections. Missing or denied optional data produces labelled previews. Enabling production records requires separately reviewed permissions and data. No location permission or GPS tracking was added. Sample sponsor actions explain the preview instead of contacting an invented advertiser.
 
@@ -72,3 +72,20 @@ CI checks architecture, formatting, analysis, domain/provider/widget behavior, e
 Tests include populated/empty/error/recovery states, no sample/live mixing, missing numeric/boolean fields, sample-write guards, owner operations through repository doubles, lazy rendering with 200 services, controller preservation, 320/390/768/1440-pixel layouts, long text, keyboard visibility, stream disposal and authentication changes.
 
 Production owner accounts are not used for test writes. Physical Android/iOS devices and production authenticated CRUD require a separate acceptance run; this branch does not deploy or merge itself.
+
+## Passenger app and sample data
+
+The [one-million-user architecture](docs/passenger-capacity.md) describes the production search path, capacity assumptions, verification results and staged release.
+
+The five passenger tabs are Find bus, Departures, Routes, Saved and More. The map is a stop diagram. Nearby distances use the existing location service when the platform callable functions are enabled. Bookmarks are stored on the device. Departure reminders use the selected service date in Kerala time. On Android the OS can defer an alert, and web passengers can import a calendar event.
+
+Open **More → Sample routes** for five illustrative services, including an independent return trip. The screen identifies a Firestore or bundled catalogue. To populate Firestore using Application Default Credentials with write access to the target project:
+
+```bash
+npm ci --prefix functions
+GOOGLE_CLOUD_PROJECT=findmybus-535ae node functions/seed-samples.js
+```
+
+The script verifies five documents in `sample_services` and three fruits in `sample_fruits`. It only creates missing documents. The transit app reads the sample services. For local seeding, set `FIRESTORE_EMULATOR_HOST` and use a `demo-` project ID. Deploy the included Firestore rules to enable the public sample timetable reader.
+
+Web uses the existing Firebase app. Register Android and iOS apps for `com.bilvok.findmybus` in the same project. Supply the Android app ID and API key via `--dart-define=FIREBASE_ANDROID_APP_ID=...` and `--dart-define=FIREBASE_ANDROID_API_KEY=...`, or place the downloaded `google-services.json` in `android/app/`. For iOS use the corresponding `FIREBASE_IOS_APP_ID` and `FIREBASE_IOS_API_KEY` defines, or include the downloaded `GoogleService-Info.plist` as a Runner resource in Xcode. Store builds require the publisher’s release signing configuration.

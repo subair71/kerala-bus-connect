@@ -1,3 +1,4 @@
+import '../../../journeys/presentation/widgets/journey_controls.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/theme/home_theme.dart';
@@ -70,6 +71,15 @@ class MobileBusResultsSheet extends ConsumerWidget {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Filter buses',
+                  icon: const Icon(Icons.tune),
+                  onPressed: () => showModalBottomSheet<void>(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (_) => const FilterSheet(),
                   ),
                 ),
                 IconButton(

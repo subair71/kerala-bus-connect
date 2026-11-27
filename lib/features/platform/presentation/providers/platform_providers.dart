@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
@@ -10,6 +11,16 @@ import '../../domain/platform_repository.dart';
 
 final platformEnabledProvider = Provider<bool>(
   (ref) => const bool.fromEnvironment('PLATFORM_ENABLED'),
+);
+// Release clients use a bounded indexed passenger API. The independent switch also
+// supports validating the index on staging before enabling other platform features.
+final passengerPagingEnabledProvider = Provider<bool>(
+  (ref) =>
+      ref.watch(platformEnabledProvider) ||
+      const bool.fromEnvironment(
+        'PAGED_PASSENGER_SEARCH',
+        defaultValue: kReleaseMode,
+      ),
 );
 final platformRepositoryProvider = Provider<PlatformRepository>(
   (ref) => FirebasePlatformRepository(

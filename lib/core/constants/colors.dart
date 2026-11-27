@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Shared light palette, inspired by the home-screen reference.
 class AppColors {
-  static const primary = Color(0xffe96300);
+  static const primary = Color(0xffb84800);
   static const accentInk = Color(0xffa64400);
   static const primaryContainer = Color(0xffffebdc);
   static const onPrimary = Color(0xffffffff);
@@ -22,7 +22,7 @@ class AppColors {
   static const surfaceContainerHighest = Color(0xffdcdce3);
   static const journeySurface = Color(0xfff5f5f6);
   static const card = Color(0xffffffff);
-  static const onSurface = Color(0xff202124);
+  static const onSurface = Color(0xff172f3f);
   static const onSurfaceVariant = Color(0xff676b78);
   static const outline = Color(0xff858895);
   static const outlineVariant = Color(0xffcbcdd4);

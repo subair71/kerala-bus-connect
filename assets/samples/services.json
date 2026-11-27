@@ -1,0 +1,135 @@
+[
+  {
+    "id": "demo:kt01",
+    "busName": "KT 01",
+    "routeId": "demo:aluva-kaloor",
+    "routeName": "Aluva → Kaloor",
+    "businessName": "FindMyBus sample operator",
+    "stops": [
+      "Aluva",
+      "Kalamassery",
+      "Edappally",
+      "Palarivattom",
+      "Kaloor"
+    ],
+    "stopTimings": {
+      "Aluva": 560,
+      "Kalamassery": 575,
+      "Edappally": 590,
+      "Palarivattom": 600,
+      "Kaloor": 610
+    },
+    "departureMinutes": 560,
+    "offDays": [
+      "Sunday"
+    ],
+    "published": true,
+    "offTimingsNote": "Sample timetable · not for travel planning."
+  },
+  {
+    "id": "demo:kt02",
+    "busName": "KT 02",
+    "routeId": "demo:aluva-kaloor",
+    "routeName": "Aluva → Kaloor",
+    "businessName": "FindMyBus sample operator",
+    "stops": [
+      "Aluva",
+      "Kalamassery",
+      "Edappally",
+      "Palarivattom",
+      "Kaloor"
+    ],
+    "stopTimings": {
+      "Aluva": 580,
+      "Kalamassery": 600,
+      "Edappally": 615,
+      "Palarivattom": 625,
+      "Kaloor": 635
+    },
+    "departureMinutes": 580,
+    "offDays": [
+      "Sunday"
+    ],
+    "published": true,
+    "offTimingsNote": "Sample timetable · not for travel planning."
+  },
+  {
+    "id": "demo:kt03",
+    "busName": "KT 03",
+    "routeId": "demo:aluva-kaloor",
+    "routeName": "Aluva → Kaloor",
+    "businessName": "FindMyBus sample operator",
+    "stops": [
+      "Aluva",
+      "Kalamassery",
+      "Edappally",
+      "Palarivattom",
+      "Kaloor"
+    ],
+    "stopTimings": {
+      "Aluva": 605,
+      "Kalamassery": 625,
+      "Edappally": 640,
+      "Palarivattom": 650,
+      "Kaloor": 660
+    },
+    "departureMinutes": 605,
+    "offDays": [
+      "Sunday"
+    ],
+    "published": true,
+    "offTimingsNote": "Sample timetable · not for travel planning."
+  },
+  {
+    "id": "demo:kt01-return",
+    "busName": "KT 01",
+    "routeId": "demo:kaloor-aluva",
+    "routeName": "Kaloor → Aluva",
+    "businessName": "FindMyBus sample operator",
+    "stops": [
+      "Kaloor",
+      "Palarivattom",
+      "Edappally",
+      "Kalamassery",
+      "Aluva"
+    ],
+    "stopTimings": {
+      "Kaloor": 630,
+      "Palarivattom": 639,
+      "Edappally": 650,
+      "Kalamassery": 665,
+      "Aluva": 680
+    },
+    "departureMinutes": 630,
+    "offDays": [
+      "Sunday"
+    ],
+    "published": true,
+    "offTimingsNote": "Sample timetable · not for travel planning."
+  },
+  {
+    "id": "demo:kt04",
+    "busName": "KT 04",
+    "routeId": "demo:thrissur round-palakkad stand",
+    "routeName": "Thrissur Round → Palakkad Stand",
+    "businessName": "FindMyBus sample operator",
+    "stops": [
+      "Thrissur Round",
+      "Pattikkad",
+      "Alathur",
+      "Palakkad Stand"
+    ],
+    "stopTimings": {
+      "Thrissur Round": 480,
+      "Pattikkad": 510,
+      "Alathur": 555,
+      "Palakkad Stand": 585
+    },
+    "departureMinutes": 480,
+    "offDays": [
+      "Sunday"
+    ],
+    "published": true,
+    "offTimingsNote": "Sample timetable · not for travel planning."
+  }
+]

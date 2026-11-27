@@ -1,3 +1,6 @@
+import '../../../journeys/presentation/widgets/journey_controls.dart';
+import '../../../journeys/presentation/providers/journey_providers.dart';
+import '../../../journeys/domain/journey_filters.dart';
 import '../../../places/presentation/widgets/nearby_stops_panel.dart';
 import '../../../places/presentation/widgets/place_text_field.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +13,8 @@ import 'journey_date_strip.dart';
 
 class SearchPanel extends HookConsumerWidget {
   final VoidCallback? onSearch;
-  const SearchPanel({super.key, this.onSearch});
+  final bool compact;
+  const SearchPanel({super.key, this.onSearch, this.compact = false});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     void submit() {
@@ -35,10 +39,9 @@ class SearchPanel extends HookConsumerWidget {
       sync(from, next.from);
       sync(to, next.to);
     });
-    final rowHeight = (28 + MediaQuery.textScalerOf(context).scale(40)).clamp(
-      72.0,
-      double.infinity,
-    );
+    final rowHeight =
+        ((compact ? 23 : 28) + MediaQuery.textScalerOf(context).scale(40))
+            .clamp(compact ? 52.0 : 72.0, double.infinity);
     Widget stopField(bool origin, {required bool wide}) => SizedBox(
       height: rowHeight,
       child: PlaceTextField(
@@ -49,7 +52,7 @@ class SearchPanel extends HookConsumerWidget {
         onSubmitted: (_) =>
             origin ? FocusScope.of(context).nextFocus() : submit(),
         style: const TextStyle(
-          fontSize: 20,
+          fontSize: 16,
           height: 1.25,
           fontWeight: FontWeight.w500,
           color: HomeTheme.text,
@@ -70,10 +73,37 @@ class SearchPanel extends HookConsumerWidget {
           padding: EdgeInsets.fromLTRB(16, 8, wide ? 12 : 68, 8),
           child: Row(
             children: [
-              Icon(
-                origin ? Icons.navigation_outlined : Icons.location_on_outlined,
-                size: 24,
-                color: HomeTheme.muted,
+              InkWell(
+                onTap: () async {
+                  final value = await chooseStop(
+                    context,
+                    title: origin
+                        ? 'Choose boarding stop'
+                        : 'Choose destination',
+                    initial: origin ? from.text : to.text,
+                  );
+                  if (context.mounted && value != null) {
+                    if (origin) {
+                      controller.from(value);
+                    } else {
+                      controller.to(value);
+                    }
+                  }
+                },
+                child: Tooltip(
+                  message: origin
+                      ? 'Choose boarding stop'
+                      : 'Choose destination',
+                  child: Icon(
+                    origin
+                        ? Icons.navigation_outlined
+                        : Icons.location_on_outlined,
+                    size: 24,
+                    color: origin
+                        ? const Color(0xff176b5d)
+                        : HomeTheme.accentInk,
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -132,7 +162,31 @@ class SearchPanel extends HookConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const NearbyStopsPanel(),
+            if (!compact) const NearbyStopsPanel(),
+            if (compact) ...[
+              const SizedBox(height: 6),
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: HomeTheme.border,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Text(
+                  'Find a bus',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -.8,
+                  ),
+                ),
+              ),
+            ],
             Card(
               margin: EdgeInsets.zero,
               elevation: 0,
@@ -179,14 +233,47 @@ class SearchPanel extends HookConsumerWidget {
                     thickness: 1,
                     color: HomeTheme.border,
                   ),
-                  const JourneyDateStrip(),
+                  if (compact)
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      children: [
+                        TextButton.icon(
+                          icon: const Icon(
+                            Icons.calendar_today_outlined,
+                            size: 16,
+                          ),
+                          onPressed: () => openJourneyTime(context, ref),
+                          label: Text(
+                            MaterialLocalizations.of(context).formatShortDate(
+                              query.serviceDate ??
+                                  ref.read(journeyTodayProvider),
+                            ),
+                          ),
+                        ),
+                        TextButton.icon(
+                          icon: const Icon(Icons.access_time, size: 16),
+                          onPressed: () => pickAfter(context, ref),
+                          label: Text(
+                            ref.watch(journeyFiltersProvider).after == null
+                                ? 'Any time'
+                                : 'After ${clock24(ref.watch(journeyFiltersProvider).after)}',
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    const JourneyDateStrip(),
                   FilledButton(
                     key: const ValueKey('show-bus-results'),
                     onPressed: submit,
                     style: FilledButton.styleFrom(
-                      backgroundColor: HomeTheme.primary,
+                      backgroundColor: compact
+                          ? const Color(0xffb84800)
+                          : HomeTheme.primary,
                       foregroundColor: Colors.white,
-                      shape: const RoundedRectangleBorder(),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(compact ? 10 : 0),
+                      ),
                       minimumSize: const Size(48, 56),
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
@@ -196,7 +283,7 @@ class SearchPanel extends HookConsumerWidget {
                     child: const Text(
                       'Search buses',
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 17,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

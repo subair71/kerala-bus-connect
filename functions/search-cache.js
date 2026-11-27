@@ -8,7 +8,8 @@ export class SearchCache {
   async get(key, load) {
     const entry = this.values.get(key);
     if (entry && (entry.pending || this.now() < entry.until)) {
-      return {...await entry.promise, cache: entry.pending ? 'shared' : 'hit', scanned: 0};
+      const status = entry.pending ? 'shared' : 'hit';
+      return {...await entry.promise, cache: status, scanned: 0, indexDocsFetched: 0, sourceLookups: 0};
     }
     if (entry) { this.values.delete(key); this.bytes -= entry.bytes; }
     while (this.values.size >= this.maximum || this.bytes > this.maxBytes) {

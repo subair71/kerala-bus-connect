@@ -42,30 +42,87 @@ export function scheduleFingerprint(service) {
   return hash(JSON.stringify([service.stops, service.stopTimings, service.departureMinutes,
     service.offDays, service.published, service.scheduleRevision]));
 }
+function dailyTimes(service, adjustment, status) {
+  const times = {};
+  let delay = 0;
+  for (const [i, stop] of service.stops.entries()) {
+    const additional = adjustment.delays?.[service.stopIds?.[i]] ?? 0;
+    if (!Number.isInteger(additional) || additional < 0 || additional > 1440) return null;
+    delay += additional;
+    const base = service.stopTimings?.[stop] ?? (i === 0 ? service.departureMinutes : null);
+    if (Number.isInteger(base) && base >= 0) times[stop] = base + (status === 'delayed' ? delay : 0);
+  }
+  return times;
+}
+
+function runningStatus(adjustment) {
+  const valid = ['scheduled', 'onTime', 'delayed', 'cancelled', 'completed'];
+  return valid.includes(adjustment?.status) ? adjustment.status :
+    adjustment && Object.values(adjustment.delays ?? {}).some(n => n > 0) ? 'delayed' : 'scheduled';
+}
+
+// A bookmark and a selected result resolve by ID independently of search pagination.
+export async function getJourneyTimetable(db, raw) {
+  const date = dateKey(raw?.date);
+  const id = raw?.id;
+  if (typeof id !== 'string' || !id || id.includes('/') || id === '.' || id === '..' ||
+      Buffer.byteLength(id) > 1400) throw new HttpsError('invalid-argument', 'Choose a valid trip.');
+  const refs = [db.collection('services').doc(id)];
+  if (raw.regular !== true) refs.push(db.collection('trip_adjustments').doc(id + '_' + date));
+  const [schedule, daily] = await db.getAll(...refs);
+  const service = schedule.data();
+  if (!service?.published || !Array.isArray(service.stops)) return {service: null};
+  const result = publicService(id, service);
+  if (raw.regular === true) return {service: result};
+  const day = days[new Date(date + 'T00:00:00Z').getUTCDay()];
+  if (service.offDays?.includes(day)) return {service: null};
+  const adjustment = daily?.data();
+  const active = adjustment && adjustment.scheduleRevision === service.scheduleRevision ? adjustment : null;
+  const status = runningStatus(active);
+  return {service: {...result, serviceDate: date, runningStatus: status,
+    expectedStopTimings: active ? dailyTimes(service, active, status) ?? {} : {}}};
+}
+
+const workingDays = days.slice(1, 6);
+const weekendDays = [days[0], days[6]];
+
+// Each boarding day matches exactly one stored group. Readers also accept the
+// full weekday names written by previous versions of the projection trigger.
+function groupsForDays(boardingDays) {
+  if (boardingDays.length === 7) return ['daily'];
+  const result = [];
+  for (const [label, group] of [['workweek', workingDays], ['weekend', weekendDays]]) {
+    if (group.every(day => boardingDays.includes(day))) result.push(label);
+    else result.push(...group.filter(day => boardingDays.includes(day)));
+  }
+  return result;
+}
+export function departureKeys(day, suffix) {
+  return [day, workingDays.includes(day) ? 'workweek' : 'weekend', 'daily'].map(group => group + suffix);
+}
+
 export function projectDepartures(tripId, service, adjustment = null) {
   if (!service?.published || !Array.isArray(service.stops) || service.stops.length > 100) return [];
   if (adjustment && adjustment.scheduleRevision !== service.scheduleRevision) return [];
   const offDays = Array.isArray(service.offDays) ? service.offDays : days;
   const records = [];
-  const validStatus = ['scheduled', 'onTime', 'delayed', 'cancelled', 'completed'];
-  const status = validStatus.includes(adjustment?.status) ? adjustment.status :
-    adjustment && Object.values(adjustment.delays ?? {}).some(n => n > 0) ? 'delayed' : 'scheduled';
-  let delay = 0;
+  const status = runningStatus(adjustment);
+  const expectedStopTimings = adjustment ? dailyTimes(service, adjustment, status) : {};
+  if (!expectedStopTimings) return [];
+  const revision = scheduleFingerprint(service);
   for (let i = 0; i < service.stops.length; i++) {
     const stop = service.stops[i];
     const scheduled = service.stopTimings?.[stop] ?? (i === 0 ? service.departureMinutes : null);
     if (!Number.isInteger(scheduled) || scheduled < 0 || scheduled > 2879) continue;
-    const additional = adjustment?.delays?.[service.stopIds?.[i]] ?? 0;
-    if (!Number.isInteger(additional) || additional < 0 || additional > 1440) return [];
-    delay += additional;
-    const minutes = scheduled + (status === 'delayed' ? delay : 0);
+    const minutes = expectedStopTimings[stop] ?? scheduled;
     const dayOffset = Math.floor(minutes / 1440);
     const scope = adjustment ? shiftDate(adjustment.serviceDate, dayOffset) : 'recurring';
     const boardingDays = days.filter((_, d) => !offDays.includes(days[((d - dayOffset) % 7 + 7) % 7]));
     const keys = [];
-    for (const day of ['*', ...boardingDays]) {
-      for (const token of tokens(stop)) keys.push(day + '|stop|' + token);
-      if (i === 0) keys.push(day + '|origin');
+    const stopTokens = tokens(stop);
+    for (const group of groupsForDays(boardingDays)) {
+      for (const token of stopTokens) keys.push(group + '|stop|' + token);
+      if (i === 0) keys.push(group + '|origin');
     }
     if (i === 0) {
       for (const token of new Set([service.routeName, ...service.stops].flatMap(tokens))) {
@@ -75,12 +132,9 @@ export function projectDepartures(tripId, service, adjustment = null) {
     records.push({
       tripId, stopIndex: i, stopName: stop, minute: minutes % 1440, dayOffset,
       scope, keys, status, serviceDate: adjustment?.serviceDate ?? null,
-      revision: scheduleFingerprint(service),
+      revision,
       service: {stops: service.stops, routeName: service.routeName ?? ''},
-      expectedStopTimings: adjustment ? Object.fromEntries(service.stops.map((name, n) => [
-        name, service.stopTimings?.[name] + (status === 'delayed' ?
-          service.stops.slice(0, n + 1).reduce((sum, _, j) => sum + (adjustment.delays?.[service.stopIds?.[j]] ?? 0), 0) : 0),
-      ]).filter(([, value]) => Number.isFinite(value))) : {},
+      expectedStopTimings,
     });
   }
   return records;
@@ -102,8 +156,9 @@ export async function indexSource(db, collection, id) {
       collection === 'services' ? null : data) : [];
     const digest = hash(JSON.stringify(rows));
     if (prior.data()?.digest === digest) return;
-    const old = await tx.get(db.collection('stop_departures').where('sourceKey', '==', sourceKey));
-    for (const doc of old.docs) tx.delete(doc.ref);
+    const old = await tx.get(db.collection('stop_departures').where('sourceKey', '==', sourceKey).select());
+    const retained = new Set(rows.map(row => hash(sourceKey + ':' + row.stopIndex)));
+    for (const doc of old.docs) if (!retained.has(doc.id)) tx.delete(doc.ref);
     for (const row of rows) {
       tx.set(db.collection('stop_departures').doc(hash(sourceKey + ':' + row.stopIndex)), {...row, sourceKey});
     }
@@ -120,54 +175,67 @@ export function rowMatches(row, input) {
   return row.stopIndex === origin && origin >= 0 && destination >= 0 &&
     (!input.to || origin < destination);
 }
-export function searchDepartures(db, raw, now = new Date()) {
-  const key = JSON.stringify([raw, Math.floor(now.getTime() / 60000)]);
-  return cacheFor(db).get(key, () => queryDepartures(db, raw, now));
-}
-export async function queryDepartures(db, raw, now = new Date()) {
-  const ready = await db.doc('platform_config/search').get();
-  if (ready.data()?.ready !== true) throw new HttpsError('failed-precondition', 'Search index is not ready.');
-  const input = {
-    from: normalize(raw?.from), to: normalize(raw?.to),
-    date: dateKey(raw?.date), directory: raw?.directory === true,
-  };
+function searchInput(raw) {
+  if (!raw || (raw.from != null && typeof raw.from !== 'string') ||
+      (raw.to != null && typeof raw.to !== 'string')) throw new HttpsError('invalid-argument', 'Invalid stops.');
+  const input = {from: normalize(raw.from), to: normalize(raw.to), date: dateKey(raw.date), directory: raw.directory === true};
   if (input.from.length > 120 || input.to.length > 120) throw new HttpsError('invalid-argument', 'Search text is too long.');
   const binding = hash(JSON.stringify(input));
-  const cursor = raw?.cursor;
-  if (cursor && (cursor.binding !== binding || !Array.isArray(cursor.positions) || cursor.positions.length !== 2)) {
-    throw new HttpsError('invalid-argument', 'Restart this search.');
+  let cursor = null;
+  if (raw.cursor != null) {
+    const c = raw.cursor;
+    if (c.binding !== binding || !Array.isArray(c.positions) || c.positions.length !== 2 ||
+        !Array.isArray(c.exhausted) || c.exhausted.length !== 2 || c.exhausted.some(v => typeof v !== 'boolean') ||
+        c.positions.some(p => p !== null && (!Array.isArray(p) || p.length !== 2 ||
+          !Number.isInteger(p[0]) || p[0] < 0 || p[0] >= 1440 || typeof p[1] !== 'string' || !/^[a-f0-9]{64}$/.test(p[1])))) {
+      throw new HttpsError('invalid-argument', 'Restart this search.');
+    }
+    cursor = {binding, positions: c.positions, exhausted: c.exhausted};
   }
+  return {input, binding, cursor};
+}
+export async function searchDepartures(db, raw, now = new Date()) {
+  const request = searchInput(raw);
+  const key = JSON.stringify([request, Math.floor(now.getTime() / 60000)]);
+  return cacheFor(db).get(key, () => readDepartures(db, request, now));
+}
+export function queryDepartures(db, raw, now = new Date()) {
+  return readDepartures(db, searchInput(raw), now);
+}
+async function readDepartures(db, {input, binding, cursor}, now) {
+  const ready = await db.doc('platform_config/search').get();
+  if (ready.data()?.ready !== true) throw new HttpsError('failed-precondition', 'Search index is not ready.');
   const today = new Date(now.getTime() + 330 * 60000).toISOString().slice(0, 10);
   const currentMinute = (now.getUTCHours() * 60 + now.getUTCMinutes() + 330) % 1440;
   const minimum = input.directory || input.date !== today ? 0 : currentMinute;
   const day = days[new Date(input.date + 'T00:00:00Z').getUTCDay()];
   const token = [...input.from].slice(0, 3).join('');
-  const key = input.directory ? '*|directory|' + token :
-    input.from ? day + '|stop|' + token : day + '|origin';
+  const keys = input.directory ? ['*|directory|' + token] : departureKeys(day, input.from ? '|stop|' + token : '|origin');
   const positions = cursor?.positions?.map(p => p ? [...p] : null) ?? [null, null];
   const exhausted = cursor?.exhausted ? [...cursor.exhausted] : [false, input.directory];
   const buffers = [[], []];
+  const lastBatch = [false, false];
+  const batchSize = [5, 5];
   const collections = ['recurring', input.date];
   const rows = [];
-  let scanned = 0;
+  let scanned = 0, indexDocsFetched = 0, sourceLookups = 1;
   const memo = new Map();
   async function read(path) {
-    if (!memo.has(path)) memo.set(path, db.doc(path).get());
+    if (!memo.has(path)) { sourceLookups++; memo.set(path, db.doc(path).get()); }
     return memo.get(path);
   }
   async function fill(i) {
     if (buffers[i].length || exhausted[i]) return;
     let query = db.collection('stop_departures').where('scope', '==', collections[i])
-      .where('keys', 'array-contains', key).where('minute', '>=', minimum)
-      .orderBy('minute').orderBy(FieldPath.documentId()).limit(12);
-    if (positions[i]) {
-      if (!Array.isArray(positions[i]) || !Number.isInteger(positions[i][0]) || !/^[a-f0-9]{64}$/.test(positions[i][1])) {
-        throw new HttpsError('invalid-argument', 'Restart this search.');
-      }
-      query = query.startAfter(...positions[i]);
-    }
+      .where('keys', keys.length === 1 ? 'array-contains' : 'array-contains-any', keys.length === 1 ? keys[0] : keys)
+      .where('minute', '>=', minimum).orderBy('minute').orderBy(FieldPath.documentId())
+      .limit(batchSize[i]).select('tripId', 'stopIndex', 'minute', 'dayOffset', 'serviceDate', 'status', 'revision', 'service');
+    if (positions[i]) query = query.startAfter(...positions[i]);
     const page = await query.get();
+    indexDocsFetched += page.size;
     buffers[i] = page.docs;
+    lastBatch[i] = page.size < batchSize[i];
+    batchSize[i] = 12;
     if (!page.size) exhausted[i] = true;
   }
   while (rows.length < 4 && scanned < 120) {
@@ -179,6 +247,7 @@ export async function queryDepartures(db, raw, now = new Date()) {
       a.data().minute === b.data().minute && a.id < b.id ? 0 : 1;
     const doc = buffers[i].shift();
     const row = doc.data();
+    if (lastBatch[i] && !buffers[i].length) exhausted[i] = true;
     positions[i] = [row.minute, doc.id];
     scanned++;
     if (!rowMatches(row, input)) continue;
@@ -189,11 +258,14 @@ export async function queryDepartures(db, raw, now = new Date()) {
       const paths = new Set();
       for (const candidate of candidates) {
         paths.add('services/' + candidate.tripId);
-        paths.add('trip_adjustments/' + candidate.tripId + '_' +
-          (candidate.serviceDate ?? shiftDate(input.date, -candidate.dayOffset)));
+        if (!input.directory) {
+          paths.add('trip_adjustments/' + candidate.tripId + '_' +
+            (candidate.serviceDate ?? shiftDate(input.date, -candidate.dayOffset)));
+        }
       }
       const missing = [...paths].filter(path => !memo.has(path));
       if (missing.length) {
+        sourceLookups += missing.length;
         const snapshots = await db.getAll(...missing.map(path => db.doc(path)));
         snapshots.forEach((snapshot, index) => memo.set(missing[index], Promise.resolve(snapshot)));
       }
@@ -201,20 +273,24 @@ export async function queryDepartures(db, raw, now = new Date()) {
     const service = (await read('services/' + row.tripId)).data();
     if (!service?.published || scheduleFingerprint(service) !== row.revision) continue;
     const startDate = row.serviceDate ?? shiftDate(input.date, -row.dayOffset);
-    const adjustment = (await read('trip_adjustments/' + row.tripId + '_' + startDate)).data();
+    const adjustment = input.directory ? null : (await read('trip_adjustments/' + row.tripId + '_' + startDate)).data();
     const validDaily = adjustment && adjustment.scheduleRevision === service.scheduleRevision;
     if (!input.directory && (i === 0 && validDaily || i === 1 && !validDaily)) continue;
+    let expectedStopTimings = {};
     if (i === 1) {
-      const current = projectDepartures(row.tripId, service, adjustment).find(r => r.stopIndex === row.stopIndex);
-      if (!current || current.scope !== row.scope || current.minute !== row.minute || current.status !== row.status) continue;
+      const status = runningStatus(adjustment);
+      expectedStopTimings = dailyTimes(service, adjustment, status);
+      const expected = expectedStopTimings?.[service.stops[row.stopIndex]];
+      if (expected == null || shiftDate(startDate, Math.floor(expected / 1440)) !== input.date ||
+          expected % 1440 !== row.minute || status !== row.status) continue;
     }
     rows.push({...publicService(row.tripId, service), runningStatus: row.status,
-      serviceDate: startDate, expectedStopTimings: row.expectedStopTimings,
+      serviceDate: startDate, expectedStopTimings,
       boardingMinute: row.minute});
   }
   const hasMore = buffers.some(b => b.length > 0) || exhausted.some(v => !v);
   return {records: rows, cursor: hasMore ? {binding, positions, exhausted} : null,
-    scanned, confirmedAt: now.toISOString()};
+    scanned, indexDocsFetched, sourceLookups, confirmedAt: now.toISOString()};
 }
 export function distanceKm(a, b) {
   const rad = x => x * Math.PI / 180;

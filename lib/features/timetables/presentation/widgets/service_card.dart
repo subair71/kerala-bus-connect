@@ -1,3 +1,5 @@
+import '../../../journeys/presentation/pages/trip_pages.dart';
+import '../../../passenger/presentation/providers/search_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import '../../../../core/constants/colors.dart';
@@ -85,20 +87,34 @@ class ServiceCard extends ConsumerWidget {
       to: destination,
       day: effectiveDay,
     );
+    void details() => openTrip(
+      context,
+      service,
+      from: boarding,
+      to: destination,
+      date:
+          serviceDay ??
+          ref.read(searchQueryProvider).serviceDate ??
+          ref.read(journeyTodayProvider),
+      route: !compact,
+    );
     if (compact)
-      return CompactServiceCard(
-        service: service,
-        boarding: boarding,
-        destination: destination,
-        status: status,
-        departure: departure,
-        arrival: arrival,
-        duration: duration,
-        demo: demo,
-        running: running,
-        demoFare: demoFare,
-        demoFareLabel: demoFareLabel,
-        onViewStops: openTimings,
+      return InkWell(
+        onTap: details,
+        child: CompactServiceCard(
+          service: service,
+          boarding: boarding,
+          destination: destination,
+          status: status,
+          departure: departure,
+          arrival: arrival,
+          duration: duration,
+          demo: demo,
+          running: running,
+          demoFare: demoFare,
+          demoFareLabel: demoFareLabel,
+          onViewStops: openTimings,
+        ),
       );
     return Card(
       child: Padding(
@@ -150,11 +166,14 @@ class ServiceCard extends ConsumerWidget {
               stopCount: service.stops.length,
             ),
             const SizedBox(height: 8),
-            if (service.hasDailyAdjustment)
+            if (service.hasDailyAdjustment &&
+                arrival != null &&
+                service.scheduledTime(boarding) != null &&
+                service.scheduledTime(destination) != null)
               Text(
                 'Scheduled: ${timeLabel(service.scheduledTime(boarding)!)} → '
                 '${timeLabel(service.scheduledTime(destination)!)} · '
-                'Delay: +${arrival! - service.scheduledTime(destination)!} min at destination',
+                'Delay: +${arrival - service.scheduledTime(destination)!} min at destination',
               ),
             Wrap(
               alignment: WrapAlignment.spaceBetween,
@@ -183,6 +202,11 @@ class ServiceCard extends ConsumerWidget {
                   onPressed: openTimings,
                 ),
               ],
+            ),
+            OutlinedButton.icon(
+              icon: const Icon(Icons.route_outlined),
+              label: const Text("Open route timetable"),
+              onPressed: details,
             ),
             if (service.offTimingsNote?.isNotEmpty ?? false)
               Text(

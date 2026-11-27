@@ -1,6 +1,15 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
-enum AppTab { passenger, routes, owner, tracking, crew }
+enum AppTab {
+  passenger,
+  departures,
+  routes,
+  saved,
+  more,
+  owner,
+  tracking,
+  crew,
+}
 
 final navigationProvider = NotifierProvider<NavigationController, AppTab>(
   NavigationController.new,

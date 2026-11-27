@@ -181,7 +181,7 @@ final passengerDailyUpdatesUnavailableProvider = Provider.autoDispose<bool>((
 
 final departureResultsProvider =
     Provider.autoDispose<AsyncValue<List<ServiceEntity>>>((ref) {
-      if (ref.watch(platformEnabledProvider)) {
+      if (ref.watch(passengerPagingEnabledProvider)) {
         return ref
             .watch(
               pagedDeparturesProvider(ref.watch(currentDepartureQueryProvider)),

@@ -11,21 +11,39 @@ import '../../domain/repositories/tracking_repository.dart';
 final trackingRepositoryProvider = Provider<TrackingRepository>(
   (ref) => FirebaseTrackingRepository(ref.watch(firestoreProvider)),
 );
+final trackingCursorsProvider =
+    NotifierProvider.autoDispose<TrackingCursors, List<String>>(
+      TrackingCursors.new,
+    );
+
+class TrackingCursors extends Notifier<List<String>> {
+  @override
+  List<String> build() => const [];
+  void next(String lastId) => state = [...state, lastId];
+  void previous() {
+    if (state.isNotEmpty) state = state.sublist(0, state.length - 1);
+  }
+}
+
 final liveTrackingProvider = StreamProvider.autoDispose<List<TrackingPreview>>(
   (ref) {
     retainWhileIdle(ref, ref.watch(liveDataCacheDurationProvider));
-    return ref.watch(trackingRepositoryProvider).watch();
+    return ref
+        .watch(trackingRepositoryProvider)
+        .watch(after: ref.watch(trackingCursorsProvider).lastOrNull);
   },
   // Firestore owns reconnection; expose errors to the labelled preview fallback.
   retry: (_, _) => null,
 );
 final trackingDataProvider =
-    Provider.autoDispose<AsyncValue<DataSet<TrackingPreview>>>(
-      (ref) => sampleFallback(
-        ref.watch(liveTrackingProvider),
-        const DemoTrackingRepository().previews(),
-      ),
-    );
+    Provider.autoDispose<AsyncValue<DataSet<TrackingPreview>>>((ref) {
+      final live = ref
+          .watch(liveTrackingProvider)
+          .whenData((rows) => rows.take(trackingPageSize).toList());
+      if (ref.watch(trackingCursorsProvider).isNotEmpty)
+        return live.whenData((rows) => DataSet(rows));
+      return sampleFallback(live, const DemoTrackingRepository().previews());
+    });
 final trackingSelectionProvider = NotifierProvider<TrackingSelection, int>(
   TrackingSelection.new,
 );

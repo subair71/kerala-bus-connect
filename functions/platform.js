@@ -4,7 +4,7 @@ import {getFirestore, FieldPath} from 'firebase-admin/firestore';
 import {onCall, HttpsError} from 'firebase-functions/v2/https';
 import {onDocumentWritten} from 'firebase-functions/v2/firestore';
 import {onSchedule} from 'firebase-functions/v2/scheduler';
-import {searchDepartures, nearbyStops, indexSource} from './transit.js';
+import {searchDepartures, getJourneyTimetable as readJourneyTimetable, nearbyStops, indexSource} from './transit.js';
 import {platformAction, platformList, targetedAds, writeAd} from './commerce.js';
 import {recordEvent} from './usage.js';
 
@@ -13,19 +13,23 @@ const db = getFirestore();
 const options = {region: 'asia-south1', enforceAppCheck: true,
   cors: process.env.FUNCTIONS_EMULATOR === 'true' ? true : ['https://subair71.github.io'],
   timeoutSeconds: 30, memory: '256MiB', maxInstances: 10, concurrency: 40};
-function callable(handler) {
-  return onCall(options, async request => {
+function callable(handler, settings = options) {
+  return onCall(settings, async request => {
     if (!request.app) throw new HttpsError('unauthenticated', 'App verification required.');
     return handler(request);
   });
 }
+// Bound the public read tier independently of owner commands and analytics.
+const passengerOptions = {...options, concurrency: 64, maxInstances: 30, memory: '512MiB'};
+export const getJourneyTimetable = callable(r => readJourneyTimetable(db, r.data), passengerOptions);
 export const searchTimetables = callable(async r => {
   const started = Date.now();
   const result = await searchDepartures(db, r.data);
   console.info(JSON.stringify({metric: 'departure_search', durationMs: Date.now() - started,
-    scanned: result.scanned, returned: result.records.length, cache: result.cache}));
+    scanned: result.scanned, indexDocsFetched: result.indexDocsFetched, sourceLookups: result.sourceLookups,
+    returned: result.records.length, cache: result.cache}));
   return result;
-});
+}, passengerOptions);
 export const findNearbyStops = callable(r => nearbyStops(db, r.data));
 export const managePlatform = callable(r => platformAction(db, r.auth, r.data));
 export const listPlatformRecords = callable(r => platformList(db, r.auth, r.data));

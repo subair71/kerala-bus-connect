@@ -7,6 +7,7 @@ test('coalesces requests, expires and invalidates source changes', async () => {
   const load = async () => { calls++; return {records: [calls], scanned: 4}; };
   const results = await Promise.all([cache.get('a', load), cache.get('a', load)]);
   assert.equal(calls, 1);
+  assert.equal(results[1].cache, 'shared');
   assert.deepEqual(results[0].records, results[1].records);
   assert.equal((await cache.get('a', load)).scanned, 0);
   now = 11; await cache.get('a', load); assert.equal(calls, 2);

@@ -1,3 +1,4 @@
+import 'support/open_section.dart';
 import 'dart:async';
 import 'package:kerala_bus_connect/features/sponsors/domain/entities/sponsored_ad.dart';
 import 'package:flutter/material.dart';
@@ -164,12 +165,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       for (final label in ['Routes', 'Owner', 'Tracking', 'Crew']) {
-        await tester.tap(
-          find.descendant(
-            of: find.byType(NavigationBar),
-            matching: find.text(label),
-          ),
-        );
+        await openSection(tester, label);
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull, reason: label);
       }

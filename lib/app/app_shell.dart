@@ -10,30 +10,36 @@ import '../features/owner/presentation/pages/owner_page.dart';
 import '../features/tracking/presentation/pages/tracking_page.dart';
 import '../features/crew/presentation/pages/crew_page.dart';
 import 'navigation_provider.dart';
+import '../features/journeys/presentation/pages/discovery_pages.dart';
 import '../features/auth/presentation/providers/auth_providers.dart';
 
 class AppShell extends HookConsumerWidget {
   const AppShell({super.key});
-  static const _labels = ['Find bus', 'Routes', 'Owner', 'Tracking', 'Crew'];
+  static const _labels = ['Find bus', 'Departures', 'Routes', 'Saved', 'More'];
   static const _icons = [
-    Icons.directions_bus_outlined,
+    Icons.map_outlined,
+    Icons.departure_board_outlined,
     Icons.alt_route,
-    Icons.business_outlined,
-    Icons.location_on_outlined,
-    Icons.badge_outlined,
+    Icons.bookmark_outline,
+    Icons.more_horiz,
   ];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Observe session changes even while cached owner queries are off screen.
     // A listener keeps auth current without rebuilding the shell on each event.
     ref.listen(authUserProvider, (_, _) {});
     final tab = ref.watch(navigationProvider);
+    final navIndex = tab.index >= _labels.length
+        ? AppTab.more.index
+        : tab.index;
     final home = tab == AppTab.passenger;
     final baseTheme = Theme.of(context);
     final homeTheme = useMemoized(() => HomeTheme.from(baseTheme), [baseTheme]);
     final page = switch (tab) {
       AppTab.passenger => const PassengerPage(),
+      AppTab.departures => const DeparturesPage(),
+      AppTab.saved => const SavedPage(),
+      AppTab.more => const MorePage(),
       AppTab.routes => const RoutesPage(),
       AppTab.owner => const OwnerPage(),
       AppTab.tracking => const TrackingPage(),
@@ -45,7 +51,11 @@ class AppShell extends HookConsumerWidget {
       builder: (context, constraints) {
         final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
         final wide = constraints.maxWidth >= 1000 && scale <= 1.3;
-        final headerHeight = scale > 1.5 ? 92.0 : 68.0;
+        final headerHeight = scale > 1.5
+            ? 92.0
+            : scale > 1.15
+            ? 74.0
+            : 54.0;
         return Theme(
           data: homeTheme,
           child: Scaffold(
@@ -79,14 +89,15 @@ class AppShell extends HookConsumerWidget {
                                       style: TextStyle(
                                         fontSize: 17,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.primary,
+                                        color: AppColors.onSurface,
                                         letterSpacing: -.6,
                                       ),
                                     ),
                                     Text(
                                       home || wide
                                           ? 'Kerala Transit'
-                                          : _labels[tab.index],
+                                          : tab.name[0].toUpperCase() +
+                                                tab.name.substring(1),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: const TextStyle(
@@ -104,21 +115,25 @@ class AppShell extends HookConsumerWidget {
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 3,
                                     ),
-                                    child: TextButton.icon(
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: tab.index == i
-                                            ? AppColors.accentInk
-                                            : AppColors.onSurfaceVariant,
-                                        backgroundColor: tab.index == i
-                                            ? AppColors.secondaryContainer
-                                            : null,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
+                                    child: Semantics(
+                                      identifier:
+                                          'nav-${AppTab.values[i].name}',
+                                      child: TextButton.icon(
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: navIndex == i
+                                              ? AppColors.accentInk
+                                              : AppColors.onSurfaceVariant,
+                                          backgroundColor: navIndex == i
+                                              ? AppColors.secondaryContainer
+                                              : null,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                          ),
                                         ),
+                                        onPressed: () => select(i),
+                                        icon: Icon(_icons[i], size: 19),
+                                        label: Text(_labels[i]),
                                       ),
-                                      onPressed: () => select(i),
-                                      icon: Icon(_icons[i], size: 19),
-                                      label: Text(_labels[i]),
                                     ),
                                   ),
                                 const SizedBox(width: 24),
@@ -133,20 +148,23 @@ class AppShell extends HookConsumerWidget {
                                     color: AppColors.onSurface,
                                   ),
                                 ),
-                              IconButton(
-                                tooltip: 'Owner account',
-                                onPressed: () => select(AppTab.owner.index),
-                                padding: EdgeInsets.zero,
-                                icon: const CircleAvatar(
-                                  radius: 17,
-                                  backgroundColor: AppColors.primary,
-                                  child: Icon(
-                                    Icons.person_outline,
-                                    size: 19,
-                                    color: Colors.white,
+                              if (wide || tab.index >= _labels.length)
+                                IconButton(
+                                  tooltip: 'Owner account',
+                                  onPressed: () => ref
+                                      .read(navigationProvider.notifier)
+                                      .select(AppTab.owner),
+                                  padding: EdgeInsets.zero,
+                                  icon: const CircleAvatar(
+                                    radius: 17,
+                                    backgroundColor: AppColors.primary,
+                                    child: Icon(
+                                      Icons.person_outline,
+                                      size: 19,
+                                      color: Colors.white,
+                                    ),
                                   ),
                                 ),
-                              ),
                             ],
                           ),
                         ),
@@ -156,26 +174,38 @@ class AppShell extends HookConsumerWidget {
                 ),
               ),
             ),
-            body: SafeArea(top: false, bottom: false, child: page),
+            body: SafeArea(
+              top: false,
+              bottom: false,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1200),
+                  child: page,
+                ),
+              ),
+            ),
             bottomNavigationBar: wide
                 ? null
                 : NavigationBar(
-                    selectedIndex: tab.index,
+                    selectedIndex: navIndex,
                     onDestinationSelected: select,
                     destinations: [
                       for (var i = 0; i < _labels.length; i++)
-                        NavigationDestination(
-                          icon: Icon(
-                            _icons[i],
-                            size: 22,
-                            color: AppColors.onSurfaceVariant,
+                        Semantics(
+                          identifier: 'nav-${AppTab.values[i].name}',
+                          child: NavigationDestination(
+                            icon: Icon(
+                              _icons[i],
+                              size: 22,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                            selectedIcon: Icon(
+                              _icons[i],
+                              size: 22,
+                              color: AppColors.primary,
+                            ),
+                            label: _labels[i],
                           ),
-                          selectedIcon: Icon(
-                            _icons[i],
-                            size: 22,
-                            color: AppColors.primary,
-                          ),
-                          label: _labels[i],
                         ),
                     ],
                   ),
@@ -189,31 +219,10 @@ class AppShell extends HookConsumerWidget {
 class _BrandMark extends StatelessWidget {
   const _BrandMark();
   @override
-  Widget build(BuildContext context) => const SizedBox(
-    width: 30,
-    height: 34,
-    child: ColoredBox(
-      color: Colors.white,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.directions_bus_outlined,
-            size: 20,
-            color: AppColors.primary,
-          ),
-          SizedBox(height: 1),
-          Text(
-            'FindMyBus',
-            textScaler: TextScaler.noScaling,
-            style: TextStyle(
-              fontSize: 4,
-              fontWeight: FontWeight.w700,
-              color: AppColors.primary,
-            ),
-          ),
-        ],
-      ),
-    ),
+  Widget build(BuildContext context) => Image.asset(
+    'assets/images/findmybus-logo.jpg',
+    width: 40,
+    height: 33,
+    fit: BoxFit.contain,
   );
 }
