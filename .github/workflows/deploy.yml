@@ -29,7 +29,7 @@ jobs:
           FIREBASE_APP_CHECK_WEB_SITE_KEY: ${{ vars.FIREBASE_APP_CHECK_WEB_SITE_KEY }}
         run: >-
           flutter build web --release --base-href /kerala-bus-connect/
-          --dart-define=PAGED_PASSENGER_SEARCH=${PAGED_PASSENGER_SEARCH:-true}
+          --dart-define=PAGED_PASSENGER_SEARCH=${PAGED_PASSENGER_SEARCH:-${PLATFORM_ENABLED:-false}}
           --dart-define=PLATFORM_ENABLED=${PLATFORM_ENABLED:-false}
           --dart-define=GOOGLE_PLACES_ENABLED=${GOOGLE_PLACES_ENABLED:-false}
           --dart-define=FIREBASE_APP_CHECK_WEB_SITE_KEY=${FIREBASE_APP_CHECK_WEB_SITE_KEY}
