@@ -85,8 +85,9 @@ async function verifyStartup(page) {
         ]) {
           const staff = {Owner:'Owner account',Tracking:'Route position preview',Crew:'Crew duty roster'};
           if (staff[tab]) {
-            await page.getByText('More',{exact:true}).or(page.getByLabel(/^More(?: tab|,|$)/i)).first().click();
-            await page.getByText(staff[tab],{exact:true}).or(page.getByLabel(new RegExp(staff[tab]))).first().click();
+            await page.locator('[flt-semantics-identifier="nav-more"]').click();
+            const target = 'more-' + staff[tab].toLowerCase().replaceAll(' ', '-');
+            await page.locator('[flt-semantics-identifier="' + target + '"]').click();
           } else await page.locator('[aria-label^="' + tab + '"]').or(page.getByText(tab, {exact:true})).first().click();
           try {
             // Flutter may merge a heading and subtitle into one text or ARIA label.

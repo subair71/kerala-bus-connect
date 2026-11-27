@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {initializeApp, deleteApp} from 'firebase-admin/app';
 import {getFirestore} from 'firebase-admin/firestore';
 import {platformAction, platformList, targetedAds} from './commerce.js';
-import {indexSource, searchDepartures, nearbyStops} from './transit.js';
+import {indexSource, searchDepartures, nearbyStops, getJourneyTimetable} from './transit.js';
 import {recordEvent} from './usage.js';
 const enabled = !!process.env.FIRESTORE_EMULATOR_HOST;
 let app, db, sequence = 0;
@@ -162,4 +162,29 @@ test('advertiser edits preserve attribution and reject another owner', {skip: !e
   const saved = (await db.doc('advertisers/' + advertiser.id).get()).data();
   assert.equal(saved.ownerId, owner.uid);
   assert.equal(saved.name, 'Updated shop');
+});
+
+test('a saved trip resolves by ID with its current revision and a private trip stays unavailable', {skip: !enabled}, async () => {
+  const ref = db.doc('services/bookmark-01');
+  const schedule = {published:true, scheduleRevision:'one', stops:['A','B'],stopIds:['a','b'],stopTimings:{A:560,B:610},departureMinutes:560,offDays:['Sunday']};
+  await ref.set(schedule);
+  await db.doc('trip_adjustments/bookmark-01_2026-11-27').set({tripId:'bookmark-01',scheduleRevision:'one',delays:{a:5},status:'delayed'});
+  const query = {id:'bookmark-01',date:'2026-11-27'};
+  assert.equal((await getJourneyTimetable(db,query)).service.expectedStopTimings.B,615);
+  assert.equal((await getJourneyTimetable(db,{...query,regular:true})).service.stopTimings.B,610);
+  await ref.update({scheduleRevision:'two'});
+  assert.deepEqual((await getJourneyTimetable(db,query)).service.expectedStopTimings,{});
+  assert.equal((await getJourneyTimetable(db,{...query,date:'2026-11-29'})).service,null);
+  await ref.update({published:false});
+  assert.equal((await getJourneyTimetable(db,query)).service,null);
+});
+test('equivalent hot requests share a single normalized cache entry', {skip: !enabled}, async () => {
+  await db.doc('platform_config/search').set({ready:true});
+  const query = {from:'cache sample',to:'terminal',date:'2026-11-27'};
+  const first = await searchDepartures(db,query,new Date(now));
+  const repeat = await searchDepartures(db,{date:query.date,from:' CACHE sample ',to:'TERMINAL',extra:'ignored'},new Date(now));
+  assert.equal(first.cache,'miss');
+  assert.equal(repeat.cache,'hit');
+  assert.equal(repeat.sourceLookups,0);
+  assert.equal(repeat.indexDocsFetched,0);
 });

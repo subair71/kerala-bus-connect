@@ -75,6 +75,8 @@ Production owner accounts are not used for test writes. Physical Android/iOS dev
 
 ## Passenger app and sample data
 
+The [one-million-user architecture](docs/passenger-capacity.md) describes the production search path, capacity assumptions, verification results and staged release.
+
 The five passenger tabs are Find bus, Departures, Routes, Saved and More. The map is a stop diagram. Nearby distances use the existing location service when the platform callable functions are enabled. Bookmarks are stored on the device. Departure reminders use the selected service date in Kerala time. On Android the OS can defer an alert, and web passengers can import a calendar event.
 
 Open **More → Sample routes** for five illustrative services, including an independent return trip. The screen identifies a Firestore or bundled catalogue. To populate Firestore using Application Default Credentials with write access to the target project:

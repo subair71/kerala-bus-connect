@@ -8,11 +8,11 @@ import '../../../passenger/presentation/providers/search_providers.dart';
 import '../../../passenger/domain/services/departure_order.dart';
 import '../../../timetables/presentation/providers/timetable_providers.dart';
 import 'dart:convert';
-import 'package:flutter/services.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/providers/firebase_providers.dart';
-import '../../../timetables/data/models/service_model.dart';
+import '../../data/firebase_journey_repository.dart';
+import '../../domain/journey_repository.dart';
 import '../../../timetables/domain/entities/service_entity.dart';
 import '../../domain/journey_filters.dart';
 
@@ -29,19 +29,10 @@ final journeyBookProvider =
     AsyncNotifierProvider<JourneyBook, List<SavedJourney>>(JourneyBook.new);
 
 class JourneyBook extends AsyncNotifier<List<SavedJourney>> {
-  final _prefs = SharedPreferencesAsync();
   Future<void> _pending = Future.value();
-  static const _key = 'findmybus.journeys.v1';
   @override
-  Future<List<SavedJourney>> build() async {
-    final raw = await _prefs.getString(_key);
-    if (raw == null) return [];
-    return (jsonDecode(raw) as List)
-        .map(
-          (row) => SavedJourney.fromJson(Map<String, dynamic>.from(row as Map)),
-        )
-        .toList();
-  }
+  Future<List<SavedJourney>> build() =>
+      ref.watch(journeyRepositoryProvider).readBookmarks();
 
   Future<void> edit(SavedJourney item, {bool remove = false}) {
     final operation = _pending.then((_) async {
@@ -55,10 +46,7 @@ class JourneyBook extends AsyncNotifier<List<SavedJourney>> {
         var count = 0;
         rows.removeWhere((entry) => entry.kind == 'recent' && ++count > 12);
       }
-      await _prefs.setString(
-        _key,
-        jsonEncode(rows.map((e) => e.toJson()).toList()),
-      );
+      await ref.read(journeyRepositoryProvider).writeBookmarks(rows);
       if (ref.mounted) state = AsyncData(List.unmodifiable(rows));
     });
     _pending = operation.catchError((Object _) {});
@@ -66,42 +54,24 @@ class JourneyBook extends AsyncNotifier<List<SavedJourney>> {
   }
 }
 
-final sampleCatalogueProvider =
-    FutureProvider.autoDispose<({List<ServiceEntity> records, bool cloud})>((
-      ref,
-    ) async {
-      try {
-        final docs = await ref
-            .watch(firestoreProvider)
-            .collection('sample_services')
-            .get()
-            .timeout(const Duration(seconds: 5));
-        final rows = docs.docs
-            .where(
-              (d) => d.id.startsWith('demo:') && d.data()['sample'] == true,
-            )
-            .map(ServiceModel.fromSnapshot)
-            .toList();
-        if (rows.isNotEmpty) return (records: rows, cloud: true);
-      } catch (_) {
-        /* The bundled copy keeps the explicitly opened sample catalogue usable offline. */
-      }
-      final rows =
-          jsonDecode(
-                await rootBundle.loadString('assets/samples/services.json'),
-              )
-              as List;
-      return (
-        records: [
-          for (final row in rows)
-            ServiceModel.fromMap(
-              row['id'] as String,
-              Map<String, dynamic>.from(row as Map),
-            ),
-        ],
-        cloud: false,
-      );
-    });
+final journeyRepositoryProvider = Provider<JourneyRepository>(
+  (ref) => FirebaseJourneyRepository(
+    () => ref.read(firestoreProvider),
+    ref.watch(platformRepositoryProvider),
+    () => SharedPreferencesAsync(),
+  ),
+);
+final sampleCatalogueProvider = FutureProvider.autoDispose<SampleCatalogue>(
+  (ref) => ref.watch(journeyRepositoryProvider).samples(),
+);
+typedef TimetableKey = ({String id, String date, bool regular});
+final journeyTimetableProvider = FutureProvider.autoDispose
+    .family<ServiceEntity?, TimetableKey>(
+      (ref, key) => ref
+          .watch(journeyRepositoryProvider)
+          .timetable(key.id, key.date, regular: key.regular),
+      retry: (_, _) => null,
+    );
 
 typedef DateTrips = ({String date, String ids});
 final journeyUpdatesProvider = StreamProvider.autoDispose
@@ -121,7 +91,7 @@ typedef JourneyFeed = ({
 });
 final journeyFeedProvider = Provider.autoDispose
     .family<AsyncValue<JourneyFeed>, DepartureQuery>((ref, q) {
-      if (ref.watch(platformEnabledProvider)) {
+      if (ref.watch(passengerPagingEnabledProvider)) {
         return ref
             .watch(pagedDeparturesProvider(q))
             .whenData(

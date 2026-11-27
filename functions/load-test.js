@@ -26,10 +26,10 @@ for (let group = 0; group < 8; group++) for (let trip = 0; trip < 10; trip++) {
     departureMinutes: start, offDays: [], routeName: origin + ' route'});
   await indexSource(db, 'services', id);
 }
-for (const scenario of [{mode: 'cold', concurrency: 10}, {mode: 'shared-cache', concurrency: 10}, {mode: 'shared-cache', concurrency: 25}, {mode: 'shared-cache', concurrency: 50}, {mode: 'mixed-routes', concurrency: 50}]) {
+for (const scenario of [{mode: 'cold', concurrency: 10}, {mode: 'shared-cache', concurrency: 10}, {mode: 'shared-cache', concurrency: 25}, {mode: 'shared-cache', concurrency: 50}, {mode: 'mixed-routes', concurrency: 50}, {mode: 'mixed-routes', concurrency: 100}]) {
   const {mode, concurrency} = scenario;
   const times = [];
-  let errors = 0, scanned = 0;
+  let errors = 0, scanned = 0, indexDocsFetched = 0, sourceLookups = 0;
   const started = performance.now();
   await Promise.all(Array.from({length: concurrency}, async (_, worker) => {
     let cursor;
@@ -41,6 +41,8 @@ for (const scenario of [{mode: 'cold', concurrency: 10}, {mode: 'shared-cache', 
           new Date('2026-11-09T04:30:00Z'));
         if (result.records.length !== 4) throw new Error('Incomplete page');
         scanned += result.scanned;
+        indexDocsFetched += result.indexDocsFetched;
+        sourceLookups += result.sourceLookups;
         cursor = result.cursor;
       } catch { errors++; }
       times.push(performance.now() - at);
@@ -50,7 +52,8 @@ for (const scenario of [{mode: 'cold', concurrency: 10}, {mode: 'shared-cache', 
   const report = {mode, concurrency, requests: times.length, errors,
     durationMs: Math.round(performance.now() - started),
     p50Ms: Math.round(times[Math.floor(times.length * .5)]),
-    p95Ms: Math.round(times[Math.floor(times.length * .95)]), scanned};
+    p95Ms: Math.round(times[Math.floor(times.length * .95)]),
+    p99Ms: Math.round(times[Math.floor(times.length * .99)]), scanned, indexDocsFetched, sourceLookups};
   console.log('EMULATOR_LOAD_RESULT=' + JSON.stringify(report));
   if (errors) process.exitCode = 1;
 }

@@ -1,3 +1,4 @@
+import '../../../platform/presentation/providers/platform_providers.dart';
 import '../../../../app/navigation_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +55,18 @@ class TripPage extends ConsumerWidget {
   });
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final feed = sampleCatalogue
+    final indexed =
+        !sampleCatalogue && ref.watch(passengerPagingEnabledProvider);
+    final direct = indexed
+        ? ref.watch(
+            journeyTimetableProvider((
+              id: initial.id,
+              date: serviceDateKey(date),
+              regular: route,
+            )),
+          )
+        : null;
+    final feed = sampleCatalogue || indexed
         ? null
         : ref.watch(
             journeyFeedProvider((
@@ -65,8 +77,12 @@ class TripPage extends ConsumerWidget {
             )),
           );
     final current = feed?.asData?.value;
-    final match = current?.rows.where((s) => s.id == initial.id).firstOrNull;
-    final missing = current != null && !current.more && match == null;
+    final match =
+        direct?.asData?.value ??
+        current?.rows.where((s) => s.id == initial.id).firstOrNull;
+    final missing =
+        direct?.asData != null && direct!.asData!.value == null ||
+        current != null && !current.more && match == null;
     if (missing) {
       return Scaffold(
         appBar: AppBar(title: Text(route ? 'Route timetable' : 'Trip details')),
@@ -128,7 +144,9 @@ class TripPage extends ConsumerWidget {
                   ),
                   if (isSampleId(s.id))
                     const Text('Sample timetable · not for travel planning.'),
-                  if (current?.updatesMissing == true || feed?.hasError == true)
+                  if (direct?.hasError == true ||
+                      current?.updatesMissing == true ||
+                      feed?.hasError == true)
                     const Text(
                       'Daily updates unavailable. Check the regular timetable.',
                     ),

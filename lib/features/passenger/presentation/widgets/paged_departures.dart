@@ -82,7 +82,7 @@ class PagedDeparturesSliver extends ConsumerWidget {
               service: page.records[i],
               from: query.directory ? '' : query.from,
               to: query.to,
-              compact: true,
+              compact: !query.directory,
             ),
           ),
           if (page.records.isEmpty)

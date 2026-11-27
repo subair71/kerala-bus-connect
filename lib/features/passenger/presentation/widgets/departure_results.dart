@@ -19,7 +19,8 @@ class CatalogNotice extends ConsumerWidget {
   const CatalogNotice();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (ref.watch(platformEnabledProvider)) return const SizedBox.shrink();
+    if (ref.watch(passengerPagingEnabledProvider))
+      return const SizedBox.shrink();
     final data = ref.watch(serviceCatalogProvider).asData?.value;
     if (!(data?.cached ?? false) &&
         ref.watch(passengerDailyUpdatesUnavailableProvider)) {
@@ -45,7 +46,7 @@ class DeparturesSliver extends ConsumerWidget {
   const DeparturesSliver({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (ref.watch(platformEnabledProvider)) {
+    if (ref.watch(passengerPagingEnabledProvider)) {
       return PagedDeparturesSliver(
         query: ref.watch(currentDepartureQueryProvider),
       );

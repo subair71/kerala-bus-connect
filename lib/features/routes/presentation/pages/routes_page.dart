@@ -39,7 +39,7 @@ class RoutesPage extends HookConsumerWidget {
                       subtitle:
                           'Browse published services by route name or stop.',
                     ),
-                    if (!ref.watch(platformEnabledProvider))
+                    if (!ref.watch(passengerPagingEnabledProvider))
                       DataNotice(
                         cached: ref.watch(
                           serviceCatalogProvider.select(
@@ -125,7 +125,7 @@ class _DirectoryResults extends ConsumerWidget {
   const _DirectoryResults();
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (!ref.watch(platformEnabledProvider)) return const _RoutesList();
+    if (!ref.watch(passengerPagingEnabledProvider)) return const _RoutesList();
     return PagedDeparturesSliver(
       query: (
         from: ref.watch(debouncedRouteQueryProvider),

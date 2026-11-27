@@ -26,7 +26,7 @@ final placeDebounceProvider = Provider<Duration>(
 );
 final stopLabelsProvider = Provider.autoDispose<StopLabels>((ref) {
   retainWhileIdle(ref, ref.watch(catalogCacheDurationProvider));
-  if (ref.watch(platformEnabledProvider)) return StopLabels(const []);
+  if (ref.watch(passengerPagingEnabledProvider)) return StopLabels(const []);
   final services = ref.watch(serviceCatalogProvider).asData?.value.records;
   return StopLabels(services?.expand((s) => s.stops) ?? const []);
 });

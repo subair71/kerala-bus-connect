@@ -24,6 +24,6 @@ export const placeSuggestions = onCall({
   }
 });
 
-export {searchTimetables, findNearbyStops, managePlatform, listPlatformRecords,
+export {getJourneyTimetable, searchTimetables, findNearbyStops, managePlatform, listPlatformRecords,
   relevantAdvertisements, recordUsage, syncServiceDepartures,
   syncDailyDepartures, refreshAdvertisements} from './platform.js';

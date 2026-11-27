@@ -219,7 +219,7 @@ class DeparturesPage extends ConsumerWidget {
 
 void retryFeed(WidgetRef ref, DepartureQuery q) {
   ref.invalidate(journeyUpdatesProvider);
-  if (ref.read(platformEnabledProvider))
+  if (ref.read(passengerPagingEnabledProvider))
     ref.invalidate(pagedDeparturesProvider(q));
   else
     ref.invalidate(publishedServicesProvider);
@@ -350,6 +350,36 @@ class SavedServicePage extends ConsumerWidget {
           );
         },
       );
+    }
+    if (ref.watch(passengerPagingEnabledProvider)) {
+      final key = (id: item.serviceId, date: q.date, regular: q.directory);
+      return ref
+          .watch(journeyTimetableProvider(key))
+          .when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, _) => Center(
+              child: TextButton(
+                onPressed: () => ref.invalidate(journeyTimetableProvider(key)),
+                child: const Text('Unable to open timetable · Retry'),
+              ),
+            ),
+            data: (service) => service == null
+                ? const Center(
+                    child: Text('No published service for this date.'),
+                  )
+                : ListTile(
+                    title: Text(service.busName),
+                    subtitle: Text(service.routeName),
+                    onTap: () => openTrip(
+                      context,
+                      service,
+                      from: item.from,
+                      to: item.to,
+                      date: date,
+                      route: q.directory,
+                    ),
+                  ),
+          );
     }
     final result = ref.watch(journeyFeedProvider(q));
     return result.when(
@@ -534,12 +564,15 @@ class MorePage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     void select(AppTab t) => ref.read(navigationProvider.notifier).select(t);
     Widget link(IconData icon, String t, String sub, VoidCallback action) =>
-        ListTile(
-          leading: Icon(icon),
-          title: Text(t),
-          subtitle: Text(sub),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: action,
+        Semantics(
+          identifier: 'more-${t.toLowerCase().replaceAll(" ", "-")}',
+          child: ListTile(
+            leading: Icon(icon),
+            title: Text(t),
+            subtitle: Text(sub),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: action,
+          ),
         );
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),

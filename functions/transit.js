@@ -42,23 +42,61 @@ export function scheduleFingerprint(service) {
   return hash(JSON.stringify([service.stops, service.stopTimings, service.departureMinutes,
     service.offDays, service.published, service.scheduleRevision]));
 }
+function dailyTimes(service, adjustment, status) {
+  const times = {};
+  let delay = 0;
+  for (const [i, stop] of service.stops.entries()) {
+    const additional = adjustment.delays?.[service.stopIds?.[i]] ?? 0;
+    if (!Number.isInteger(additional) || additional < 0 || additional > 1440) return null;
+    delay += additional;
+    const base = service.stopTimings?.[stop] ?? (i === 0 ? service.departureMinutes : null);
+    if (Number.isInteger(base) && base >= 0) times[stop] = base + (status === 'delayed' ? delay : 0);
+  }
+  return times;
+}
+
+function runningStatus(adjustment) {
+  const valid = ['scheduled', 'onTime', 'delayed', 'cancelled', 'completed'];
+  return valid.includes(adjustment?.status) ? adjustment.status :
+    adjustment && Object.values(adjustment.delays ?? {}).some(n => n > 0) ? 'delayed' : 'scheduled';
+}
+
+// A bookmark and a selected result resolve by ID independently of search pagination.
+export async function getJourneyTimetable(db, raw) {
+  const date = dateKey(raw?.date);
+  const id = raw?.id;
+  if (typeof id !== 'string' || !id || id.includes('/') || id === '.' || id === '..' ||
+      Buffer.byteLength(id) > 1400) throw new HttpsError('invalid-argument', 'Choose a valid trip.');
+  const refs = [db.collection('services').doc(id)];
+  if (raw.regular !== true) refs.push(db.collection('trip_adjustments').doc(id + '_' + date));
+  const [schedule, daily] = await db.getAll(...refs);
+  const service = schedule.data();
+  if (!service?.published || !Array.isArray(service.stops)) return {service: null};
+  const result = publicService(id, service);
+  if (raw.regular === true) return {service: result};
+  const day = days[new Date(date + 'T00:00:00Z').getUTCDay()];
+  if (service.offDays?.includes(day)) return {service: null};
+  const adjustment = daily?.data();
+  const active = adjustment && adjustment.scheduleRevision === service.scheduleRevision ? adjustment : null;
+  const status = runningStatus(active);
+  return {service: {...result, serviceDate: date, runningStatus: status,
+    expectedStopTimings: active ? dailyTimes(service, active, status) ?? {} : {}}};
+}
+
 export function projectDepartures(tripId, service, adjustment = null) {
   if (!service?.published || !Array.isArray(service.stops) || service.stops.length > 100) return [];
   if (adjustment && adjustment.scheduleRevision !== service.scheduleRevision) return [];
   const offDays = Array.isArray(service.offDays) ? service.offDays : days;
   const records = [];
-  const validStatus = ['scheduled', 'onTime', 'delayed', 'cancelled', 'completed'];
-  const status = validStatus.includes(adjustment?.status) ? adjustment.status :
-    adjustment && Object.values(adjustment.delays ?? {}).some(n => n > 0) ? 'delayed' : 'scheduled';
-  let delay = 0;
+  const status = runningStatus(adjustment);
+  const expectedStopTimings = adjustment ? dailyTimes(service, adjustment, status) : {};
+  if (!expectedStopTimings) return [];
+  const revision = scheduleFingerprint(service);
   for (let i = 0; i < service.stops.length; i++) {
     const stop = service.stops[i];
     const scheduled = service.stopTimings?.[stop] ?? (i === 0 ? service.departureMinutes : null);
     if (!Number.isInteger(scheduled) || scheduled < 0 || scheduled > 2879) continue;
-    const additional = adjustment?.delays?.[service.stopIds?.[i]] ?? 0;
-    if (!Number.isInteger(additional) || additional < 0 || additional > 1440) return [];
-    delay += additional;
-    const minutes = scheduled + (status === 'delayed' ? delay : 0);
+    const minutes = expectedStopTimings[stop] ?? scheduled;
     const dayOffset = Math.floor(minutes / 1440);
     const scope = adjustment ? shiftDate(adjustment.serviceDate, dayOffset) : 'recurring';
     const boardingDays = days.filter((_, d) => !offDays.includes(days[((d - dayOffset) % 7 + 7) % 7]));
@@ -75,12 +113,9 @@ export function projectDepartures(tripId, service, adjustment = null) {
     records.push({
       tripId, stopIndex: i, stopName: stop, minute: minutes % 1440, dayOffset,
       scope, keys, status, serviceDate: adjustment?.serviceDate ?? null,
-      revision: scheduleFingerprint(service),
+      revision,
       service: {stops: service.stops, routeName: service.routeName ?? ''},
-      expectedStopTimings: adjustment ? Object.fromEntries(service.stops.map((name, n) => [
-        name, service.stopTimings?.[name] + (status === 'delayed' ?
-          service.stops.slice(0, n + 1).reduce((sum, _, j) => sum + (adjustment.delays?.[service.stopIds?.[j]] ?? 0), 0) : 0),
-      ]).filter(([, value]) => Number.isFinite(value))) : {},
+      expectedStopTimings,
     });
   }
   return records;
@@ -103,7 +138,8 @@ export async function indexSource(db, collection, id) {
     const digest = hash(JSON.stringify(rows));
     if (prior.data()?.digest === digest) return;
     const old = await tx.get(db.collection('stop_departures').where('sourceKey', '==', sourceKey));
-    for (const doc of old.docs) tx.delete(doc.ref);
+    const retained = new Set(rows.map(row => hash(sourceKey + ':' + row.stopIndex)));
+    for (const doc of old.docs) if (!retained.has(doc.id)) tx.delete(doc.ref);
     for (const row of rows) {
       tx.set(db.collection('stop_departures').doc(hash(sourceKey + ':' + row.stopIndex)), {...row, sourceKey});
     }
@@ -120,23 +156,36 @@ export function rowMatches(row, input) {
   return row.stopIndex === origin && origin >= 0 && destination >= 0 &&
     (!input.to || origin < destination);
 }
-export function searchDepartures(db, raw, now = new Date()) {
-  const key = JSON.stringify([raw, Math.floor(now.getTime() / 60000)]);
-  return cacheFor(db).get(key, () => queryDepartures(db, raw, now));
-}
-export async function queryDepartures(db, raw, now = new Date()) {
-  const ready = await db.doc('platform_config/search').get();
-  if (ready.data()?.ready !== true) throw new HttpsError('failed-precondition', 'Search index is not ready.');
-  const input = {
-    from: normalize(raw?.from), to: normalize(raw?.to),
-    date: dateKey(raw?.date), directory: raw?.directory === true,
-  };
+function searchInput(raw) {
+  if (!raw || (raw.from != null && typeof raw.from !== 'string') ||
+      (raw.to != null && typeof raw.to !== 'string')) throw new HttpsError('invalid-argument', 'Invalid stops.');
+  const input = {from: normalize(raw.from), to: normalize(raw.to), date: dateKey(raw.date), directory: raw.directory === true};
   if (input.from.length > 120 || input.to.length > 120) throw new HttpsError('invalid-argument', 'Search text is too long.');
   const binding = hash(JSON.stringify(input));
-  const cursor = raw?.cursor;
-  if (cursor && (cursor.binding !== binding || !Array.isArray(cursor.positions) || cursor.positions.length !== 2)) {
-    throw new HttpsError('invalid-argument', 'Restart this search.');
+  let cursor = null;
+  if (raw.cursor != null) {
+    const c = raw.cursor;
+    if (c.binding !== binding || !Array.isArray(c.positions) || c.positions.length !== 2 ||
+        !Array.isArray(c.exhausted) || c.exhausted.length !== 2 || c.exhausted.some(v => typeof v !== 'boolean') ||
+        c.positions.some(p => p !== null && (!Array.isArray(p) || p.length !== 2 ||
+          !Number.isInteger(p[0]) || p[0] < 0 || p[0] >= 1440 || typeof p[1] !== 'string' || !/^[a-f0-9]{64}$/.test(p[1])))) {
+      throw new HttpsError('invalid-argument', 'Restart this search.');
+    }
+    cursor = {binding, positions: c.positions, exhausted: c.exhausted};
   }
+  return {input, binding, cursor};
+}
+export async function searchDepartures(db, raw, now = new Date()) {
+  const request = searchInput(raw);
+  const key = JSON.stringify([request, Math.floor(now.getTime() / 60000)]);
+  return cacheFor(db).get(key, () => readDepartures(db, request, now));
+}
+export function queryDepartures(db, raw, now = new Date()) {
+  return readDepartures(db, searchInput(raw), now);
+}
+async function readDepartures(db, {input, binding, cursor}, now) {
+  const ready = await db.doc('platform_config/search').get();
+  if (ready.data()?.ready !== true) throw new HttpsError('failed-precondition', 'Search index is not ready.');
   const today = new Date(now.getTime() + 330 * 60000).toISOString().slice(0, 10);
   const currentMinute = (now.getUTCHours() * 60 + now.getUTCMinutes() + 330) % 1440;
   const minimum = input.directory || input.date !== today ? 0 : currentMinute;
@@ -149,10 +198,10 @@ export async function queryDepartures(db, raw, now = new Date()) {
   const buffers = [[], []];
   const collections = ['recurring', input.date];
   const rows = [];
-  let scanned = 0;
+  let scanned = 0, indexDocsFetched = 0, sourceLookups = 1;
   const memo = new Map();
   async function read(path) {
-    if (!memo.has(path)) memo.set(path, db.doc(path).get());
+    if (!memo.has(path)) { sourceLookups++; memo.set(path, db.doc(path).get()); }
     return memo.get(path);
   }
   async function fill(i) {
@@ -167,6 +216,7 @@ export async function queryDepartures(db, raw, now = new Date()) {
       query = query.startAfter(...positions[i]);
     }
     const page = await query.get();
+    indexDocsFetched += page.size;
     buffers[i] = page.docs;
     if (!page.size) exhausted[i] = true;
   }
@@ -194,6 +244,7 @@ export async function queryDepartures(db, raw, now = new Date()) {
       }
       const missing = [...paths].filter(path => !memo.has(path));
       if (missing.length) {
+        sourceLookups += missing.length;
         const snapshots = await db.getAll(...missing.map(path => db.doc(path)));
         snapshots.forEach((snapshot, index) => memo.set(missing[index], Promise.resolve(snapshot)));
       }
@@ -214,7 +265,7 @@ export async function queryDepartures(db, raw, now = new Date()) {
   }
   const hasMore = buffers.some(b => b.length > 0) || exhausted.some(v => !v);
   return {records: rows, cursor: hasMore ? {binding, positions, exhausted} : null,
-    scanned, confirmedAt: now.toISOString()};
+    scanned, indexDocsFetched, sourceLookups, confirmedAt: now.toISOString()};
 }
 export function distanceKm(a, b) {
   const rad = x => x * Math.PI / 180;

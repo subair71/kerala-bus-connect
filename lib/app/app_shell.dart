@@ -115,21 +115,25 @@ class AppShell extends HookConsumerWidget {
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 3,
                                     ),
-                                    child: TextButton.icon(
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: navIndex == i
-                                            ? AppColors.accentInk
-                                            : AppColors.onSurfaceVariant,
-                                        backgroundColor: navIndex == i
-                                            ? AppColors.secondaryContainer
-                                            : null,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
+                                    child: Semantics(
+                                      identifier:
+                                          'nav-${AppTab.values[i].name}',
+                                      child: TextButton.icon(
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: navIndex == i
+                                              ? AppColors.accentInk
+                                              : AppColors.onSurfaceVariant,
+                                          backgroundColor: navIndex == i
+                                              ? AppColors.secondaryContainer
+                                              : null,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                          ),
                                         ),
+                                        onPressed: () => select(i),
+                                        icon: Icon(_icons[i], size: 19),
+                                        label: Text(_labels[i]),
                                       ),
-                                      onPressed: () => select(i),
-                                      icon: Icon(_icons[i], size: 19),
-                                      label: Text(_labels[i]),
                                     ),
                                   ),
                                 const SizedBox(width: 24),
@@ -187,18 +191,21 @@ class AppShell extends HookConsumerWidget {
                     onDestinationSelected: select,
                     destinations: [
                       for (var i = 0; i < _labels.length; i++)
-                        NavigationDestination(
-                          icon: Icon(
-                            _icons[i],
-                            size: 22,
-                            color: AppColors.onSurfaceVariant,
+                        Semantics(
+                          identifier: 'nav-${AppTab.values[i].name}',
+                          child: NavigationDestination(
+                            icon: Icon(
+                              _icons[i],
+                              size: 22,
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                            selectedIcon: Icon(
+                              _icons[i],
+                              size: 22,
+                              color: AppColors.primary,
+                            ),
+                            label: _labels[i],
                           ),
-                          selectedIcon: Icon(
-                            _icons[i],
-                            size: 22,
-                            color: AppColors.primary,
-                          ),
-                          label: _labels[i],
                         ),
                     ],
                   ),
