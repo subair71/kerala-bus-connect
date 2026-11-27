@@ -17,7 +17,7 @@ class PlaceTextField extends HookConsumerWidget {
   final TextStyle? style;
   final TextInputAction? textInputAction;
   final TextCapitalization textCapitalization;
-  final bool enabled, commaSeparated;
+  final bool enabled, commaSeparated, autofocus;
   final int? minLines, maxLines;
 
   const PlaceTextField({
@@ -33,6 +33,7 @@ class PlaceTextField extends HookConsumerWidget {
     this.textInputAction,
     this.textCapitalization = TextCapitalization.words,
     this.enabled = true,
+    this.autofocus = false,
     this.commaSeparated = false,
     this.minLines,
     this.maxLines = 1,
@@ -86,6 +87,7 @@ class PlaceTextField extends HookConsumerWidget {
               key: fieldKey,
               controller: text,
               focusNode: node,
+              autofocus: autofocus,
               enabled: enabled,
               onChanged: onChanged,
               onEditingComplete: () {},

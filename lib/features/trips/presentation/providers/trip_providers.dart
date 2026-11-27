@@ -88,6 +88,9 @@ class TripDraftController extends Notifier<TripDraft> {
     }
   }
 
+  void routeName(String value) =>
+      _update(() => state.plan.copyWith(routeName: value.trim()));
+
   void rename(int index, String name) => _update(() {
     final stops = [...state.plan.stops];
     stops[index] = stops[index].copyWith(name: name);
@@ -149,6 +152,14 @@ class TripDraftController extends Notifier<TripDraft> {
       if (step == 2) state.plan.validate();
       if (step > 0 && state.plan.stops.any((s) => s.name.trim().isEmpty)) {
         throw const AppFailure('Enter every stop name first.');
+      }
+      if (step > 0 &&
+          state.plan.stops
+                  .map((s) => s.name.trim().toLowerCase())
+                  .toSet()
+                  .length !=
+              state.plan.stops.length) {
+        throw const AppFailure('Give each stop a distinct name.');
       }
       state = TripDraft(state.plan, step: step);
     } catch (error) {
@@ -212,7 +223,7 @@ class TripActions extends AsyncNotifier<void> {
     final result = await AsyncValue.guard(() => action(owner, repository));
     if (!ref.mounted || ref.read(ownerIdProvider) != owner) return false;
     state = result;
-    if (!result.hasError && ref.read(platformEnabledProvider)) {
+    if (!result.hasError && ref.read(passengerPagingEnabledProvider)) {
       await ref.read(publicPageCacheProvider).invalidate();
       if (ref.mounted) ref.invalidate(pagedDeparturesProvider);
     }

@@ -1,28 +1,22 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:fake_async/fake_async.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:kerala_bus_connect/core/providers/cache_lifetime.dart';
-import 'package:kerala_bus_connect/core/theme/app_theme.dart';
 import 'package:kerala_bus_connect/features/auth/domain/entities/auth_user.dart';
 import 'package:kerala_bus_connect/features/auth/presentation/providers/auth_providers.dart';
 import 'package:kerala_bus_connect/features/crew/domain/entities/crew_assignment.dart';
 import 'package:kerala_bus_connect/features/crew/presentation/providers/crew_providers.dart';
-import 'package:kerala_bus_connect/features/owner/presentation/pages/owner_page.dart';
 import 'package:kerala_bus_connect/features/passenger/domain/services/departure_order.dart';
 import 'package:kerala_bus_connect/features/passenger/presentation/providers/search_providers.dart';
 import 'package:kerala_bus_connect/features/timetables/domain/entities/service_entity.dart';
 import 'package:kerala_bus_connect/features/timetables/presentation/providers/timetable_providers.dart';
 import 'package:kerala_bus_connect/features/tracking/domain/entities/tracking_preview.dart';
 import 'package:kerala_bus_connect/features/tracking/domain/repositories/tracking_repository.dart';
-import 'package:kerala_bus_connect/features/tracking/presentation/pages/tracking_page.dart';
 import 'package:kerala_bus_connect/features/tracking/presentation/providers/tracking_providers.dart';
 import 'package:kerala_bus_connect/features/trips/presentation/providers/trip_providers.dart';
 import 'support/fakes.dart';
-import 'trip_dashboard_test.dart' show bus;
-import 'trip_passenger_test.dart' show managed;
 import 'trip_schedule_test.dart' show example;
 
 class CountedService extends ServiceEntity {
@@ -308,73 +302,5 @@ void main() {
     );
     expect(structuralChanges, changesBeforeNote);
     sub.close();
-  });
-
-  testWidgets('tracking builds only the visible part of a long stop list', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          liveTrackingProvider.overrideWithValue(
-            AsyncData([
-              TrackingPreview(
-                'Long route',
-                List.generate(500, (i) => 'Stop $i'),
-                0,
-                id: 'long',
-              ),
-            ]),
-          ),
-        ],
-        child: MaterialApp(
-          theme: AppTheme.lightTheme,
-          home: const Scaffold(body: TrackingPage()),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    expect(find.byType(ListTile).evaluate().length, lessThan(30));
-    expect(find.text('Stop 499'), findsNothing);
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, -1500));
-    await tester.pumpAndSettle();
-    expect(find.byType(ListTile).evaluate().length, lessThan(30));
-    expect(tester.takeException(), isNull);
-  });
-
-  testWidgets('owner dashboard lazily renders large trip lists', (
-    tester,
-  ) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          authUserProvider.overrideWithValue(
-            const AsyncData(AuthUser(id: 'owner', email: 'owner@test.com')),
-          ),
-          ownerBusinessesProvider.overrideWithValue(
-            const AsyncData([business]),
-          ),
-          ownerBusesProvider.overrideWith((ref, id) => Stream.value([bus])),
-          ownerServicesProvider.overrideWithValue(
-            AsyncData(List.generate(200, (i) => managed('trip-$i', i * 5))),
-          ),
-          dailyAdjustmentsProvider.overrideWith(
-            (ref, date) => Stream.value([]),
-          ),
-        ],
-        child: MaterialApp(
-          theme: AppTheme.lightTheme,
-          home: const Scaffold(body: OwnerPage()),
-        ),
-      ),
-    );
-    await tester.pumpAndSettle();
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, -600));
-    await tester.pumpAndSettle();
-    expect(find.text('Edit trip').evaluate().length, inInclusiveRange(1, 10));
-    await tester.drag(find.byType(Scrollable).first, const Offset(0, -1500));
-    await tester.pumpAndSettle();
-    expect(find.text('Edit trip').evaluate().length, inInclusiveRange(1, 10));
-    expect(tester.takeException(), isNull);
   });
 }

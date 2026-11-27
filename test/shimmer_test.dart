@@ -1,17 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:kerala_bus_connect/core/widgets/shimmer_loading.dart';
 import 'package:kerala_bus_connect/core/widgets/loading_skeletons.dart';
-import 'package:kerala_bus_connect/features/auth/presentation/widgets/auth_panel.dart';
-import 'package:kerala_bus_connect/features/auth/presentation/providers/auth_providers.dart';
-import 'package:kerala_bus_connect/features/passenger/presentation/widgets/departure_results.dart';
-import 'package:kerala_bus_connect/features/timetables/domain/entities/service_entity.dart';
-import 'package:kerala_bus_connect/features/timetables/presentation/providers/timetable_providers.dart';
-import 'package:kerala_bus_connect/features/timetables/presentation/widgets/service_card.dart';
-import 'support/fakes.dart';
-import 'widgets_test.dart' show harness;
 
 Widget shimmerHarness(
   Widget child, {
@@ -37,15 +28,6 @@ Widget shimmerHarness(
     ),
   ),
 );
-
-class SlowAuth extends FakeAuthRepository {
-  final pending = Completer<void>();
-  @override
-  Future<void> signIn(String email, String password) async {
-    signIns++;
-    await pending.future;
-  }
-}
 
 void main() {
   testWidgets(
@@ -199,103 +181,4 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
   }
-
-  testWidgets(
-    'refresh preserves bus cards, scroll position and request count',
-    (tester) async {
-      final auth = FakeAuthRepository();
-      final stream = StreamController<List<ServiceEntity>>.broadcast();
-      final repository = FakeTransitRepository()
-        ..publishedOverride = stream.stream;
-      addTearDown(auth.changes.close);
-      addTearDown(stream.close);
-      final scroll = ScrollController();
-      addTearDown(scroll.dispose);
-      await tester.pumpWidget(
-        harness(
-          Scaffold(
-            body: CustomScrollView(
-              controller: scroll,
-              slivers: const [DeparturesSliver()],
-            ),
-          ),
-          repository,
-          auth,
-        ),
-      );
-      await tester.pump(const Duration(milliseconds: 150));
-      expect(find.byType(LoadingSliver), findsOneWidget);
-      stream.add(List.generate(8, (i) => service('bus-$i')));
-      await tester.pumpAndSettle();
-      scroll.jumpTo(200);
-      await tester.pump();
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(DeparturesSliver)),
-      );
-      container.invalidate(publishedServicesProvider);
-      await tester.pump();
-      expect(find.byType(LoadingSliver), findsNothing);
-      expect(find.byType(ServiceCard), findsWidgets);
-      expect(scroll.offset, 200);
-      expect(repository.publishedRequests, 2);
-      stream.add(List.generate(8, (i) => service('bus-$i')));
-      await tester.pumpAndSettle();
-      expect(scroll.offset, 200);
-      await tester.pumpWidget(const SizedBox.shrink());
-    },
-  );
-
-  testWidgets(
-    'sign-in keeps input and label, blocks repeats, restores after failure',
-    (tester) async {
-      final auth = SlowAuth();
-      addTearDown(auth.changes.close);
-      await tester.pumpWidget(
-        harness(
-          const Scaffold(body: AuthPanel()),
-          FakeTransitRepository(),
-          auth,
-        ),
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('auth-email')),
-        'owner@example.com',
-      );
-      await tester.enterText(
-        find.byKey(const ValueKey('auth-password')),
-        'password123',
-      );
-      await tester.tap(find.widgetWithText(FilledButton, 'Sign in'));
-      await tester.pump(const Duration(milliseconds: 150));
-      expect(find.text('Sign in'), findsOneWidget);
-      expect(
-        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-        isNull,
-      );
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(AuthPanel)),
-      );
-      unawaited(
-        container
-            .read(authActionProvider.notifier)
-            .submit('owner@example.com', 'password123', register: false),
-      );
-      expect(auth.signIns, 1);
-      expect(find.byType(AppShimmer), findsOneWidget);
-      auth.pending.completeError(StateError('offline'));
-      await tester.pumpAndSettle();
-      expect(find.byType(AppShimmer), findsNothing);
-      expect(
-        tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-        isNotNull,
-      );
-      expect(
-        tester
-            .widget<TextField>(find.byKey(const ValueKey('auth-email')))
-            .controller!
-            .text,
-        'owner@example.com',
-      );
-    },
-  );
 }

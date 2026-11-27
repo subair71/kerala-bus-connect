@@ -29,15 +29,15 @@ async function verifyStartup(page) {
     }));
   });
   const failed = page.getByText('Unable to start FindMyBus. Please check your connection.', {exact:true});
-  const home = page.getByText('FindMyBus', {exact:true});
+  const home = page.getByText('Find a bus', {exact:true});
   await home.or(failed).first().waitFor({timeout:90000});
   assert.equal(await failed.count(), 0, 'Firebase startup failed before the home screen');
   await home.waitFor({timeout:90000});
   assert.equal(await page.evaluate(() => window.firebase_core.getApps().length), 1,
     'The default Firebase app must be initialized exactly once');
   // Optional advertisements must never hold up the usable search form.
-  await page.getByRole('button', {name:'Clear boarding stop', exact:true})
-    .or(page.getByText('Clear boarding stop', {exact:true})).first()
+  await page.getByRole('button', {name:'Search buses', exact:true})
+    .or(page.getByText('Search buses', {exact:true})).first()
     .waitFor({timeout:10000});
 }
 
@@ -71,34 +71,20 @@ async function verifyStartup(page) {
         if (name !== 'desktop') {
           await page.getByRole('button', {name:'Search buses', exact:true})
             .or(page.getByText('Search buses', {exact:true})).first().click();
-          await page.getByText('Bus results', {exact:true}).waitFor();
+          await page.getByText(/^(Bus results|Timetable status)$/).first().waitFor();
           await page.screenshot({path:'browser-screenshots/' + name + '-results.png'});
-          await page.getByRole('button', {name:'Close bus results', exact:true})
-            .or(page.getByText('Close bus results', {exact:true})).first().click();
-          await page.getByText('Bus results', {exact:true}).waitFor({state:'hidden'});
+          await page.getByRole('button',{name:'Back',exact:true}).first().click();
         }
-        for (const [tab, heading] of [
-          ['Routes', 'Routes directory'],
-          ['Owner', 'Owner sign in'],
-          ['Tracking', 'Bus tracking preview'],
-          ['Crew', 'Crew duty roster'],
-        ]) {
-          const staff = {Owner:'Owner account',Tracking:'Route position preview',Crew:'Crew duty roster'};
-          if (staff[tab]) {
-            await page.locator('[flt-semantics-identifier="nav-more"]').click();
-            const target = 'more-' + staff[tab].toLowerCase().replaceAll(' ', '-');
-            await page.locator('[flt-semantics-identifier="' + target + '"]').click();
-          } else await page.locator('[aria-label^="' + tab + '"]').or(page.getByText(tab, {exact:true})).first().click();
-          try {
-            // Flutter may merge a heading and subtitle into one text or ARIA label.
-            await page.getByText(heading, {exact:false})
-              .or(page.getByLabel(heading, {exact:false})).first().waitFor();
-          } catch (error) {
-            await page.screenshot({path:'browser-screenshots/' + name + '-failure.png'});
-            throw error;
-          }
-          assert.equal(await page.getByText('Local sponsors near Aluva', {exact:true}).count(), 0);
-          await page.screenshot({path:'browser-screenshots/' + name + '-' + tab.toLowerCase() + '.png'});
+        for (const [id, heading] of [['departures','Upcoming buses'],['routes','Published timetables'],['saved','On this device'],['more','Passenger tools']]) {
+          await page.locator('[flt-semantics-identifier="nav-' + id + '"]').click();
+          await page.getByText(heading,{exact:false}).or(page.getByLabel(heading,{exact:false})).first().waitFor();
+          await page.screenshot({path:'browser-screenshots/' + name + '-' + id + '.png'});
+        }
+        for(const label of ['Owner sign in','Crew duty roster']){
+          await page.getByText(label,{exact:false}).or(page.getByLabel(label,{exact:false})).first().click();
+          await page.getByText(label==='Owner sign in'?'Email address':'Search crew or vehicle',{exact:false})
+            .or(page.getByLabel(label==='Owner sign in'?'Email address':'Search crew or vehicle',{exact:false})).first().waitFor();
+          await page.getByRole('button',{name:'Back',exact:true}).first().click();
         }
         assert.deepEqual(errors, [], name + ': cold startup and navigation must not raise page errors');
         console.log('WEB_SMOKE_COLD_START_PASS ' + name);

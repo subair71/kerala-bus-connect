@@ -235,7 +235,9 @@ class FirebaseTripRepository implements TripRepository {
               jsonEncode(trip.stops.map((s) => s.id).toList()) &&
           jsonEncode(current['offDays']) == jsonEncode(offDays);
       final routeId = current?['routeId'] as String? ?? routeRef.id;
-      final name = '${stops.first} → ${stops.last}';
+      final name = trip.routeName.trim().isEmpty
+          ? '${stops.first} → ${stops.last}'
+          : trip.routeName.trim();
       if (current == null) {
         tx.set(routeRef, {
           'ownerId': ownerId,

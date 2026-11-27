@@ -7,7 +7,6 @@ import '../core/config/firebase_config.dart';
 import '../core/theme/app_theme.dart';
 import '../core/widgets/async_status.dart';
 import 'app_shell.dart';
-import '../features/journeys/presentation/pages/discovery_pages.dart';
 
 final initializationProvider = FutureProvider<void>((ref) async {
   // Initialize before accessing Firebase APIs. Pre-SDK apps reads throw on Safari.
@@ -40,16 +39,6 @@ class FindMyBusApp extends ConsumerWidget {
                       message:
                           'Unable to start FindMyBus. Please check your connection.',
                       retry: () => ref.invalidate(initializationProvider),
-                    ),
-                    Builder(
-                      builder: (ctx) => TextButton(
-                        onPressed: () => openScreen(
-                          ctx,
-                          'Sample routes',
-                          const SampleServicesPage(),
-                        ),
-                        child: const Text('Explore sample timetables'),
-                      ),
                     ),
                   ],
                 ),

@@ -36,7 +36,7 @@ final selectedBusinessProvider = Provider.autoDispose<BusinessEntity?>((ref) {
       const <BusinessEntity>[];
   final selected = ref.watch(selectedBusinessIdProvider);
   if (list.isEmpty) return null;
-  return list.firstWhere((b) => b.id == selected, orElse: () => list.first);
+  return list.where((b) => b.id == selected).firstOrNull ?? list.first;
 });
 
 final ownerActionsProvider =
