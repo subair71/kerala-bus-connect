@@ -26,18 +26,20 @@ for (let group = 0; group < 8; group++) for (let trip = 0; trip < 10; trip++) {
     departureMinutes: start, offDays: [], routeName: origin + ' route'});
   await indexSource(db, 'services', id);
 }
-for (const scenario of [{mode: 'cold', concurrency: 10}, {mode: 'shared-cache', concurrency: 10}, {mode: 'shared-cache', concurrency: 25}, {mode: 'shared-cache', concurrency: 50}, {mode: 'mixed-routes', concurrency: 50}, {mode: 'mixed-routes', concurrency: 100}]) {
+for (const scenario of [{mode: 'cold', concurrency: 10}, {mode: 'shared-cache', concurrency: 10}, {mode: 'shared-cache', concurrency: 25}, {mode: 'shared-cache', concurrency: 50}, {mode: 'mixed-routes', concurrency: 50}, {mode: 'mixed-routes', concurrency: 100}, {mode: 'uncached-mixed-routes', concurrency: 25}]) {
   const {mode, concurrency} = scenario;
+  const mixed = mode === 'mixed-routes' || mode === 'uncached-mixed-routes';
+  const read = mode === 'cold' || mode === 'uncached-mixed-routes' ? queryDepartures : searchDepartures;
   const times = [];
   let errors = 0, scanned = 0, indexDocsFetched = 0, sourceLookups = 0;
   const started = performance.now();
   await Promise.all(Array.from({length: concurrency}, async (_, worker) => {
     let cursor;
-    const origin = mode === 'mixed-routes' ? 'G0' + (worker % 8) + ' origin' : 'loadorigin';
+    const origin = mixed ? 'G0' + (worker % 8) + ' origin' : 'loadorigin';
     for (let i = 0; i < 4; i++) {
       const at = performance.now();
       try {
-        const result = await (mode === 'cold' ? queryDepartures : searchDepartures)(db, {from: origin, to: mode === 'mixed-routes' ? 'Diverse destination' : 'loaddestination', date: '2026-11-09', cursor: mode === 'mixed-routes' && i % 2 === 1 ? cursor : undefined},
+        const result = await read(db, {from: origin, to: mixed ? 'Diverse destination' : 'loaddestination', date: '2026-11-09', cursor: mixed && i % 2 === 1 ? cursor : undefined},
           new Date('2026-11-09T04:30:00Z'));
         if (result.records.length !== 4) throw new Error('Incomplete page');
         scanned += result.scanned;

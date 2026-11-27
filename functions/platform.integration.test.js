@@ -188,3 +188,49 @@ test('equivalent hot requests share a single normalized cache entry', {skip: !en
   assert.equal(repeat.sourceLookups,0);
   assert.equal(repeat.indexDocsFetched,0);
 });
+
+test('old and compact weekday projections share cursor pages throughout backfill', {skip: !enabled}, async () => {
+  await db.doc('platform_config/search').set({ready:true});
+  const origin = 'Migration junction', destination = 'Western terminal';
+  for (let i = 0; i < 5; i++) {
+    const id = 'migration-trip-' + i;
+    await db.doc('services/' + id).set({published:true, scheduleRevision:'r1', offDays:[],
+      stops:[origin,destination], stopIds:['a','b'], departureMinutes:900+i,
+      stopTimings:{[origin]:900+i,[destination]:940+i}});
+    await indexSource(db,'services',id);
+    if (i % 2 === 0) {
+      const rows = await db.collection('stop_departures').where('sourceKey','==','services:'+id).get();
+      for (const row of rows.docs) {
+        const keys = row.get('keys').flatMap(key => !key.startsWith('daily|') ? [key] :
+          ['*', 'Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].map(day => day + key.slice(5)));
+        await row.ref.update({keys});
+      }
+    }
+  }
+  const req = {from:'grat',to:'terminal',date:'2026-11-27'};
+  const time = new Date('2026-11-26T10:00:00Z');
+  const first = await searchDepartures(db,req,time);
+  assert.equal(first.records.length,4);
+  const next = await searchDepartures(db,{...req,cursor:first.cursor},time);
+  assert.deepEqual([...first.records,...next.records].map(s=>s.id),[0,1,2,3,4].map(i=>'migration-trip-'+i));
+  assert.equal(next.cursor,null);
+  const directory = await searchDepartures(db,{...req, directory:true, to:''},time);
+  assert.equal(directory.records.length,4);
+  assert.equal(directory.sourceLookups,5); // Readiness plus four regular services.
+});
+
+test('search returns fresh downstream timings for a daily change before its projection refreshes', {skip: !enabled}, async () => {
+  await db.doc('platform_config/search').set({ready:true});
+  const id='downstream-check', date='2026-11-27';
+  await db.doc('services/'+id).set({published:true,scheduleRevision:'one',offDays:[],
+    stops:['Hill boarding','Bridge'],stopIds:['hill','bridge'],departureMinutes:610,
+    stopTimings:{'Hill boarding':610,Bridge:640}});
+  await indexSource(db,'services',id);
+  const change=db.doc('trip_adjustments/'+id+'_'+date);
+  await change.set({tripId:id,serviceDate:date,scheduleRevision:'one',status:'delayed',delays:{hill:2}});
+  await indexSource(db,'trip_adjustments',change.id);
+  await change.update({delays:{hill:2,bridge:5}});
+  const result = await searchDepartures(db,{from:'Hill boarding',to:'Bridge',date},new Date('2026-11-26T10:00:00Z'));
+  assert.equal(result.records[0].boardingMinute,612);
+  assert.equal(result.records[0].expectedStopTimings.Bridge,647);
+});

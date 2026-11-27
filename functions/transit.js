@@ -83,6 +83,24 @@ export async function getJourneyTimetable(db, raw) {
     expectedStopTimings: active ? dailyTimes(service, active, status) ?? {} : {}}};
 }
 
+const workingDays = days.slice(1, 6);
+const weekendDays = [days[0], days[6]];
+
+// Each boarding day matches exactly one stored group. Readers also accept the
+// full weekday names written by previous versions of the projection trigger.
+function groupsForDays(boardingDays) {
+  if (boardingDays.length === 7) return ['daily'];
+  const result = [];
+  for (const [label, group] of [['workweek', workingDays], ['weekend', weekendDays]]) {
+    if (group.every(day => boardingDays.includes(day))) result.push(label);
+    else result.push(...group.filter(day => boardingDays.includes(day)));
+  }
+  return result;
+}
+export function departureKeys(day, suffix) {
+  return [day, workingDays.includes(day) ? 'workweek' : 'weekend', 'daily'].map(group => group + suffix);
+}
+
 export function projectDepartures(tripId, service, adjustment = null) {
   if (!service?.published || !Array.isArray(service.stops) || service.stops.length > 100) return [];
   if (adjustment && adjustment.scheduleRevision !== service.scheduleRevision) return [];
@@ -101,9 +119,10 @@ export function projectDepartures(tripId, service, adjustment = null) {
     const scope = adjustment ? shiftDate(adjustment.serviceDate, dayOffset) : 'recurring';
     const boardingDays = days.filter((_, d) => !offDays.includes(days[((d - dayOffset) % 7 + 7) % 7]));
     const keys = [];
-    for (const day of ['*', ...boardingDays]) {
-      for (const token of tokens(stop)) keys.push(day + '|stop|' + token);
-      if (i === 0) keys.push(day + '|origin');
+    const stopTokens = tokens(stop);
+    for (const group of groupsForDays(boardingDays)) {
+      for (const token of stopTokens) keys.push(group + '|stop|' + token);
+      if (i === 0) keys.push(group + '|origin');
     }
     if (i === 0) {
       for (const token of new Set([service.routeName, ...service.stops].flatMap(tokens))) {
@@ -137,7 +156,7 @@ export async function indexSource(db, collection, id) {
       collection === 'services' ? null : data) : [];
     const digest = hash(JSON.stringify(rows));
     if (prior.data()?.digest === digest) return;
-    const old = await tx.get(db.collection('stop_departures').where('sourceKey', '==', sourceKey));
+    const old = await tx.get(db.collection('stop_departures').where('sourceKey', '==', sourceKey).select());
     const retained = new Set(rows.map(row => hash(sourceKey + ':' + row.stopIndex)));
     for (const doc of old.docs) if (!retained.has(doc.id)) tx.delete(doc.ref);
     for (const row of rows) {
@@ -191,11 +210,12 @@ async function readDepartures(db, {input, binding, cursor}, now) {
   const minimum = input.directory || input.date !== today ? 0 : currentMinute;
   const day = days[new Date(input.date + 'T00:00:00Z').getUTCDay()];
   const token = [...input.from].slice(0, 3).join('');
-  const key = input.directory ? '*|directory|' + token :
-    input.from ? day + '|stop|' + token : day + '|origin';
+  const keys = input.directory ? ['*|directory|' + token] : departureKeys(day, input.from ? '|stop|' + token : '|origin');
   const positions = cursor?.positions?.map(p => p ? [...p] : null) ?? [null, null];
   const exhausted = cursor?.exhausted ? [...cursor.exhausted] : [false, input.directory];
   const buffers = [[], []];
+  const lastBatch = [false, false];
+  const batchSize = [5, 5];
   const collections = ['recurring', input.date];
   const rows = [];
   let scanned = 0, indexDocsFetched = 0, sourceLookups = 1;
@@ -207,17 +227,15 @@ async function readDepartures(db, {input, binding, cursor}, now) {
   async function fill(i) {
     if (buffers[i].length || exhausted[i]) return;
     let query = db.collection('stop_departures').where('scope', '==', collections[i])
-      .where('keys', 'array-contains', key).where('minute', '>=', minimum)
-      .orderBy('minute').orderBy(FieldPath.documentId()).limit(12);
-    if (positions[i]) {
-      if (!Array.isArray(positions[i]) || !Number.isInteger(positions[i][0]) || !/^[a-f0-9]{64}$/.test(positions[i][1])) {
-        throw new HttpsError('invalid-argument', 'Restart this search.');
-      }
-      query = query.startAfter(...positions[i]);
-    }
+      .where('keys', keys.length === 1 ? 'array-contains' : 'array-contains-any', keys.length === 1 ? keys[0] : keys)
+      .where('minute', '>=', minimum).orderBy('minute').orderBy(FieldPath.documentId())
+      .limit(batchSize[i]).select('tripId', 'stopIndex', 'minute', 'dayOffset', 'serviceDate', 'status', 'revision', 'service');
+    if (positions[i]) query = query.startAfter(...positions[i]);
     const page = await query.get();
     indexDocsFetched += page.size;
     buffers[i] = page.docs;
+    lastBatch[i] = page.size < batchSize[i];
+    batchSize[i] = 12;
     if (!page.size) exhausted[i] = true;
   }
   while (rows.length < 4 && scanned < 120) {
@@ -229,6 +247,7 @@ async function readDepartures(db, {input, binding, cursor}, now) {
       a.data().minute === b.data().minute && a.id < b.id ? 0 : 1;
     const doc = buffers[i].shift();
     const row = doc.data();
+    if (lastBatch[i] && !buffers[i].length) exhausted[i] = true;
     positions[i] = [row.minute, doc.id];
     scanned++;
     if (!rowMatches(row, input)) continue;
@@ -239,8 +258,10 @@ async function readDepartures(db, {input, binding, cursor}, now) {
       const paths = new Set();
       for (const candidate of candidates) {
         paths.add('services/' + candidate.tripId);
-        paths.add('trip_adjustments/' + candidate.tripId + '_' +
-          (candidate.serviceDate ?? shiftDate(input.date, -candidate.dayOffset)));
+        if (!input.directory) {
+          paths.add('trip_adjustments/' + candidate.tripId + '_' +
+            (candidate.serviceDate ?? shiftDate(input.date, -candidate.dayOffset)));
+        }
       }
       const missing = [...paths].filter(path => !memo.has(path));
       if (missing.length) {
@@ -252,15 +273,19 @@ async function readDepartures(db, {input, binding, cursor}, now) {
     const service = (await read('services/' + row.tripId)).data();
     if (!service?.published || scheduleFingerprint(service) !== row.revision) continue;
     const startDate = row.serviceDate ?? shiftDate(input.date, -row.dayOffset);
-    const adjustment = (await read('trip_adjustments/' + row.tripId + '_' + startDate)).data();
+    const adjustment = input.directory ? null : (await read('trip_adjustments/' + row.tripId + '_' + startDate)).data();
     const validDaily = adjustment && adjustment.scheduleRevision === service.scheduleRevision;
     if (!input.directory && (i === 0 && validDaily || i === 1 && !validDaily)) continue;
+    let expectedStopTimings = {};
     if (i === 1) {
-      const current = projectDepartures(row.tripId, service, adjustment).find(r => r.stopIndex === row.stopIndex);
-      if (!current || current.scope !== row.scope || current.minute !== row.minute || current.status !== row.status) continue;
+      const status = runningStatus(adjustment);
+      expectedStopTimings = dailyTimes(service, adjustment, status);
+      const expected = expectedStopTimings?.[service.stops[row.stopIndex]];
+      if (expected == null || shiftDate(startDate, Math.floor(expected / 1440)) !== input.date ||
+          expected % 1440 !== row.minute || status !== row.status) continue;
     }
     rows.push({...publicService(row.tripId, service), runningStatus: row.status,
-      serviceDate: startDate, expectedStopTimings: row.expectedStopTimings,
+      serviceDate: startDate, expectedStopTimings,
       boardingMinute: row.minute});
   }
   const hasMore = buffers.some(b => b.length > 0) || exhausted.some(v => !v);
